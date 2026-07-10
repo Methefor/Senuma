@@ -120,6 +120,12 @@
         a { color: var(--gold); text-decoration: none; }
         a:hover { text-decoration: underline; }
 
+        .lang-divider {
+            margin: 56px 0 32px;
+            padding-top: 32px;
+            border-top: 2px solid var(--border);
+        }
+
         footer {
             text-align: center;
             padding: 32px 24px;
@@ -139,18 +145,18 @@
 
 <main>
     <h1>Privacy Policy</h1>
-    <p class="meta">Last updated: April 20, 2025 &nbsp;·&nbsp; Applies to NewTabFolders Chrome Extension</p>
+    <p class="meta">Last updated: July 10, 2026 &nbsp;·&nbsp; Applies to the NewTabFolders Chrome Extension &nbsp;·&nbsp; Operated by Melion LLC (Delaware, USA)</p>
 
-    <p>NewTabFolders ("we", "our", or "the extension") is committed to protecting your privacy. This policy explains what data is collected, how it is used, and your rights as a user.</p>
+    <p>NewTabFolders ("we", "our", or "the extension") is operated by Melion LLC, a Delaware, USA limited liability company. We are committed to protecting your privacy. This policy explains what data is collected, how it is used, and your rights as a user.</p>
 
     <h2>1. Summary</h2>
-    <p>The free tier stores everything locally on your device. We do not collect analytics, show ads, or sell data. The Pro cloud sync feature optionally stores your bookmarks in Firebase Firestore, linked to your Google account — only when you explicitly sign in.</p>
+    <p>The free tier stores everything locally on your device using <code>chrome.storage.local</code>. We do not run analytics, show ads, or sell data. The optional Pro cloud sync feature stores your bookmarks in Google Firebase Firestore, linked to your Google account — only when you explicitly sign in. Payments are processed by LemonSqueezy; we never see your card details.</p>
 
     <h2>2. Data We Collect</h2>
 
     <div class="card">
         <div class="card-title">Bookmark & Folder Data <span class="badge badge-free">FREE</span></div>
-        <p>Your folders, links, settings, and preferences are stored locally on your device using Chrome's <code>chrome.storage.local</code> API. This data never leaves your device on the free plan.</p>
+        <p>Your folders, links, settings, and preferences are stored locally on your device using Chrome's <code>chrome.storage.local</code> API. This data never leaves your device unless you enable cloud sync.</p>
     </div>
 
     <div class="card">
@@ -159,18 +165,24 @@
     </div>
 
     <div class="card">
-        <div class="card-title">Cloud Sync Data (Firestore) <span class="badge badge-pro">PRO</span></div>
+        <div class="card-title">Cloud Sync Data (Firebase Firestore) <span class="badge badge-pro">PRO</span></div>
         <p>If you enable cloud sync, your bookmark/folder data is stored in Google Firebase Firestore under your unique user ID. This allows you to access your workspace across devices. Data is encrypted in transit (HTTPS). You can delete your cloud data at any time by signing out and using "Clear All Data" in Settings.</p>
     </div>
 
     <div class="card">
         <div class="card-title">Weather & Location <span class="badge badge-free">FREE</span></div>
         <p>The weather widget uses your browser's Geolocation API to obtain your approximate coordinates — only if you grant permission. Coordinates are sent to <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> (weather data) and <a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener">Nominatim / OpenStreetMap</a> (city name lookup). Neither service receives any identifying information. Your location is not stored by NewTabFolders.</p>
+        <p>The optional weather widget sends your approximate location to Open-Meteo and Nominatim for forecast data; location data is not stored by us.</p>
     </div>
 
     <div class="card">
         <div class="card-title">Payment Information <span class="badge badge-pro">PRO</span></div>
-        <p>Payments are processed by <a href="https://www.lemonsqueezy.com" target="_blank" rel="noopener">LemonSqueezy</a>. NewTabFolders never sees or stores your credit card or billing information. Your license key is stored locally on your device to verify Pro status.</p>
+        <p>Payments are processed by <a href="https://www.lemonsqueezy.com" target="_blank" rel="noopener">LemonSqueezy</a>, our merchant of record. NewTabFolders never sees or stores your credit card or billing information. Your license key is stored locally on your device to verify Pro status.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Web Search Queries <span class="badge badge-free">FREE</span></div>
+        <p>The new-tab search bar uses Chrome's built-in <code>chrome.search</code> API to run your query through your browser's default search engine. NewTabFolders does not see, log, or store your search terms.</p>
     </div>
 
     <div class="card">
@@ -186,6 +198,7 @@
         <li><strong>tabGroups</strong> — Reads your Chrome Tab Groups so you can import them as bookmark folders.</li>
         <li><strong>bookmarks</strong> — Reads Chrome's built-in bookmarks so Pro users can import them in bulk.</li>
         <li><strong>identity</strong> — Used only for Google Sign-In to enable cloud sync. No data is accessed beyond what you explicitly authorize.</li>
+        <li><strong>search</strong> — Lets the new-tab search bar submit queries to your default search engine via Chrome's Search API.</li>
     </ul>
 
     <h2>4. Data Sharing</h2>
@@ -205,12 +218,48 @@
     <p>We may update this policy as the extension evolves. Material changes will be noted in the What's New section of the extension. Continued use after changes constitutes acceptance.</p>
 
     <h2>8. Contact</h2>
+    <p><strong>Melion LLC</strong> (Delaware, USA)</p>
     <p>For privacy questions or data deletion requests, contact us at: <a href="mailto:methefor@gmail.com">methefor@gmail.com</a></p>
     <p>Source code is available at: <a href="https://github.com/Methefor/New-Tab-Folders" target="_blank" rel="noopener">github.com/Methefor/New-Tab-Folders</a></p>
+
+    <!-- ================= Turkish summary ================= -->
+    <div class="lang-divider" lang="tr">
+        <h1>Gizlilik Politikası <span style="font-size:16px; color:var(--muted); font-weight:400;">(Türkçe özet)</span></h1>
+        <p class="meta">Son güncelleme: 10 Temmuz 2026 &nbsp;·&nbsp; NewTabFolders Chrome Uzantısı için geçerlidir &nbsp;·&nbsp; İşleten: Melion LLC (Delaware, ABD)</p>
+
+        <p>NewTabFolders ("biz", "bize" veya "uzantı"), Delaware, ABD merkezli bir limited şirket olan Melion LLC tarafından işletilmektedir. Aşağıda tam İngilizce metnin özeti yer almaktadır; herhangi bir uyuşmazlıkta İngilizce metin esas alınır.</p>
+
+        <h2>Özet</h2>
+        <p>Ücretsiz sürümde tüm verileriniz yalnızca cihazınızda (<code>chrome.storage.local</code>) saklanır. Reklam göstermiyoruz, kullanım analitiği toplamıyoruz ve verinizi satmıyoruz. İsteğe bağlı Pro bulut senkronizasyonu, yalnızca Google ile giriş yaptığınızda verilerinizi Google Firebase Firestore'da saklar. Ödemeler LemonSqueezy üzerinden işlenir; kart bilgilerinizi asla görmeyiz.</p>
+
+        <h2>Topladığımız Veriler</h2>
+        <ul>
+            <li><strong>Klasör ve yer imi verileri (Ücretsiz):</strong> Cihazınızda yerel olarak saklanır, bulut senkronizasyonu açmadığınız sürece cihazınızdan çıkmaz.</li>
+            <li><strong>Google hesabı bilgileri (Pro):</strong> Bulut senkronizasyonu için giriş yaptığınızda ad, e-posta ve profil fotoğrafınızı alırız; yalnızca hesabınızı tanımlamak için kullanılır.</li>
+            <li><strong>Bulut senkronizasyon verisi (Pro):</strong> Firebase Firestore'da, benzersiz kullanıcı kimliğinizle şifreli (HTTPS) olarak saklanır. Ayarlar'dan "Tüm Verileri Temizle" ile silinebilir.</li>
+            <li><strong>Hava durumu ve konum (Ücretsiz):</strong> Yalnızca izin verirseniz, yaklaşık konumunuz Open-Meteo ve Nominatim/OpenStreetMap servislerine gönderilir; kimliğinizi belirleyen bilgi paylaşılmaz ve konumunuz tarafımızca saklanmaz.</li>
+            <li><strong>Ödeme bilgisi (Pro):</strong> Ödemeler LemonSqueezy tarafından işlenir; kredi kartı bilgilerinizi asla görmeyiz veya saklamayız.</li>
+            <li><strong>Arama sorguları (Ücretsiz):</strong> Yeni sekme arama çubuğu, sorgunuzu Chrome'un <code>chrome.search</code> API'si üzerinden varsayılan arama motorunuza iletir; arama terimlerinizi görmeyiz veya kaydetmeyiz.</li>
+            <li><strong>Analitik ve takip:</strong> Hiçbir zaman toplanmaz. Üçüncü taraf analitik betiği kullanılmaz.</li>
+        </ul>
+        <p>İsteğe bağlı hava durumu widget'ı, tahmin verisi için yaklaşık konumunuzu Open-Meteo ve Nominatim'e gönderir; konum verisi tarafımızca saklanmaz.</p>
+
+        <h2>İzinler</h2>
+        <p><code>storage</code>, <code>tabs</code>, <code>sessions</code>, <code>tabGroups</code>, <code>bookmarks</code>, <code>identity</code> ve <code>search</code> izinleri yalnızca yukarıda açıklanan özellikleri (yerel kayıt, sekme/yer imi/oturum yönetimi, Google ile giriş, arama çubuğu) çalıştırmak için kullanılır.</p>
+
+        <h2>Veri Saklama ve Silme</h2>
+        <p>Yerel veriler, uzantıyı kaldırdığınızda veya Ayarlar'dan "Tüm Verileri Temizle"yi kullandığınızda silinir. Bulut verileri, "Tüm Verileri Temizle" onaylandığında veya bizimle iletişime geçtiğinizde silinir; yalnızca çıkış yapmak bulut verisini silmez.</p>
+
+        <h2>Çocukların Gizliliği</h2>
+        <p>NewTabFolders 13 yaş altı çocuklara yönelik değildir; bilerek çocuklardan kişisel veri toplamayız.</p>
+
+        <h2>İletişim</h2>
+        <p><strong>Melion LLC</strong> (Delaware, ABD) &nbsp;·&nbsp; Gizlilik soruları ve veri silme talepleri için: <a href="mailto:methefor@gmail.com">methefor@gmail.com</a></p>
+    </div>
 </main>
 
 <footer>
-    &copy; 2025 NewTabFolders &nbsp;·&nbsp; Made with ♥ by METHEFOR &nbsp;·&nbsp;
+    &copy; 2026 NewTabFolders &nbsp;·&nbsp; Operated by Melion LLC &nbsp;·&nbsp; Made with ♥ by METHEFOR &nbsp;·&nbsp;
     <a href="landing.html">Home</a>
 </footer>
 
