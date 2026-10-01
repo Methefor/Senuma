@@ -75,21 +75,21 @@ async function freshInstall(): Promise<void> {
 
     await check('Onboarding', 'a new user gets onboarding, not an empty page', async () => {
         await page.waitForSelector('.onboarding');
-        expect((await page.locator('.interest').count()) === 11, 'expected 11 interest choices');
+        expect((await page.locator('.interest').count()) === 10, 'expected 10 interest choices');
     });
 
     await check('Onboarding', 'three steps create Spaces, apply the theme and finish', async () => {
-        await completeOnboarding(page, ['AI', 'Coding', 'Work', 'Movies & TV', 'Music']);
+        await completeOnboarding(page, ['AI', 'Coding', 'Work', 'Media', 'Gaming']);
         const names = await plateNames(page);
-        expect(names.join() === 'AI,Coding,Work,Movies & TV,Music', `Spaces: ${names.join()}`);
-        expect((await page.evaluate(() => document.documentElement.style.getPropertyValue('--backdrop-color'))) === '#000000', 'Noir not applied');
+        expect(names.join() === 'AI,Coding,Work,Media,Gaming', `Spaces: ${names.join()}`);
+        expect((await page.evaluate(() => document.documentElement.style.getPropertyValue('--bg-color'))) === '#000000', 'Noir not applied');
         return `${names.length} Spaces, theme Noir`;
     });
 
     await check('Chrome storage', 'state is written to chrome.storage.local', async () => {
         const state = await waitForState(session, s => s.onboarded && s);
-        expect(state.schema === 3 && state.spaceOrder.length === 5, 'unexpected stored state');
-        expect(state.modeOrder.length === 3, `expected 3 starter Modes, got ${state.modeOrder.length}`);
+        expect(state.schema === 4 && state.spaceOrder.length === 5, 'unexpected stored state');
+        expect(state.modeOrder.length === 4, `expected 4 starter Modes, got ${state.modeOrder.length}`);
         return `schema ${state.schema}, ${Object.keys(state.items).length} links, ${state.modeOrder.length} Modes`;
     });
 
@@ -118,9 +118,11 @@ async function freshInstall(): Promise<void> {
             await page.locator('.overlay-palette input').fill(query);
             return (await page.locator('.result').allInnerTexts()).join(' | ');
         };
-        expect(/Coding[\s\S]*Space/.test(await resultsFor('coding')), 'Space not found');
-        expect(/Dev[\s\S]*Mode/.test(await resultsFor('dev')), 'Mode not found');
-        expect(/Privacy/.test(await resultsFor('privacy')), 'settings page not found');
+        expect(/Open Coding/.test(await resultsFor('coding')), 'Space not found');
+        expect(/Switch to Dev Mode/.test(await resultsFor('dev')), 'Mode not found');
+        expect(/Open Settings: Privacy/.test(await resultsFor('privacy')), 'settings page not found');
+        expect(/Customize appearance/.test(await resultsFor('wallpaper')), 'customize command not found');
+        expect((await page.locator('.result-group').count()) >= 1, 'results are not grouped under headings');
         expect(/Search YouTube for/.test(await resultsFor('youtube lofi')), 'engine by name not offered');
         await page.keyboard.press('Escape');
     });
@@ -130,7 +132,7 @@ async function freshInstall(): Promise<void> {
         await page.keyboard.type('atelier');
         await page.keyboard.press('Enter');
         await waitForState(session, s => s.prefs.themeId === 'atelier');
-        expect((await page.evaluate(() => document.documentElement.style.getPropertyValue('--accent'))) === '#CFAE7C', 'accent not applied');
+        expect((await page.evaluate(() => document.documentElement.style.getPropertyValue('--accent'))) === '#D2B48C', 'accent not applied');
     });
 
     await check('Modes', 'switching Mode changes the Spaces on Home and is stored', async () => {
@@ -147,7 +149,7 @@ async function freshInstall(): Promise<void> {
     await check('Modes', 'M opens the Mode menu; choosing one switches', async () => {
         await page.keyboard.press('m');
         await page.locator('.menu button', { hasText: 'Chill' }).click();
-        expect((await plateNames(page)).join() === 'Movies & TV,Music', 'Chill Mode did not switch');
+        expect((await plateNames(page)).join() === 'Media', 'Chill Mode did not switch');
         await page.keyboard.press('m');
         await page.locator('.menu button', { hasText: 'All Spaces' }).click();
         expect((await plateNames(page)).length === 5, 'All Spaces did not restore');
@@ -162,7 +164,7 @@ async function freshInstall(): Promise<void> {
         await writeStorage(session, { 'bos.state': state });
         await settle(page);
         await switchMode(page, 'Dev');
-        expect((await page.evaluate(() => document.documentElement.style.getPropertyValue('--accent'))) === '#6CF5A2', 'Mode theme not applied');
+        expect((await page.evaluate(() => document.documentElement.style.getPropertyValue('--accent'))) === '#E6B450', 'Mode theme not applied');
         expect((await page.locator('.dock .dock-item').count()) === 1, 'Mode dock not shown');
         await page.locator('#home-search').fill('preact signals');
         expect(/Search GitHub for/.test(await page.locator('.result').first().innerText()), 'Mode search engine not used');
@@ -173,7 +175,7 @@ async function freshInstall(): Promise<void> {
     await check('Persistence', 'a second new tab shows the same Spaces, theme and Mode', async () => {
         const second = await openNewTab(session);
         expect((await plateNames(second)).join() === 'Coding,AI', 'Mode not carried to a new tab');
-        expect((await second.evaluate(() => document.documentElement.style.getPropertyValue('--accent'))) === '#6CF5A2', 'theme not carried');
+        expect((await second.evaluate(() => document.documentElement.style.getPropertyValue('--accent'))) === '#E6B450', 'theme not carried');
         await second.close();
     });
 
@@ -184,7 +186,10 @@ async function freshInstall(): Promise<void> {
         await page.locator('.deck-head .quiet-button').click();
         await page.locator('.overlay-form input').first().fill('Travel');
         await page.locator('.overlay-form button[type=submit]').click();
+        // A new Space opens straight away, ready for its first link.
+        await page.waitForSelector('.overlay-space');
         await page.keyboard.press('Escape');
+        await page.waitForSelector('.overlay-space', { state: 'detached' });
         await second.waitForFunction(() => [...document.querySelectorAll('.plate-name')].some(n => n.textContent === 'Travel'), null, { timeout: 5000 });
         expect((await plateNames(second)).length === 6, 'second tab did not receive the new Space');
         await second.close();
@@ -223,10 +228,10 @@ async function freshInstall(): Promise<void> {
     });
 
     await check('Home', 'drag reorder moves a Space and persists', async () => {
-        await page.locator('.plate', { hasText: 'Music' }).dragTo(page.locator('.plate', { hasText: 'Coding' }), { targetPosition: { x: 10, y: 40 } });
+        await page.locator('.plate', { hasText: 'Gaming' }).dragTo(page.locator('.plate', { hasText: 'Coding' }), { targetPosition: { x: 10, y: 40 } });
         const names = await plateNames(page);
-        expect(names[0] === 'Music', `order after drag: ${names.join()}`);
-        await waitForState(session, s => s.spaces[s.spaceOrder[0]].name === 'Music');
+        expect(names[0] === 'Gaming', `order after drag: ${names.join()}`);
+        await waitForState(session, s => s.spaces[s.spaceOrder[0]].name === 'Gaming');
     });
 
     await check('Home', 'an interrupted drag (dropped outside) changes nothing', async () => {
@@ -250,21 +255,21 @@ async function freshInstall(): Promise<void> {
 
     let exported = '';
     await check('Export', 'export downloads a versioned, valid backup file', async () => {
-        await page.locator('.topbar .icon-button').click();
+        await page.locator('.topbar button[aria-label="Settings"]').click();
         await page.locator('.settings-nav button', { hasText: 'Data' }).click();
         const [download] = await Promise.all([page.waitForEvent('download'), page.locator('.row', { hasText: 'Export your setup' }).locator('.button').click()]);
         const file = join(profile, 'backup.json');
         await download.saveAs(file);
         exported = readFileSync(file, 'utf8');
         const parsed = JSON.parse(exported);
-        expect(parsed.kind === 'browser-os-backup' && parsed.schema === 3, 'missing kind/schema');
+        expect(parsed.kind === 'browser-os-backup' && parsed.schema === 4, 'missing kind/schema');
         expect(parsed.state.recents.length === 0, 'backup contains activity');
         return `${download.suggestedFilename()}, schema ${parsed.schema}, ${parsed.state.spaceOrder.length} Spaces`;
     });
 
     await check('Import', 'an unreadable file is rejected and nothing changes', async () => {
         const bad = join(profile, 'bad.json');
-        writeFileSync(bad, '{"kind":"browser-os-backup","schema":3,"state":{"spaces":"nope"}}');
+        writeFileSync(bad, '{"kind":"browser-os-backup","schema":4,"state":{"spaces":"nope"}}');
         const before = await readStorage<any>(session, 'bos.state');
         await page.locator('.settings-body input[type=file]').setInputFiles(bad);
         await page.locator('.toast', { hasText: 'not a readable backup' }).waitFor();
@@ -577,7 +582,7 @@ async function optionalFeatures(): Promise<void> {
         const site = await session.context.newPage();
         await site.goto('https://example.com/');
         await site.close();
-        await page.locator('.topbar .icon-button').click();
+        await page.locator('.topbar button[aria-label="Settings"]').click();
         await page.locator('.settings-nav button', { hasText: 'Privacy' }).click();
         await page.locator('.row', { hasText: 'recently closed tabs' }).locator('.switch').click();
         await waitForState(session, s => s.prefs.showClosedTabs === true);
@@ -604,9 +609,288 @@ async function optionalFeatures(): Promise<void> {
     removeProfile(profile);
 }
 
+// =====================================================================================
+// 4. Personalization: customize panel, wallpapers, atmosphere, per-Mode looks
+// =====================================================================================
+
+const cssVar = (page: Page, name: string) => page.evaluate(n => document.documentElement.style.getPropertyValue(n), name);
+
+/** Draws a picture in the page and saves it as a file, so the upload path gets a real image. */
+async function makeImage(page: Page, file: string, bright: boolean): Promise<void> {
+    const dataUrl = await page.evaluate(isBright => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 3200;
+        canvas.height = 1800;
+        const context = canvas.getContext('2d')!;
+        const gradient = context.createLinearGradient(0, 0, 3200, 1800);
+        gradient.addColorStop(0, isBright ? '#f6e7c8' : '#10243a');
+        gradient.addColorStop(0.5, isBright ? '#f2b98a' : '#3a2a5a');
+        gradient.addColorStop(1, isBright ? '#e8eef2' : '#0a0e18');
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, 3200, 1800);
+        for (let i = 0; i < 40; i++) {
+            context.fillStyle = `hsla(${(i * 37) % 360} 70% ${isBright ? 80 : 45}% / .25)`;
+            context.beginPath();
+            context.arc((i * 331) % 3200, (i * 197) % 1800, 60 + ((i * 53) % 260), 0, Math.PI * 2);
+            context.fill();
+        }
+        return canvas.toDataURL('image/jpeg', 0.9);
+    }, bright);
+    writeFileSync(file, Buffer.from(dataUrl.split(',')[1]!, 'base64'));
+}
+
+const idbCount = (page: Page) => page.evaluate(() => new Promise<number>(resolve => {
+    const open = indexedDB.open('bos-assets', 1);
+    open.onupgradeneeded = () => open.result.createObjectStore('wallpapers', { keyPath: 'id' });
+    open.onsuccess = () => {
+        const request = open.result.transaction('wallpapers').objectStore('wallpapers').count();
+        request.onsuccess = () => resolve(request.result);
+    };
+}));
+
+async function heapMb(session: Session, page: Page): Promise<number> {
+    const client = await session.context.newCDPSession(page);
+    await client.send('Performance.enable');
+    await client.send('HeapProfiler.collectGarbage');
+    const { metrics } = await client.send('Performance.getMetrics');
+    return Math.round(((metrics.find(m => m.name === 'JSHeapUsedSize')?.value ?? 0) / 1024 / 1024) * 10) / 10;
+}
+
+async function personalization(): Promise<void> {
+    const profile = newProfile();
+    let session = await launch(DIST, profile);
+    let page = await openNewTab(session);
+    await completeOnboarding(page, ['AI', 'Coding', 'Media'], 'Dusk');
+    await waitForState(session, s => s.onboarded);
+    const openCustomize = async (target: Page = page) => {
+        await target.locator('.topbar button[aria-label="Customize"]').click();
+        await target.waitForSelector('.overlay-customize');
+    };
+
+    const baselineHeap = await heapMb(session, page);
+
+    await check('Customize', 'a theme is previewed live and nothing is saved until Apply', async () => {
+        await openCustomize();
+        const before = await readStorage<any>(session, 'bos.state');
+        await page.locator('.overlay-customize .theme-card', { hasText: 'Fjord' }).click();
+        expect((await cssVar(page, '--bg-color')) === '#dbe4ea', 'preview did not change the page');
+        expect((await page.evaluate(() => getComputedStyle(document.querySelector('.home')!).opacity)) === '1', 'page is dimmed while previewing');
+        await page.waitForTimeout(500);
+        expect((await readStorage<any>(session, 'bos.state')).updatedAt === before.updatedAt, 'a preview was written to storage');
+    });
+
+    await check('Customize', 'Cancel (or Escape) puts the previous look back', async () => {
+        await page.keyboard.press('Escape');
+        await page.waitForSelector('.overlay-customize', { state: 'detached' });
+        expect((await cssVar(page, '--bg-color')) === '#080a17', 'look was not restored');
+        expect((await readStorage<any>(session, 'bos.state')).prefs.themeId === 'dusk', 'cancelled look was saved');
+    });
+
+    await check('Customize', 'Apply saves theme, a preset background and atmosphere together', async () => {
+        await openCustomize();
+        await page.locator('.overlay-customize .theme-card', { hasText: 'Atelier' }).click();
+        await page.locator('.swatch-tile[aria-label="Ember"]').click();
+        await page.locator('.segmented button', { hasText: 'Subtle' }).click();
+        expect((await page.locator('.backdrop[data-picture] .backdrop-picture').count()) === 1, 'preset not previewed');
+        await page.locator('.customize-foot .button.is-primary').click();
+        const state = await waitForState(session, s => s.prefs.themeId === 'atelier' && s);
+        expect(state.prefs.background.source.kind === 'preset' && state.prefs.background.source.id === 'ember', 'background not saved');
+        expect(state.prefs.atmosphere === 'subtle' && (await cssVar(page, '--atmo')) === '0.55', 'atmosphere not applied');
+        return 'under 10 seconds of interaction: theme + background + atmosphere';
+    });
+
+    await check('Atmosphere', 'Off removes grain, vignette, fog and bloom; the backdrop stays', async () => {
+        await openCustomize();
+        await page.locator('.segmented button', { hasText: 'Off' }).first().click();
+        const layers = await page.evaluate(() => ({
+            grain: getComputedStyle(document.querySelector('.backdrop')!, '::after').opacity,
+            fog: getComputedStyle(document.querySelector('.backdrop-fog')!).opacity,
+            bloom: getComputedStyle(document.querySelector('.backdrop-bloom')!).opacity,
+            hasBackdrop: getComputedStyle(document.querySelector('.backdrop')!).backgroundImage !== 'none',
+        }));
+        expect(layers.grain === '0' && layers.fog === '0' && layers.bloom === '0' && layers.hasBackdrop, JSON.stringify(layers));
+        await page.keyboard.press('Escape');
+    });
+
+    const photo = join(profile, 'photo.jpg');
+    await makeImage(page, photo, false);
+
+    await check('Wallpaper', 'unsupported and corrupt files are refused with a reason; nothing is stored', async () => {
+        await openCustomize();
+        const text = join(profile, 'notes.txt');
+        writeFileSync(text, 'not an image');
+        await page.locator('.overlay-customize input[type=file]').setInputFiles(text);
+        await page.locator('.toast', { hasText: 'not a JPEG' }).waitFor();
+        const corrupt = join(profile, 'corrupt.png');
+        writeFileSync(corrupt, Buffer.from('89504e470d0a1a0a00000000deadbeef', 'hex'));
+        await page.locator('.overlay-customize input[type=file]').setInputFiles(corrupt);
+        await page.locator('.toast', { hasText: 'could not be read' }).waitFor();
+        expect((await idbCount(page)) === 0, 'a rejected file reached storage');
+        expect(Object.keys((await readStorage<any>(session, 'bos.state')).wallpapers).length === 0, 'a rejected file was added to the library');
+    });
+
+    await check('Wallpaper', 'an uploaded image is resized, stored locally and previewed before Apply', async () => {
+        await page.locator('.overlay-customize input[type=file]').setInputFiles(photo);
+        await page.locator('.backdrop-photo.is-ready').waitFor({ timeout: 15_000 });
+        const state = await waitForState(session, s => Object.keys(s.wallpapers).length === 1 && s);
+        const asset: any = Object.values(state.wallpapers)[0];
+        expect(asset.width === 2560 && asset.height === 1440, `stored at ${asset.width}×${asset.height}`);
+        expect(asset.lqip.startsWith('data:image/jpeg;base64,') && asset.lqip.length < 3000, 'no small inline preview');
+        expect(state.prefs.background.source.kind === 'preset', 'background was saved before Apply');
+        expect((await idbCount(page)) === 1, 'image is not in IndexedDB');
+        expect(JSON.stringify(state).length < 60_000, 'saved state grew by more than the metadata');
+        return `3200×1800 input → ${asset.width}×${asset.height}, ${Math.round(asset.bytes / 1024)} kB WebP in IndexedDB; ${asset.lqip.length} bytes of preview in settings`;
+    });
+
+    await check('Wallpaper', 'fit, position, dim and blur adjust the picture; Apply saves them', async () => {
+        await page.locator('.tune .segmented button', { hasText: 'Fit' }).click();
+        await page.locator('.position-grid button').first().click();
+        const style = await page.evaluate(() => {
+            const img = document.querySelector<HTMLElement>('.backdrop-photo')!;
+            return { fit: img.style.objectFit, position: img.style.objectPosition, wash: document.querySelector<HTMLElement>('.backdrop-wash')!.style.opacity };
+        });
+        expect(style.fit === 'contain' && style.position === '0% 0%' && Number(style.wash) > 0, JSON.stringify(style));
+        await page.locator('.tune .segmented button', { hasText: 'Fill' }).click();
+        await page.locator('.customize-foot .button.is-primary').click();
+        const state = await waitForState(session, s => s.prefs.background.source.kind === 'upload' && s);
+        expect(state.prefs.background.fit === 'cover' && state.prefs.background.x === 0, 'adjustments not saved');
+    });
+
+    await check('Wallpaper', 'a new tab paints the preview at once, then fades the picture in; Home does not wait', async () => {
+        const tab = await session.context.newPage();
+        await tab.goto('chrome://newtab/');
+        await tab.waitForSelector('.home');
+        const early = await tab.evaluate(() => ({
+            mounted: performance.getEntriesByName('app:mounted')[0]?.startTime ?? -1,
+            lqip: !!document.querySelector('.backdrop-lqip'),
+            search: !!document.querySelector('#home-search'),
+            bodyColor: getComputedStyle(document.body).backgroundColor,
+        }));
+        expect(early.lqip && early.search, 'preview or Home missing right after mount');
+        expect(early.bodyColor !== 'rgba(0, 0, 0, 0)' && early.bodyColor !== 'rgb(255, 255, 255)', `flash risk: body is ${early.bodyColor}`);
+        await tab.locator('.backdrop-photo.is-ready').waitFor({ timeout: 10_000 });
+        await tab.close();
+        return `Home mounted at ${Math.round(early.mounted)} ms with the picture still decoding`;
+    });
+
+    await check('Wallpaper', 'text stays readable over a picture: surfaces turn to glass', async () => {
+        const view = await page.evaluate(() => ({
+            mode: document.documentElement.dataset.backdrop,
+            surface: getComputedStyle(document.body).getPropertyValue('--surface-primary'),
+            halo: getComputedStyle(document.querySelector('.greeting')!).textShadow,
+        }));
+        expect(view.mode === 'picture' && /color-mix/.test(view.surface) && view.halo !== 'none', JSON.stringify(view));
+    });
+
+    await check('Modes', 'a Mode can have its own theme and background; switching changes the scene', async () => {
+        await page.locator('#mode-switch').click();
+        await page.locator('.menu button', { hasText: 'Dev' }).click();
+        await openCustomize();
+        await page.locator('.overlay-customize .segmented button', { hasText: 'Dev only' }).click();
+        await page.locator('.overlay-customize .theme-card', { hasText: 'Phosphor' }).click();
+        await page.locator('.swatch-tile[aria-label="Ink"]').click();
+        await page.locator('.customize-foot .button.is-primary').click();
+        const state = await waitForState(session, s => s.activeModeId && s.modes[s.activeModeId].themeId === 'phosphor' && s);
+        expect(state.modes[state.activeModeId].background.source.id === 'ink', 'Mode background not saved');
+        expect(state.prefs.themeId === 'atelier' && state.prefs.background.source.kind === 'upload', 'the default look was changed too');
+        await page.locator('#mode-switch').click();
+        await page.locator('.menu button', { hasText: 'Chill' }).click();
+        expect((await cssVar(page, '--bg-color')) === '#1c1a17' && (await page.locator('.backdrop-photo').count()) === 1, 'Chill did not return to the default look');
+        await page.locator('#mode-switch').click();
+        await page.locator('.menu button', { hasText: 'Dev' }).click();
+        expect((await cssVar(page, '--bg-color')) === '#050a07' && (await page.locator('.backdrop-photo').count()) === 0, 'Dev look not shown');
+        return 'Dev → Phosphor + Ink; Chill → Atelier + personal photo';
+    });
+
+    await check('Modes', 'the Mode editor says what changes, in plain terms', async () => {
+        await page.locator('.topbar button[aria-label="Settings"]').click();
+        await page.locator('.settings-nav button', { hasText: 'Modes' }).click();
+        const summary = await page.locator('.mode-card', { hasText: 'Dev' }).locator('.mode-summary-text span').innerText();
+        expect(/2 Spaces/.test(summary) && /Phosphor/.test(summary) && /Ink/.test(summary) && /shared dock/.test(summary), summary);
+        await page.keyboard.press('Escape');
+        return summary;
+    });
+
+    await check('Backup', 'export carries the look but never the uploaded image', async () => {
+        await page.locator('.topbar button[aria-label="Settings"]').click();
+        await page.locator('.settings-nav button', { hasText: 'Data' }).click();
+        const [download] = await Promise.all([page.waitForEvent('download'), page.locator('.row', { hasText: 'Export your setup' }).locator('.button').click()]);
+        const file = join(profile, 'look.json');
+        await download.saveAs(file);
+        const text = readFileSync(file, 'utf8');
+        const parsed = JSON.parse(text);
+        expect(!text.includes('lqip') && Object.keys(parsed.state.wallpapers).length === 0, 'backup contains image data');
+        expect(parsed.state.prefs.themeId === 'atelier' && parsed.state.prefs.background.source.kind === 'theme', 'look not exported as expected');
+        expect(text.length < 60_000, `backup is ${text.length} bytes`);
+        await page.keyboard.press('Escape');
+        return `${Math.round(text.length / 1024)} kB file; theme and adjustments included, image left on the device`;
+    });
+
+    const wallpaperHeap = await heapMb(session, page);
+    note('Performance', 'JS heap', `${baselineHeap} MB on a fresh setup → ${wallpaperHeap} MB with an uploaded wallpaper applied (decoded image memory is held by the browser, outside the JS heap)`);
+
+    await check('Startup', 'with a wallpaper, Home still mounts as fast as without one', async () => {
+        const samples: number[] = [];
+        for (let i = 0; i < 7; i++) {
+            const tab = await openNewTab(session);
+            samples.push(await tab.evaluate(() => performance.getEntriesByName('app:mounted')[0]?.startTime ?? -1));
+            await tab.close();
+        }
+        const median = [...samples].sort((a, b) => a - b)[3]!;
+        expect(median > 0 && median < 400, `median ${median} ms`);
+        return `median ${Math.round(median)} ms, slowest ${Math.round(Math.max(...samples))} ms`;
+    });
+
+    allErrors.push(...session.errors);
+    await session.context.close();
+
+    session = await launch(DIST, profile);
+    page = await openNewTab(session);
+    await check('Wallpaper', 'the wallpaper and per-Mode looks survive a browser restart', async () => {
+        expect((await cssVar(page, '--bg-color')) === '#050a07', 'Mode look lost');
+        await page.locator('#mode-switch').click();
+        await page.locator('.menu button', { hasText: 'All Spaces' }).click();
+        await page.locator('.backdrop-photo.is-ready').waitFor({ timeout: 10_000 });
+        expect((await idbCount(page)) === 1, 'image lost from IndexedDB');
+    });
+
+    await check('Wallpaper', 'if the image file is gone, the theme background is shown and the user is told', async () => {
+        await page.evaluate(() => new Promise<void>(resolve => {
+            const open = indexedDB.open('bos-assets', 1);
+            open.onsuccess = () => {
+                const tx = open.result.transaction('wallpapers', 'readwrite');
+                tx.objectStore('wallpapers').clear();
+                tx.oncomplete = () => resolve();
+            };
+        }));
+        const tab = await openNewTab(session);
+        await tab.locator('.toast', { hasText: 'could not be loaded' }).waitFor({ timeout: 10_000 });
+        const view = await tab.evaluate(() => ({
+            photo: document.querySelectorAll('.backdrop-photo').length,
+            backdrop: getComputedStyle(document.querySelector('.backdrop')!).backgroundImage !== 'none',
+            search: !!document.querySelector('#home-search'),
+        }));
+        expect(view.photo === 0 && view.backdrop && view.search, JSON.stringify(view));
+        await tab.close();
+    });
+
+    await check('Wallpaper', 'opening Customize forgets images whose file is gone', async () => {
+        const tab = await openNewTab(session);
+        await openCustomize(tab);
+        const state = await waitForState(session, s => Object.keys(s.wallpapers).length === 0 && s);
+        expect(state.prefs.background.source.kind === 'theme', 'background still points at the missing image');
+        await tab.close();
+    });
+
+    allErrors.push(...session.errors);
+    await session.context.close();
+    removeProfile(profile);
+}
+
 await freshInstall();
 await legacyUpgrade();
 await optionalFeatures();
+await personalization();
 
 await check('Console', 'no errors or uncaught exceptions on any extension page during the run', async () => {
     expect(allErrors.length === 0, allErrors.slice(0, 5).join(' || '));

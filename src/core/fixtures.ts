@@ -13,14 +13,15 @@ export const names: SetupNames = {
 };
 
 export const labels: CommandLabels = {
-    allSpaces: 'All Spaces',
-    modeHint: 'Mode',
-    spaceHint: 'Space',
-    themeHint: 'Theme',
-    recentHint: 'Recent',
-    newSpace: 'New Space',
-    settings: 'Settings',
-    settingsSections: [{ id: 'search', label: 'Search settings' }],
+    openSpace: name => `Open ${name}`,
+    switchMode: name => `Switch to ${name} Mode`,
+    showAllSpaces: 'Show all Spaces',
+    useTheme: name => `Use ${name} theme`,
+    createSpace: 'Create Space',
+    customize: 'Customize appearance',
+    openSettings: 'Open Settings',
+    openSettingsSection: label => `Open Settings: ${label}`,
+    settingsSections: [{ id: 'search', label: 'Search' }, { id: 'privacy', label: 'Privacy' }],
     providerName: (_id, name) => name,
     searchWith: (p, q) => `Search ${p} for ${q}`,
     searchWeb: q => `Search the web for ${q}`,

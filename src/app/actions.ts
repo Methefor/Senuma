@@ -51,7 +51,7 @@ export function runAction(action: Action): void {
         case 'search':
             return void runSearch(action.providerId, action.query);
         case 'space':
-            return setUi({ palette: false, spaceId: action.id });
+            return setUi({ palette: false, spaceId: action.id, origin: null });
         case 'mode':
             setUi({ palette: false });
             return update(s => setActiveMode(s, action.id));
@@ -60,6 +60,8 @@ export function runAction(action: Action): void {
             return update(s => setPrefs(s, { themeId: action.id }));
         case 'settings':
             return setUi({ palette: false, settings: action.section ?? 'appearance' });
+        case 'customize':
+            return setUi({ palette: false, customize: true });
         case 'new-space':
             return setUi({ palette: false, editor: { kind: 'space' } });
         case 'prefill':
@@ -144,13 +146,14 @@ export function providerLabel(provider: { name: string; browserDefault?: boolean
 
 export function commandLabels(): CommandLabels {
     return {
-        allSpaces: t('mode.all'),
-        modeHint: t('hint.mode'),
-        spaceHint: t('hint.space'),
-        themeHint: t('hint.theme'),
-        recentHint: t('hint.recent'),
-        newSpace: t('space.new'),
-        settings: t('settings.title'),
+        openSpace: name => t('command.openSpace', { name }),
+        switchMode: name => t('command.switchMode', { name }),
+        showAllSpaces: t('command.showAll'),
+        useTheme: name => t('command.useTheme', { name }),
+        createSpace: t('command.createSpace'),
+        customize: t('command.customize'),
+        openSettings: t('command.openSettings'),
+        openSettingsSection: label => t('command.openSettingsSection', { label }),
         settingsSections: SETTINGS_SECTIONS.map(id => ({ id, label: t(`settings.${id}` as MessageKey) })),
         providerName: (_id, name) => name,
         searchWith: (provider, query) => t('search.with', { provider, query }),

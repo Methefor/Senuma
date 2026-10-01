@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_BACKGROUND, MAX_WALLPAPERS, sanitizeBackground, suggestedDim, type WallpaperAsset } from './background';
 import { addSnapshot, exportBackup, importBackup, mergeBackup, sanitizeSnapshots } from './backup';
 import { MAX_SNAPSHOTS, emptyState } from './defaults';
 import { LEGACY, seeded } from './fixtures';
@@ -122,6 +123,20 @@ describe('schema upgrades', () => {
         expect(state.prefs).toMatchObject({ iconSource: 'service', themeId: 'noir' });
     });
 
+    it('gives a v3 state the new appearance fields with safe defaults', () => {
+        const v3 = { ...roundTrip(seeded().state), schema: 3 };
+        delete v3.wallpapers;
+        delete v3.prefs.background;
+        delete v3.prefs.atmosphere;
+        delete v3.prefs.dockLabels;
+        const state = upgrade(v3)!;
+        expect(state.schema).toBe(SCHEMA_VERSION);
+        expect(state.prefs.background).toEqual(DEFAULT_BACKGROUND);
+        expect(state.prefs).toMatchObject({ atmosphere: 'cinematic', dockLabels: false });
+        expect(state.wallpapers).toEqual({});
+        expect(Object.keys(state.items)).toHaveLength(2);
+    });
+
     it('rejects states it has no upgrade path for', () => {
         expect(upgrade({ schema: 1, spaces: {} })).toBeNull();
         expect(upgrade('nope')).toBeNull();
@@ -166,6 +181,105 @@ describe('sanitize', () => {
     it('returns a usable empty state for garbage', () => {
         expect(sanitize(null).spaceOrder).toEqual([]);
         expect(sanitize('x').providers.length).toBeGreaterThan(0);
+    });
+});
+
+describe('backgrounds', () => {
+    const asset = (id: string): WallpaperAsset =>
+        ({ id, name: 'Photo', width: 1920, height: 1080, bytes: 1000, color: '#203040', luminance: 0.2, lqip: 'data:image/jpeg;base64,AAAA', createdAt: 1 });
+    const upload = (assetId: string) => ({ ...DEFAULT_BACKGROUND, source: { kind: 'upload' as const, assetId } });
+
+    it('accepts every source kind and clamps adjustments', () => {
+        const assets = { a1: asset('a1') };
+        expect(sanitizeBackground({ source: { kind: 'solid', color: '#112233' } }, assets).source).toEqual({ kind: 'solid', color: '#112233' });
+        expect(sanitizeBackground({ source: { kind: 'gradient', from: '#000000', to: '#ffffff', angle: 999 } }, assets).source).toEqual({ kind: 'gradient', from: '#000000', to: '#ffffff', angle: 360 });
+        expect(sanitizeBackground({ source: { kind: 'preset', id: 'aurora' } }, assets).source).toEqual({ kind: 'preset', id: 'aurora' });
+        expect(sanitizeBackground({ source: { kind: 'upload', assetId: 'a1' } }, assets).source).toEqual({ kind: 'upload', assetId: 'a1' });
+        expect(sanitizeBackground({ fit: 'contain', x: -5, y: 500, blur: 9999, dim: 7, saturation: -1 }, assets))
+            .toMatchObject({ fit: 'contain', x: 0, y: 100, blur: 40, dim: 0.9, saturation: 0 });
+    });
+
+    it('falls back to the theme for anything it cannot show', () => {
+        for (const source of [
+            { kind: 'solid', color: 'red; background: url(x)' }, { kind: 'gradient', from: '#000000' }, { kind: 'preset', id: 'nope' },
+            { kind: 'upload', assetId: 'missing' }, { kind: 'video', src: 'x' }, null, 'theme', 7,
+        ]) {
+            expect(sanitizeBackground({ source }, {}).source).toEqual({ kind: 'theme' });
+        }
+        expect(sanitizeBackground(null, {})).toEqual(DEFAULT_BACKGROUND);
+    });
+
+    it('rejects wallpaper previews that are not inline raster images', () => {
+        const raw = roundTrip(ops.addWallpaper(seeded().state, asset('a1')));
+        raw.wallpapers.a1.lqip = 'javascript:alert(1)';
+        raw.wallpapers.bad = 'nope';
+        raw.wallpapers.a2 = { ...asset('a2'), lqip: 'data:image/svg+xml;base64,AAAA', color: 'red' };
+        const clean = sanitize(raw);
+        expect(Object.keys(clean.wallpapers)).toEqual(['a1', 'a2']);
+        expect(clean.wallpapers.a1!.lqip).toBe('');
+        expect(clean.wallpapers.a2).toMatchObject({ lqip: '', color: '#101014' });
+    });
+
+    it('lets a Mode override the background and falls through when it does not', () => {
+        const base = seeded();
+        const mode = ops.addMode(base.state, { name: 'Chill', glyph: 'moon', spaceIds: [] });
+        const preset = { ...DEFAULT_BACKGROUND, source: { kind: 'preset' as const, id: 'ember' } };
+        let state = ops.updateMode(mode.state, mode.id, { background: preset });
+        expect(ops.effectiveBackground(state)).toEqual(DEFAULT_BACKGROUND);
+        state = ops.setActiveMode(state, mode.id);
+        expect(ops.effectiveBackground(state)).toEqual(preset);
+        expect(sanitize(roundTrip(state)).modes[mode.id]!.background).toEqual(preset);
+        state = ops.updateMode(state, mode.id, { background: null });
+        expect(state.modes[mode.id]!.background).toBeUndefined();
+        expect(ops.effectiveBackground(state)).toEqual(DEFAULT_BACKGROUND);
+        expect(ops.updateMode(state, mode.id, { name: 'Calm' }).modes[mode.id]!.background).toBeUndefined();
+    });
+
+    it('removing an image returns every background that used it to the theme default', () => {
+        const base = seeded();
+        const mode = ops.addMode(base.state, { name: 'Chill', glyph: 'moon', spaceIds: [] });
+        let state = ops.addWallpaper(ops.addWallpaper(mode.state, asset('a1')), asset('a2'));
+        state = ops.setPrefs(state, { background: upload('a1') });
+        state = ops.updateMode(state, mode.id, { background: upload('a1') });
+        const removed = ops.removeWallpaper(state, 'a1');
+        expect(Object.keys(removed.wallpapers)).toEqual(['a2']);
+        expect(removed.prefs.background.source).toEqual({ kind: 'theme' });
+        expect(removed.modes[mode.id]!.background!.source).toEqual({ kind: 'theme' });
+        expect(ops.removeWallpaper(state, 'ghost')).toBe(state);
+    });
+
+    it('keeps the library bounded', () => {
+        let state = seeded().state;
+        for (let i = 0; i < MAX_WALLPAPERS + 3; i++) state = ops.addWallpaper(state, asset(`a${i}`));
+        expect(Object.keys(state.wallpapers)).toHaveLength(MAX_WALLPAPERS);
+    });
+
+    it('a stored state whose image is gone still loads, on the theme background', () => {
+        const raw = roundTrip(ops.setPrefs(ops.addWallpaper(seeded().state, asset('a1')), { background: upload('a1') }));
+        delete raw.wallpapers.a1;
+        expect(sanitize(raw).prefs.background.source).toEqual({ kind: 'theme' });
+    });
+
+    it('never puts uploaded images, or references to them, into a backup file', () => {
+        const base = seeded();
+        const mode = ops.addMode(base.state, { name: 'Chill', glyph: 'moon', spaceIds: [] });
+        let state = ops.addWallpaper(mode.state, asset('a1'));
+        state = ops.setPrefs(state, { background: { ...upload('a1'), dim: 0.6 }, themeId: 'noir', atmosphere: 'subtle' });
+        state = ops.updateMode(state, mode.id, { background: { ...DEFAULT_BACKGROUND, source: { kind: 'preset', id: 'ember' } } });
+        const text = exportBackup(state);
+        expect(text).not.toContain('lqip');
+        expect(text).not.toContain('a1');
+        const restored = importBackup(text)!;
+        expect(restored.wallpapers).toEqual({});
+        expect(restored.prefs).toMatchObject({ themeId: 'noir', atmosphere: 'subtle' });
+        expect(restored.prefs.background).toMatchObject({ source: { kind: 'theme' }, dim: 0.6 });
+        expect(restored.modes[mode.id]!.background!.source).toEqual({ kind: 'preset', id: 'ember' });
+    });
+
+    it('suggests more wash when a picture fights the theme', () => {
+        expect(suggestedDim(0.9, 'dark')).toBeGreaterThan(suggestedDim(0.1, 'dark'));
+        expect(suggestedDim(0.1, 'light')).toBeGreaterThan(suggestedDim(0.9, 'light'));
+        expect(suggestedDim(1, 'dark')).toBeLessThanOrEqual(0.9);
     });
 });
 

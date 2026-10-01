@@ -9,12 +9,13 @@ import { releaseClosedTabsAccess, requestClosedTabsAccess } from '../../browser/
 import { importBackup, mergeBackup } from '../../core/backup';
 import { emptyState, newId } from '../../core/defaults';
 import {
-    addMode, captureMode, isValidTemplate, parseAliases, removeMode, removeProvider, restoreMode, setModeDock, setPrefs, shiftSpace, updateMode,
-    upsertProvider,
+    addMode, captureMode, isValidTemplate, parseAliases, removeMode, removeProvider, restoreMode, setActiveMode, setModeDock, setPrefs, shiftSpace,
+    updateMode, updateModeDock, upsertProvider,
 } from '../../core/ops';
 import { organize, parseUrlList, type Proposal } from '../../core/setup';
-import { THEMES, type Theme } from '../../core/themes';
-import type { AppState, IconSource, Language, MotionLevel, Prefs } from '../../core/types';
+import { presetById, type Background } from '../../core/background';
+import { themeById } from '../../core/themes';
+import type { AppState, IconSource, Language, Mode, Prefs } from '../../core/types';
 import { t, type MessageKey } from '../../i18n';
 import { MODIFIER_KEY } from '../command/Launcher';
 import { app, openMenuBelow, setUi, snapshots, toast, update, useStore } from '../../storage/store';
@@ -54,40 +55,18 @@ function Toggle({ state, pref, label, hint }: { state: AppState; pref: BooleanPr
     );
 }
 
-/** Each card paints a miniature of the page with that theme's real tokens. */
-export function ThemePicker({ themeId, onPick, large = false }: { themeId: string; onPick: (id: string) => void; large?: boolean }) {
-    return (
-        <div class={`theme-grid ${large ? 'is-large' : ''}`}>
-            {THEMES.map((theme: Theme) => (
-                <button type="button" key={theme.id} class="theme-card" aria-pressed={theme.id === themeId} onClick={() => onPick(theme.id)}>
-                    <span class="theme-preview" style={theme.tokens} data-scheme={theme.scheme}>
-                        <span class="theme-preview-title">Aa</span>
-                        <span class="theme-preview-bar" />
-                        <span class="theme-preview-plates"><i /><i /><i /></span>
-                    </span>
-                    <span class="theme-name">{theme.name}</span>
-                    <span class="theme-mood">{t(`theme.${theme.id}` as MessageKey)}</span>
-                </button>
-            ))}
-        </div>
-    );
-}
-
 // ---------- Sections ----------
 
 function Appearance({ state }: { state: AppState }) {
     return (
         <>
-            <h3>{t('settings.theme')}</h3>
-            <ThemePicker themeId={state.prefs.themeId} onPick={id => update(s => setPrefs(s, { themeId: id }))} />
-            <h3>{t('settings.behaviour')}</h3>
-            <Row label={t('settings.motion')} hint={t('settings.motionHint')}>
-                <select value={state.prefs.motion} onChange={event => update(s => setPrefs(s, { motion: event.currentTarget.value as MotionLevel }))}>
-                    <option value="full">{t('motion.full')}</option>
-                    <option value="reduced">{t('motion.reduced')}</option>
-                    <option value="off">{t('motion.off')}</option>
-                </select>
+            <h3>{t('settings.look')}</h3>
+            <Row label={t('customize.title')} hint={t('settings.lookHint')}>
+                <button type="button" class="button is-primary" onClick={() => setUi({ settings: null, customize: true })}>
+                    <Icon name="swatch" size={15} />{t('settings.openCustomize')}
+                </button>
             </Row>
+            <h3>{t('settings.behaviour')}</h3>
             <Row label={t('settings.language')}>
                 <select value={state.prefs.language} onChange={event => update(s => setPrefs(s, { language: event.currentTarget.value as Language }))}>
                     <option value="en">English</option>
@@ -96,6 +75,7 @@ function Appearance({ state }: { state: AppState }) {
             </Row>
             <Toggle state={state} pref="openInNewTab" label={t('settings.newTab')} hint={t('settings.newTabHint')} />
             <Toggle state={state} pref="showDock" label={t('settings.dock')} hint={t('settings.dockHint')} />
+            <Toggle state={state} pref="dockLabels" label={t('settings.dockLabels')} />
         </>
     );
 }
@@ -130,66 +110,146 @@ function Spaces({ state }: { state: AppState }) {
     );
 }
 
+function backgroundName(state: AppState, background: Background | undefined): string {
+    const source = background?.source;
+    if (!source || source.kind === 'theme') return t('background.theme');
+    if (source.kind === 'preset') return presetById(source.id)?.name ?? t('background.theme');
+    if (source.kind === 'upload') return state.wallpapers[source.assetId]?.name ?? t('background.theme');
+    return t(source.kind === 'solid' ? 'background.solid' : 'background.gradient');
+}
+
+/**
+ * One Mode, described the way the user thinks about it: "when I switch to this, what
+ * changes?" — the look, the Spaces, the dock and the search engine.
+ */
+function ModeCard({ state, mode, open, onToggle }: { state: AppState; mode: Mode; open: boolean; onToggle: () => void }) {
+    const id = mode.id;
+    const ownLook = !!mode.themeId || !!mode.background;
+    const provider = mode.providerId ? state.providers.find(p => p.id === mode.providerId) : undefined;
+    const summary = [
+        t('spaces.count', { n: mode.spaceIds.length }),
+        ownLook ? `${themeById(mode.themeId ?? state.prefs.themeId).name}${mode.background ? ` · ${backgroundName(state, mode.background)}` : ''}` : t('modes.sum.look'),
+        mode.dock ? t('modes.sum.ownDock') : t('modes.sum.sharedDock'),
+        provider ? providerLabel(provider) : t('modes.sum.search'),
+    ].join(' · ');
+
+    /** Switches to the Mode and opens Customize on it: the look is edited where it is seen. */
+    const editLook = () => {
+        update(s => setActiveMode(s, id));
+        setUi({ settings: null, customize: true });
+    };
+    const dockEntries = (mode.dock ?? []).flatMap(entry => {
+        const name = entry.kind === 'space' ? state.spaces[entry.id]?.name : state.items[entry.id]?.title;
+        return name ? [{ entry, name }] : [];
+    });
+
+    return (
+        <div class={`card mode-card ${open ? 'is-open' : ''}`}>
+            <button type="button" class="mode-summary" aria-expanded={open} onClick={onToggle}>
+                <span class="mode-glyph"><Icon name={mode.glyph} size={17} /></span>
+                <span class="mode-summary-text">
+                    <strong>{mode.name}{state.activeModeId === id && <em>{t('modes.active')}</em>}</strong>
+                    <span>{summary}</span>
+                </span>
+                <Icon name={open ? 'up' : 'down'} size={15} />
+            </button>
+            {open && (
+                <div class="mode-body">
+                    <div class="card-head">
+                        <button type="button" class="icon-button glyph-button" aria-label={t('field.icon')} title={t('field.icon')} aria-haspopup="menu"
+                            onClick={event => openMenuBelow(event.currentTarget, SPACE_GLYPHS.map(glyph => ({
+                                label: glyph, glyph, checked: glyph === mode.glyph, run: () => update(s => updateMode(s, id, { glyph })),
+                            })))}>
+                            <Icon name={mode.glyph} size={17} />
+                        </button>
+                        <input type="text" value={mode.name} aria-label={t('field.name')}
+                            onChange={event => update(s => updateMode(s, id, { name: event.currentTarget.value }))} />
+                    </div>
+
+                    <h4>{t('modes.look')}</h4>
+                    <Row label={ownLook ? t('modes.lookOwn', { theme: themeById(mode.themeId ?? state.prefs.themeId).name, background: backgroundName(state, mode.background) }) : t('modes.lookDefault')}
+                        hint={t('modes.lookHint')}>
+                        {ownLook && (
+                            <button type="button" class="button" onClick={() => update(s => updateMode(s, id, { themeId: '', background: null }))}>{t('customize.useDefault')}</button>
+                        )}
+                        <button type="button" class="button" onClick={editLook}><Icon name="swatch" size={15} />{t('modes.changeLook')}</button>
+                    </Row>
+
+                    <h4>{t('modes.spaces')}</h4>
+                    <div class="chip-checks">
+                        {state.spaceOrder.map(spaceId => {
+                            const on = mode.spaceIds.includes(spaceId);
+                            return (
+                                <button type="button" key={spaceId} aria-pressed={on}
+                                    onClick={() => update(s => updateMode(s, id, {
+                                        spaceIds: on ? mode.spaceIds.filter(x => x !== spaceId) : [...mode.spaceIds, spaceId],
+                                    }))}>
+                                    {state.spaces[spaceId]!.name}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <h4>{t('dock.title')}</h4>
+                    <Row label={t('modes.ownDock')} hint={t('modes.ownDockHint')}>
+                        <Switch on={!!mode.dock} label={t('modes.ownDock')} onToggle={() => update(s => setModeDock(s, id, !mode.dock))} />
+                    </Row>
+                    {mode.dock && (
+                        <div class="chip-checks">
+                            {dockEntries.map(({ entry, name }) => (
+                                <button type="button" key={`${entry.kind}:${entry.id}`} class="is-removable" title={t('dock.remove')}
+                                    onClick={() => update(s => updateModeDock(s, id, mode.dock!.filter(e => !(e.kind === entry.kind && e.id === entry.id))))}>
+                                    {name}<Icon name="x" size={11} />
+                                </button>
+                            ))}
+                            {dockEntries.length === 0 && <span class="note">{t('modes.dockEmpty')}</span>}
+                        </div>
+                    )}
+
+                    <h4>{t('settings.search')}</h4>
+                    <Row label={t('search.default')}>
+                        <select value={mode.providerId ?? ''} onChange={event => update(s => updateMode(s, id, { providerId: event.currentTarget.value }))}>
+                            <option value="">{t('modes.keep')}</option>
+                            {state.providers.map(p => <option key={p.id} value={p.id}>{providerLabel(p)}</option>)}
+                        </select>
+                    </Row>
+
+                    <div class="mode-foot">
+                        <button type="button" class="button"
+                            onClick={() => {
+                                const removed = captureMode(app.get(), id);
+                                if (!removed) return;
+                                update(s => removeMode(s, id));
+                                toast(t('modes.deleted', { name: mode.name }), s => restoreMode(s, removed));
+                            }}>
+                            <Icon name="trash" size={15} />{t('modes.delete')}
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 function Modes({ state }: { state: AppState }) {
+    const [openId, setOpenId] = useState<string | null>(state.activeModeId ?? state.modeOrder[0] ?? null);
     return (
         <>
             <h3>{t('settings.modes')}</h3>
             <p class="note">{t('modes.intro')}</p>
-            {state.modeOrder.map(id => {
-                const mode = state.modes[id]!;
-                return (
-                    <div class="card" key={id}>
-                        <div class="card-head">
-                            <button type="button" class="icon-button glyph-button" aria-label={t('field.icon')} title={t('field.icon')} aria-haspopup="menu"
-                                onClick={event => openMenuBelow(event.currentTarget, SPACE_GLYPHS.map(glyph => ({
-                                    label: glyph, glyph, checked: glyph === mode.glyph, run: () => update(s => updateMode(s, id, { glyph })),
-                                })))}>
-                                <Icon name={mode.glyph} size={17} />
-                            </button>
-                            <input type="text" value={mode.name} aria-label={t('field.name')}
-                                onChange={event => update(s => updateMode(s, id, { name: event.currentTarget.value }))} />
-                            <button type="button" class="icon-button is-small" aria-label={t('delete')} title={t('delete')}
-                                onClick={() => {
-                                    const removed = captureMode(app.get(), id);
-                                    if (!removed) return;
-                                    update(s => removeMode(s, id));
-                                    toast(t('modes.deleted', { name: mode.name }), s => restoreMode(s, removed));
-                                }}><Icon name="trash" size={15} /></button>
-                        </div>
-                        <span class="card-label">{t('modes.spaces')}</span>
-                        <div class="chip-checks">
-                            {state.spaceOrder.map(spaceId => {
-                                const on = mode.spaceIds.includes(spaceId);
-                                return (
-                                    <button type="button" key={spaceId} aria-pressed={on}
-                                        onClick={() => update(s => updateMode(s, id, {
-                                            spaceIds: on ? mode.spaceIds.filter(x => x !== spaceId) : [...mode.spaceIds, spaceId],
-                                        }))}>
-                                        {state.spaces[spaceId]!.name}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                        <Row label={t('settings.theme')}>
-                            <select value={mode.themeId ?? ''} onChange={event => update(s => updateMode(s, id, { themeId: event.currentTarget.value }))}>
-                                <option value="">{t('modes.keep')}</option>
-                                {THEMES.map(theme => <option key={theme.id} value={theme.id}>{theme.name}</option>)}
-                            </select>
-                        </Row>
-                        <Row label={t('search.default')}>
-                            <select value={mode.providerId ?? ''} onChange={event => update(s => updateMode(s, id, { providerId: event.currentTarget.value }))}>
-                                <option value="">{t('modes.keep')}</option>
-                                {state.providers.map(p => <option key={p.id} value={p.id}>{providerLabel(p)}</option>)}
-                            </select>
-                        </Row>
-                        <Row label={t('modes.ownDock')} hint={t('modes.ownDockHint')}>
-                            <Switch on={!!mode.dock} label={t('modes.ownDock')} onToggle={() => update(s => setModeDock(s, id, !mode.dock))} />
-                        </Row>
-                    </div>
-                );
-            })}
+            {state.modeOrder.map(id => (
+                <ModeCard key={id} state={state} mode={state.modes[id]!} open={openId === id} onToggle={() => setOpenId(openId === id ? null : id)} />
+            ))}
             <button type="button" class="button"
-                onClick={() => update(s => addMode(s, { name: t('modes.newName'), glyph: 'layers', spaceIds: [...s.spaceOrder] }).state)}>
+                onClick={() => {
+                    let created: string | null = null;
+                    update(s => {
+                        const result = addMode(s, { name: t('modes.newName'), glyph: 'layers', spaceIds: [...s.spaceOrder] });
+                        created = result.id;
+                        return result.state;
+                    });
+                    setOpenId(created);
+                }}>
                 {t('modes.add')}
             </button>
         </>

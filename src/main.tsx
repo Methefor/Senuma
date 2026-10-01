@@ -1,5 +1,6 @@
 import { render } from 'preact';
-import { App, applyAppearance } from './app/App';
+import { App } from './app/App';
+import { applyAppearance, savedAppearance } from './app/appearance';
 import { ensureLanguage, setLanguage, t } from './i18n';
 import { loadState, onExternalChange, readCachedState, saveState } from './storage/storage';
 import { app, hydrate, onPersistError, toast } from './storage/store';
@@ -25,7 +26,7 @@ async function boot(): Promise<void> {
         // A packaged file, read from disk: this does not delay the first paint noticeably.
         await ensureLanguage(cached.prefs.language);
         setLanguage(cached.prefs.language);
-        applyAppearance(cached);
+        applyAppearance(savedAppearance(cached), cached.prefs.language);
         mount();
     }
 
@@ -50,7 +51,7 @@ async function boot(): Promise<void> {
         hydrate(state);
         await ensureLanguage(state.prefs.language);
         setLanguage(state.prefs.language);
-        applyAppearance(state);
+        applyAppearance(savedAppearance(state), state.prefs.language);
     }
     mount();
 

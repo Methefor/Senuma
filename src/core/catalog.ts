@@ -1,6 +1,10 @@
 /**
  * Starter catalog: the categories offered at onboarding, their starter services, and the
  * domain knowledge used to sort imported links deterministically (no AI, no network).
+ *
+ * Starter sets are deliberately short: widely used services only, a handful per group.
+ * Anything else a category should recognise goes in `domains`, which sorts imports without
+ * putting the service in front of every new user.
  */
 import { hostOf } from './url';
 
@@ -23,12 +27,12 @@ export const CATEGORIES: readonly Category[] = [
         glyph: 'spark',
         accent: '#A98BE8',
         groups: [
-            { name: 'Chat', services: [['ChatGPT', 'https://chatgpt.com'], ['Claude', 'https://claude.ai'], ['Gemini', 'https://gemini.google.com'], ['Grok', 'https://grok.com']] },
+            { name: 'General', services: [['ChatGPT', 'https://chatgpt.com'], ['Claude', 'https://claude.ai'], ['Gemini', 'https://gemini.google.com']] },
             { name: 'Research', services: [['Perplexity', 'https://www.perplexity.ai'], ['NotebookLM', 'https://notebooklm.google.com']] },
-            { name: 'Create', services: [['Runway', 'https://runwayml.com'], ['Higgsfield', 'https://higgsfield.ai'], ['Midjourney', 'https://www.midjourney.com']] },
-            { name: 'Build', services: [['Hugging Face', 'https://huggingface.co'], ['OpenRouter', 'https://openrouter.ai']] },
+            { name: 'Creative', services: [['Runway', 'https://runwayml.com'], ['Higgsfield', 'https://higgsfield.ai']] },
+            { name: 'Developer', services: [['Hugging Face', 'https://huggingface.co'], ['OpenRouter', 'https://openrouter.ai']] },
         ],
-        domains: ['openai.com', 'anthropic.com', 'chat.deepseek.com', 'deepseek.com', 'x.ai', 'mistral.ai', 'elevenlabs.io', 'suno.com', 'replicate.com', 'poe.com', 'copilot.microsoft.com', 'aistudio.google.com', 'firecrawl.dev', 'cursor.com', 'lovable.dev', 'v0.dev', 'bolt.new'],
+        domains: ['openai.com', 'anthropic.com', 'grok.com', 'x.ai', 'midjourney.com', 'chat.deepseek.com', 'deepseek.com', 'mistral.ai', 'elevenlabs.io', 'suno.com', 'replicate.com', 'poe.com', 'copilot.microsoft.com', 'aistudio.google.com', 'firecrawl.dev', 'cursor.com', 'lovable.dev', 'v0.dev', 'bolt.new'],
     },
     {
         id: 'dev',
@@ -36,11 +40,11 @@ export const CATEGORIES: readonly Category[] = [
         accent: '#62B8D8',
         groups: [
             { name: 'Code', services: [['GitHub', 'https://github.com'], ['Stack Overflow', 'https://stackoverflow.com'], ['npm', 'https://www.npmjs.com']] },
-            { name: 'Ship', services: [['Vercel', 'https://vercel.com'], ['Cloudflare', 'https://dash.cloudflare.com'], ['Docker Hub', 'https://hub.docker.com']] },
+            { name: 'Deploy', services: [['Vercel', 'https://vercel.com'], ['Cloudflare', 'https://dash.cloudflare.com']] },
             { name: 'Data', services: [['Supabase', 'https://supabase.com'], ['Neon', 'https://neon.tech']] },
-            { name: 'Docs', services: [['MDN', 'https://developer.mozilla.org'], ['DevDocs', 'https://devdocs.io']] },
+            { name: 'Tools', services: [['Docker Hub', 'https://hub.docker.com'], ['Figma', 'https://www.figma.com']] },
         ],
-        domains: ['gitlab.com', 'bitbucket.org', 'netlify.com', 'render.com', 'railway.app', 'fly.io', 'heroku.com', 'aws.amazon.com', 'console.cloud.google.com', 'portal.azure.com', 'firebase.google.com', 'codepen.io', 'codesandbox.io', 'replit.com', 'docker.com', 'cloudflare.com', 'pypi.org', 'crates.io', 'developer.chrome.com', 'postman.com', 'sentry.io', 'linear.app', 'localhost', '127.0.0.1'],
+        domains: ['developer.mozilla.org', 'devdocs.io', 'gitlab.com', 'bitbucket.org', 'netlify.com', 'render.com', 'railway.app', 'fly.io', 'heroku.com', 'aws.amazon.com', 'console.cloud.google.com', 'portal.azure.com', 'firebase.google.com', 'codepen.io', 'codesandbox.io', 'replit.com', 'docker.com', 'cloudflare.com', 'pypi.org', 'crates.io', 'developer.chrome.com', 'postman.com', 'sentry.io', 'linear.app', 'localhost', '127.0.0.1'],
     },
     {
         id: 'research',
@@ -57,11 +61,12 @@ export const CATEGORIES: readonly Category[] = [
         glyph: 'briefcase',
         accent: '#7C9CF0',
         groups: [
-            { name: 'Daily', services: [['Gmail', 'https://mail.google.com'], ['Calendar', 'https://calendar.google.com'], ['Drive', 'https://drive.google.com']] },
-            { name: 'Docs', services: [['Docs', 'https://docs.google.com/document'], ['Sheets', 'https://docs.google.com/spreadsheets'], ['Notion', 'https://www.notion.so']] },
-            { name: 'Team', services: [['Slack', 'https://app.slack.com'], ['Teams', 'https://teams.microsoft.com'], ['Zoom', 'https://zoom.us']] },
+            { name: 'Communication', services: [['Gmail', 'https://mail.google.com'], ['Slack', 'https://app.slack.com'], ['Teams', 'https://teams.microsoft.com']] },
+            { name: 'Planning', services: [['Calendar', 'https://calendar.google.com'], ['Notion', 'https://www.notion.so']] },
+            { name: 'Files', services: [['Drive', 'https://drive.google.com'], ['Docs', 'https://docs.google.com/document'], ['Sheets', 'https://docs.google.com/spreadsheets']] },
+            { name: 'Creative', services: [['Figma', 'https://www.figma.com'], ['Canva', 'https://www.canva.com']] },
         ],
-        domains: ['docs.google.com', 'meet.google.com', 'outlook.live.com', 'outlook.office.com', 'office.com', 'slack.com', 'notion.com', 'trello.com', 'asana.com', 'atlassian.net', 'atlassian.com', 'airtable.com', 'clickup.com', 'monday.com', 'dropbox.com', 'calendly.com', 'linkedin.com'],
+        domains: ['docs.google.com', 'meet.google.com', 'zoom.us', 'outlook.live.com', 'outlook.office.com', 'office.com', 'slack.com', 'notion.com', 'trello.com', 'asana.com', 'atlassian.net', 'atlassian.com', 'airtable.com', 'clickup.com', 'monday.com', 'dropbox.com', 'calendly.com', 'linkedin.com'],
     },
     {
         id: 'design',
@@ -71,34 +76,32 @@ export const CATEGORIES: readonly Category[] = [
             { name: 'Make', services: [['Figma', 'https://www.figma.com'], ['Canva', 'https://www.canva.com'], ['Framer', 'https://www.framer.com']] },
             { name: 'Reference', services: [['Dribbble', 'https://dribbble.com'], ['Behance', 'https://www.behance.net'], ['Pinterest', 'https://www.pinterest.com']] },
         ],
-        domains: ['mobbin.com', 'awwwards.com', 'fonts.google.com', 'coolors.co', 'unsplash.com', 'pexels.com', 'adobe.com', 'spline.design', 'webflow.com', 'are.na', 'lottiefiles.com'],
+        domains: ['adobe.com', 'mobbin.com', 'awwwards.com', 'fonts.google.com', 'coolors.co', 'unsplash.com', 'pexels.com', 'spline.design', 'webflow.com', 'are.na', 'lottiefiles.com'],
     },
     {
+        // Watching and listening: "Media" in the interface.
         id: 'entertainment',
         glyph: 'film',
         accent: '#E98B7A',
         groups: [
-            { name: 'Streaming', services: [['Netflix', 'https://www.netflix.com'], ['Prime Video', 'https://www.primevideo.com'], ['Disney+', 'https://www.disneyplus.com'], ['YouTube', 'https://www.youtube.com']] },
-            { name: 'Track', services: [['IMDb', 'https://www.imdb.com'], ['Letterboxd', 'https://letterboxd.com']] },
+            { name: 'Watch', services: [['YouTube', 'https://www.youtube.com'], ['Netflix', 'https://www.netflix.com'], ['Prime Video', 'https://www.primevideo.com'], ['Disney+', 'https://www.disneyplus.com']] },
+            { name: 'Listen', services: [['Spotify', 'https://open.spotify.com'], ['YouTube Music', 'https://music.youtube.com']] },
+            { name: 'Discover', services: [['IMDb', 'https://www.imdb.com'], ['Letterboxd', 'https://letterboxd.com']] },
         ],
-        domains: ['max.com', 'hbomax.com', 'hulu.com', 'tv.apple.com', 'mubi.com', 'crunchyroll.com', 'blutv.com', 'exxen.com', 'tabii.com', 'justwatch.com', 'rottentomatoes.com', 'themoviedb.org', 'trakt.tv', 'myanimelist.net'],
-    },
-    {
-        id: 'music',
-        glyph: 'music',
-        accent: '#A9C46C',
-        groups: [
-            { name: '', services: [['Spotify', 'https://open.spotify.com'], ['YouTube Music', 'https://music.youtube.com'], ['SoundCloud', 'https://soundcloud.com'], ['Bandcamp', 'https://bandcamp.com']] },
+        domains: [
+            'max.com', 'hbomax.com', 'hulu.com', 'tv.apple.com', 'mubi.com', 'crunchyroll.com', 'blutv.com', 'exxen.com', 'tabii.com', 'justwatch.com', 'rottentomatoes.com', 'themoviedb.org', 'trakt.tv', 'myanimelist.net',
+            'spotify.com', 'soundcloud.com', 'music.apple.com', 'bandcamp.com', 'tidal.com', 'deezer.com', 'last.fm', 'genius.com', 'mixcloud.com', 'beatport.com',
         ],
-        domains: ['spotify.com', 'music.apple.com', 'tidal.com', 'deezer.com', 'last.fm', 'genius.com', 'mixcloud.com', 'beatport.com'],
     },
     {
         id: 'gaming',
         glyph: 'gamepad',
         accent: '#62B8D8',
         groups: [
-            { name: 'Stores', services: [['Steam', 'https://store.steampowered.com'], ['Epic Games', 'https://store.epicgames.com'], ['Xbox', 'https://www.xbox.com'], ['GeForce NOW', 'https://play.geforcenow.com']] },
-            { name: 'Community', services: [['Twitch', 'https://www.twitch.tv'], ['Discord', 'https://discord.com/app'], ['SteamDB', 'https://steamdb.info'], ['HowLongToBeat', 'https://howlongtobeat.com']] },
+            { name: 'Launch', services: [['Steam', 'https://store.steampowered.com'], ['Epic Games', 'https://store.epicgames.com'], ['Xbox', 'https://www.xbox.com']] },
+            { name: 'Cloud', services: [['GeForce NOW', 'https://play.geforcenow.com']] },
+            { name: 'Discover', services: [['SteamDB', 'https://steamdb.info'], ['HowLongToBeat', 'https://howlongtobeat.com']] },
+            { name: 'Watch', services: [['Twitch', 'https://www.twitch.tv']] },
         ],
         domains: ['steampowered.com', 'steamcommunity.com', 'epicgames.com', 'playstation.com', 'gog.com', 'itch.io', 'nintendo.com', 'ign.com', 'discord.com', 'nexusmods.com', 'protondb.com', 'isthereanydeal.com', 'riotgames.com', 'battle.net'],
     },
@@ -126,19 +129,19 @@ export const CATEGORIES: readonly Category[] = [
         glyph: 'bag',
         accent: '#F4BE8A',
         groups: [
-            { name: '', services: [['Amazon', 'https://www.amazon.com'], ['eBay', 'https://www.ebay.com'], ['Etsy', 'https://www.etsy.com'], ['AliExpress', 'https://www.aliexpress.com']] },
+            { name: '', services: [['Amazon', 'https://www.amazon.com'], ['eBay', 'https://www.ebay.com'], ['Etsy', 'https://www.etsy.com']] },
         ],
-        domains: ['amazon.com.tr', 'amazon.co.uk', 'amazon.de', 'trendyol.com', 'hepsiburada.com', 'n11.com', 'sahibinden.com', 'walmart.com', 'ikea.com', 'zalando.com', 'temu.com'],
+        domains: ['aliexpress.com', 'amazon.com.tr', 'amazon.co.uk', 'amazon.de', 'trendyol.com', 'hepsiburada.com', 'n11.com', 'sahibinden.com', 'walmart.com', 'ikea.com', 'zalando.com', 'temu.com'],
     },
     {
         id: 'study',
         glyph: 'cap',
         accent: '#E98B7A',
         groups: [
-            { name: 'Learn', services: [['Coursera', 'https://www.coursera.org'], ['Khan Academy', 'https://www.khanacademy.org'], ['Udemy', 'https://www.udemy.com'], ['Duolingo', 'https://www.duolingo.com']] },
+            { name: 'Learn', services: [['Coursera', 'https://www.coursera.org'], ['Khan Academy', 'https://www.khanacademy.org'], ['Duolingo', 'https://www.duolingo.com']] },
             { name: 'Tools', services: [['Anki', 'https://ankiweb.net'], ['Quizlet', 'https://quizlet.com'], ['Wolfram Alpha', 'https://www.wolframalpha.com']] },
         ],
-        domains: ['edx.org', 'udacity.com', 'brilliant.org', 'classroom.google.com', 'freecodecamp.org', 'codecademy.com', 'leetcode.com', 'desmos.com', 'overleaf.com'],
+        domains: ['udemy.com', 'edx.org', 'udacity.com', 'brilliant.org', 'classroom.google.com', 'freecodecamp.org', 'codecademy.com', 'leetcode.com', 'desmos.com', 'overleaf.com'],
     },
 ];
 
@@ -148,7 +151,8 @@ export function categoryById(id: string): Category | undefined {
 
 const DOMAIN_INDEX: Map<string, string> = (() => {
     const index = new Map<string, string>();
-    // Extra domains first so a starter service's exact host always wins a conflict.
+    // Extra domains first so a starter service's exact host always wins a conflict. Where two
+    // categories list the same service (Figma, Spotify), the more specific, later one wins.
     for (const category of CATEGORIES) for (const d of category.domains ?? []) index.set(d, category.id);
     for (const category of CATEGORIES) {
         for (const group of category.groups) for (const [, url] of group.services) index.set(hostOf(url), category.id);
@@ -172,6 +176,6 @@ export function categorize(url: string): string | null {
 export const MODE_PRESETS = [
     { key: 'work', glyph: 'briefcase', needs: ['work', 'research', 'study', 'finance'], includes: ['work', 'research', 'ai', 'finance', 'study'] },
     { key: 'dev', glyph: 'code', needs: ['dev'], includes: ['dev', 'ai', 'design', 'research'] },
-    { key: 'chill', glyph: 'moon', needs: ['entertainment', 'music'], includes: ['entertainment', 'music', 'social', 'shopping'] },
-    { key: 'gaming', glyph: 'gamepad', needs: ['gaming'], includes: ['gaming', 'social', 'music'] },
+    { key: 'chill', glyph: 'moon', needs: ['entertainment'], includes: ['entertainment', 'social'] },
+    { key: 'gaming', glyph: 'gamepad', needs: ['gaming'], includes: ['gaming', 'entertainment'] },
 ] as const;

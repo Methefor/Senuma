@@ -1,8 +1,9 @@
 /** Persistent data model. One normalized tree, one source of truth, stable IDs (sync-ready). */
+import type { AtmosphereLevel, Background, WallpaperAsset } from './background';
 
 export type ID = string;
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 /** A saved destination: an app, site or document. */
 export interface Item {
@@ -52,6 +53,8 @@ export interface Mode {
     /** Spaces shown on Home, in this Mode's own order. */
     spaceIds: ID[];
     themeId?: string;
+    /** Present when the Mode has its own background instead of the default one. */
+    background?: Background;
     providerId?: ID;
     /** Present when the Mode has its own dock instead of the shared one. */
     dock?: DockEntry[];
@@ -86,12 +89,16 @@ export type IconSource = 'site' | 'service' | 'none';
 export interface Prefs {
     language: Language;
     themeId: string;
+    background: Background;
+    atmosphere: AtmosphereLevel;
     motion: MotionLevel;
     iconSource: IconSource;
     openInNewTab: boolean;
     showContinue: boolean;
     showClosedTabs: boolean;
     showDock: boolean;
+    /** Names under dock icons, instead of only on hover. */
+    dockLabels: boolean;
     defaultProviderId: ID;
 }
 
@@ -124,6 +131,8 @@ export interface AppState {
     modeOrder: ID[];
     activeModeId: ID | null;
     dock: DockEntry[];
+    /** Images the user added. Only metadata lives here; pixels are in local browser storage. */
+    wallpapers: Record<ID, WallpaperAsset>;
     providers: SearchProvider[];
     recents: RecentItem[];
     /** Command-center result key → last used time. Bounded; used only to rank results. */

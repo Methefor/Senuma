@@ -1,16 +1,15 @@
 import type { ComponentType } from 'preact';
 import { useEffect, useLayoutEffect, useState } from 'preact/hooks';
-import { effectiveThemeId, visibleSpaces } from '../core/ops';
-import { applyTheme, themeById } from '../core/themes';
-import type { AppState } from '../core/types';
+import { sourceKey } from '../core/background';
+import { visibleSpaces } from '../core/ops';
+import { Backdrop } from '../features/background/Backdrop';
 import { CommandPalette } from '../features/command/Launcher';
 import { Home } from '../features/home/Home';
 import { MigrationSummary } from '../features/onboarding/MigrationSummary';
-import { Editor } from '../features/spaces/Editors';
-import { SpaceView } from '../features/spaces/SpaceView';
 import { ensureLanguage, setLanguage } from '../i18n';
 import { app, setUi, ui, useStore } from '../storage/store';
 import { ContextMenu, Toasts } from '../ui/Layers';
+import { applyAppearance, savedAppearance } from './appearance';
 
 /** Loads a secondary screen only when it is first shown, keeping it out of the startup path. */
 function useLazy<P>(wanted: boolean, loader: () => Promise<ComponentType<P>>): ComponentType<P> | null {
@@ -23,24 +22,43 @@ function useLazy<P>(wanted: boolean, loader: () => Promise<ComponentType<P>>): C
 
 const loadSettings = () => import('../features/settings/Settings').then(m => m.Settings);
 const loadOnboarding = () => import('../features/onboarding/Onboarding').then(m => m.Onboarding);
+const loadCustomize = () => import('../features/customize/Customize').then(m => m.Customize);
+// Opening a Space and editing are one chunk: they are needed a moment after Home, not for it.
+const loadSpaces = () => import('../features/spaces/SpaceView');
+const loadSpaceView = () => loadSpaces().then(m => m.SpaceView);
+const loadEditor = () => loadSpaces().then(m => m.Editor);
+
+/** Fetches the Space view while the browser is idle, so the first click on a Space is instant. */
+function usePrefetch(loader: () => Promise<unknown>): void {
+    useEffect(() => {
+        const handle = requestIdleCallback(() => void loader(), { timeout: 2000 });
+        return () => cancelIdleCallback(handle);
+    }, []);
+}
 
 function isTyping(target: EventTarget | null): boolean {
     const node = target as HTMLElement | null;
     return !!node && (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA' || node.tagName === 'SELECT' || node.isContentEditable);
 }
 
+/**
+ * Shortcuts work as soon as the page has keyboard focus. On a brand-new tab the browser
+ * puts focus in its address bar, as it does for every new tab; this page leaves that alone
+ * and does not redirect, reopen or otherwise pull focus away. One click or Tab into the
+ * page and every shortcut below is live.
+ */
 function useShortcuts(): void {
     useEffect(() => {
         const onKeyDown = (event: KeyboardEvent) => {
             const state = ui.get();
             if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'k') {
                 event.preventDefault();
-                if (app.get().onboarded) setUi({ palette: !state.palette, menu: null });
+                if (app.get().onboarded && !state.customize) setUi({ palette: !state.palette, menu: null });
                 return;
             }
             // Single-key shortcuts belong to Home only: never while typing, never with a
             // modifier (those are the browser's), never while a panel or menu is open.
-            const busy = state.palette || state.spaceId || state.settings || state.editor || state.menu || !app.get().onboarded;
+            const busy = state.palette || state.spaceId || state.settings || state.editor || state.menu || state.customize || !app.get().onboarded;
             if (busy || isTyping(event.target) || event.ctrlKey || event.metaKey || event.altKey) return;
             if (event.key === '/') {
                 event.preventDefault();
@@ -49,19 +67,12 @@ function useShortcuts(): void {
                 document.getElementById('mode-switch')?.click();
             } else if (/^[1-9]$/.test(event.key)) {
                 const space = visibleSpaces(app.get())[Number(event.key) - 1];
-                if (space) setUi({ spaceId: space.id });
+                if (space) setUi({ spaceId: space.id, origin: null });
             }
         };
         window.addEventListener('keydown', onKeyDown);
         return () => window.removeEventListener('keydown', onKeyDown);
     }, []);
-}
-
-export function applyAppearance(state: AppState): void {
-    const root = document.documentElement;
-    applyTheme(themeById(effectiveThemeId(state)), root);
-    root.dataset.motion = state.prefs.motion;
-    root.lang = state.prefs.language;
 }
 
 export function App() {
@@ -76,24 +87,33 @@ export function App() {
         void ensureLanguage(state.prefs.language).then(() => setStringsReady(n => n + 1));
     }, [state.prefs.language]);
 
-    const themeId = effectiveThemeId(state);
-    useLayoutEffect(() => applyAppearance(state), [themeId, state.prefs.motion, state.prefs.language]);
+    // What is shown is the saved look, unless Customize is trying one out.
+    const look = view.preview ?? savedAppearance(state);
+    useLayoutEffect(
+        () => applyAppearance(look, state.prefs.language),
+        [look.themeId, look.atmosphere, look.motion, sourceKey(look.background.source), state.prefs.language],
+    );
 
     const Settings = useLazy(view.settings !== null, loadSettings);
     const Onboarding = useLazy(!state.onboarded, loadOnboarding);
+    const Customize = useLazy(view.customize, loadCustomize);
+    const SpaceView = useLazy(view.spaceId !== null, loadSpaceView);
+    const Editor = useLazy(view.editor !== null, loadEditor);
+    usePrefetch(loadSpaces);
 
     const space = view.spaceId ? state.spaces[view.spaceId] : undefined;
-    const covered = !!(space || view.palette || view.settings !== null || view.editor || !state.onboarded);
+    const covered = !!(space || view.palette || view.settings !== null || view.editor || view.customize || !state.onboarded);
     const showSummary = state.onboarded && state.legacy && !state.legacy.acknowledged && !covered;
 
     return (
         <>
-            {/* Keyed by theme so a new backdrop fades in over the old colour instead of snapping. */}
-            <div class="backdrop" key={themeId} aria-hidden="true"><i class="backdrop-glow" /></div>
-            <Home state={state} covered={covered} />
-            {space && <SpaceView key={space.id} state={state} space={space} />}
+            <Backdrop themeId={look.themeId} background={look.background} assets={state.wallpapers} />
+            {/* While customizing, the page stays fully visible: it is the preview. */}
+            <Home state={state} covered={covered} previewing={view.customize} />
+            {space && SpaceView && <SpaceView key={space.id} state={state} space={space} origin={view.origin} />}
             {view.settings !== null && Settings && <Settings state={state} section={view.settings} />}
-            {view.editor && <Editor state={state} target={view.editor} />}
+            {view.customize && Customize && <Customize state={state} />}
+            {view.editor && Editor && <Editor state={state} target={view.editor} />}
             {view.palette && <CommandPalette />}
             {!state.onboarded && Onboarding && <Onboarding state={state} />}
             {showSummary && <MigrationSummary legacy={state.legacy!} />}

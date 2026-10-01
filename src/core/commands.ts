@@ -1,6 +1,11 @@
 /**
  * Command engine: turns a query into ranked results. Pure and deterministic; results carry
  * a data-only Action, so an AI interpreter can later produce the same Actions.
+ *
+ * Action language: every result that does something starts with a verb, and the same verb
+ * always means the same thing — Open (go there), Switch to (change Mode), Search (web),
+ * Create, Use (apply a look), Customize. Saved links are shown by name alone: the name is
+ * the destination.
  */
 import { locateItem, visibleSpaces } from './ops';
 import { matchProviderName, routeQuery, type Route } from './search';
@@ -14,13 +19,18 @@ export type Action =
     | { type: 'mode'; id: ID | null }
     | { type: 'theme'; id: string }
     | { type: 'settings'; section?: string }
+    | { type: 'customize' }
     | { type: 'new-space' }
     /** Rewrites the input instead of leaving it, e.g. to start a provider search. */
     | { type: 'prefill'; text: string };
 
+/** How results are grouped in the command center. */
+export type ResultGroup = 'links' | 'spaces' | 'modes' | 'commands' | 'search' | 'recent';
+
 export interface Result {
     key: string;
     kind: 'item' | 'space' | 'mode' | 'command' | 'theme' | 'search' | 'url' | 'recent';
+    group: ResultGroup;
     title: string;
     hint?: string;
     /** Site URL to show an app icon for; otherwise `glyph` is used. */
@@ -35,13 +45,14 @@ export interface Result {
 
 /** Labels supplied by the UI layer so the engine has no language dependency. */
 export interface CommandLabels {
-    allSpaces: string;
-    modeHint: string;
-    spaceHint: string;
-    themeHint: string;
-    recentHint: string;
-    newSpace: string;
-    settings: string;
+    openSpace: (name: string) => string;
+    switchMode: (name: string) => string;
+    showAllSpaces: string;
+    useTheme: (name: string) => string;
+    createSpace: string;
+    customize: string;
+    openSettings: string;
+    openSettingsSection: (label: string) => string;
     settingsSections: { id: string; label: string }[];
     providerName: (id: ID, name: string) => string;
     searchWith: (provider: string, query: string) => string;
@@ -59,7 +70,7 @@ export interface CommandContext {
     now?: number;
 }
 
-const MAX_LOCAL = 7;
+const MAX_LOCAL = 8;
 const FUZZY_MIN_LENGTH = 3;
 /** Substring quality or better. Below this a match is a fuzzy guess. */
 const STRONG_MATCH = 28;
@@ -77,7 +88,7 @@ export function matchScore(text: string, query: string): number {
     if (!q || !t) return 0;
     if (t === q) return 100;
     if (t.startsWith(q)) return 80;
-    if (new RegExp(`(^|[\\s\\-_/.])${escapeRegExp(q)}`).test(t)) return 60;
+    if (new RegExp(`(^|[\\s\\-_/.:])${escapeRegExp(q)}`).test(t)) return 60;
     if (t.includes(q)) return 40;
     if (q.length < FUZZY_MIN_LENGTH || /\s/.test(q)) return 0;
     const from = t.indexOf(q[0]!);
@@ -90,6 +101,9 @@ export function matchScore(text: string, query: string): number {
     const gaps = at - from + 1 - q.length;
     return Math.max(8, 30 - gaps * 4);
 }
+
+/** Best score across several ways of naming the same thing (its name, its action phrase). */
+const bestScore = (query: string, ...texts: string[]) => Math.max(...texts.map(text => matchScore(text, query)));
 
 interface Intent {
     /** Restricts results to one kind when the phrasing makes the intent explicit. */
@@ -120,12 +134,13 @@ export function interpret(query: string, s: AppState): Intent {
 function routeResult(route: Route, labels: CommandLabels, key = 'route'): Result {
     if (route.kind === 'url') {
         const host = hostOf(route.url) || route.url;
-        return { key, kind: 'url', title: labels.openUrl(host), glyph: 'globe', action: { type: 'open', url: route.url, title: host } };
+        return { key, kind: 'url', group: 'search', title: labels.openUrl(host), glyph: 'globe', action: { type: 'open', url: route.url, title: host } };
     }
     const { provider, query } = route;
     return {
         key,
         kind: 'search',
+        group: 'search',
         title: provider.browserDefault ? labels.searchWeb(query) : labels.searchWith(provider.name, query),
         glyph: 'search',
         action: { type: 'search', providerId: provider.id, query },
@@ -137,29 +152,33 @@ function modeResult(s: AppState, id: ID | null, labels: CommandLabels): Result {
     return {
         key: `mode:${id ?? 'all'}`,
         kind: 'mode',
-        title: mode ? mode.name : labels.allSpaces,
-        hint: labels.modeHint,
+        group: 'modes',
+        title: mode ? labels.switchMode(mode.name) : labels.showAllSpaces,
         glyph: mode ? mode.glyph : 'grid',
         action: { type: 'mode', id },
     };
 }
 
-const newSpaceResult = (labels: CommandLabels): Result =>
-    ({ key: 'cmd:new-space', kind: 'command', title: labels.newSpace, glyph: 'plus', action: { type: 'new-space' } });
-const settingsResult = (labels: CommandLabels): Result =>
-    ({ key: 'cmd:settings', kind: 'command', title: labels.settings, glyph: 'sliders', action: { type: 'settings' } });
+function commandResults(labels: CommandLabels): { result: Result; names: string[] }[] {
+    const command = (key: string, title: string, glyph: string, action: Action): Result => ({ key, kind: 'command', group: 'commands', title, glyph, action });
+    return [
+        { result: command('cmd:new-space', labels.createSpace, 'plus', { type: 'new-space' }), names: [labels.createSpace, 'new space'] },
+        { result: command('cmd:customize', labels.customize, 'swatch', { type: 'customize' }), names: [labels.customize, 'theme', 'wallpaper', 'background', 'appearance'] },
+        { result: command('cmd:settings', labels.openSettings, 'sliders', { type: 'settings' }), names: [labels.openSettings, 'preferences'] },
+    ];
+}
 
 /** Results for an empty query in the command center: where you can go from here. */
 export function defaultResults(s: AppState, labels: CommandLabels): Result[] {
     const results: Result[] = [];
-    if (s.modeOrder.length) {
-        if (s.activeModeId) results.push(modeResult(s, null, labels));
-        for (const id of s.modeOrder) if (id !== s.activeModeId) results.push(modeResult(s, id, labels));
-    }
     for (const r of s.recents.slice(0, 4)) {
-        results.push({ key: `recent:${r.url}`, kind: 'recent', title: r.title, hint: labels.recentHint, iconUrl: r.url, action: { type: 'open', url: r.url, title: r.title, spaceId: r.spaceId } });
+        results.push({ key: `recent:${r.url}`, kind: 'recent', group: 'recent', title: r.title, hint: hostOf(r.url), iconUrl: r.url, action: { type: 'open', url: r.url, title: r.title, spaceId: r.spaceId } });
     }
-    results.push(newSpaceResult(labels), settingsResult(labels));
+    if (s.modeOrder.length) {
+        for (const id of s.modeOrder) if (id !== s.activeModeId) results.push(modeResult(s, id, labels));
+        if (s.activeModeId) results.push(modeResult(s, null, labels));
+    }
+    results.push(...commandResults(labels).map(c => c.result));
     return results;
 }
 
@@ -192,6 +211,7 @@ export function buildResults(query: string, s: AppState, context: CommandContext
             push(score, {
                 key: `item:${item.id}`,
                 kind: 'item',
+                group: 'links',
                 title: item.title,
                 hint: space?.name,
                 iconUrl: item.url,
@@ -205,9 +225,9 @@ export function buildResults(query: string, s: AppState, context: CommandContext
         for (const id of s.spaceOrder) {
             const space = s.spaces[id]!;
             const position = visible.indexOf(id);
-            // A hair below items so "claude" opens Claude before a Space of the same name.
+            // A hair below links so "claude" opens Claude before a Space of the same name.
             push(matchScore(space.name, term) - (intent.only ? 0 : 1), {
-                key: `space:${id}`, kind: 'space', title: space.name, hint: labels.spaceHint, glyph: space.glyph, accent: space.accent,
+                key: `space:${id}`, kind: 'space', group: 'spaces', title: labels.openSpace(space.name), glyph: space.glyph, accent: space.accent,
                 ...(position >= 0 && position < 9 ? { shortcut: String(position + 1) } : {}),
                 action: { type: 'space', id },
             });
@@ -216,26 +236,29 @@ export function buildResults(query: string, s: AppState, context: CommandContext
     if (wants('mode') && s.modeOrder.length) {
         for (const id of [...s.modeOrder, null]) {
             const result = modeResult(s, id, labels);
-            push(matchScore(result.title, term) - (intent.only ? 0 : 2), result);
+            const name = id ? s.modes[id]!.name : labels.showAllSpaces;
+            push(bestScore(term, name, result.title) - (intent.only ? 0 : 2), result);
         }
     }
     if (!intent.only) {
-        push(matchScore(labels.newSpace, term) - 5, newSpaceResult(labels));
-        push(matchScore(labels.settings, term) - 5, settingsResult(labels));
+        for (const { result, names } of commandResults(labels)) push(bestScore(term, ...names) - 5, result);
         for (const section of labels.settingsSections) {
             push(matchScore(section.label, term) - 6, {
-                key: `cmd:settings:${section.id}`, kind: 'command', title: section.label, hint: labels.settings, glyph: 'sliders', action: { type: 'settings', section: section.id },
+                key: `cmd:settings:${section.id}`, kind: 'command', group: 'commands', title: labels.openSettingsSection(section.label), glyph: 'sliders',
+                action: { type: 'settings', section: section.id },
             });
         }
         for (const theme of labels.themes) {
-            push(matchScore(theme.name, term) - 8, { key: `theme:${theme.id}`, kind: 'theme', title: theme.name, hint: labels.themeHint, glyph: 'swatch', action: { type: 'theme', id: theme.id } });
+            push(matchScore(theme.name, term) - 8, {
+                key: `theme:${theme.id}`, kind: 'theme', group: 'commands', title: labels.useTheme(theme.name), glyph: 'swatch', action: { type: 'theme', id: theme.id },
+            });
         }
         // Naming an engine offers to search it: "youtube" → "Search YouTube…".
         for (const provider of s.providers) {
             if (provider.browserDefault) continue;
             const name = labels.providerName(provider.id, provider.name);
             push(matchScore(name, term) - 12, {
-                key: `provider:${provider.id}`, kind: 'search', title: labels.searchPrompt(name), glyph: 'search',
+                key: `provider:${provider.id}`, kind: 'search', group: 'search', title: labels.searchPrompt(name), glyph: 'search',
                 ...(provider.aliases[0] ? { shortcut: provider.aliases[0] } : {}),
                 action: { type: 'prefill', text: `${provider.aliases[0] ?? provider.name.toLowerCase()} ` },
             });
@@ -262,4 +285,18 @@ export function buildResults(query: string, s: AppState, context: CommandContext
     const strong = ranked.filter(x => x.strong).map(x => x.result);
     const guesses = ranked.filter(x => !x.strong).map(x => x.result);
     return [...strong, routed, ...byName, ...guesses];
+}
+
+/**
+ * Arranges results under group headings for display. The first result stays first (it is
+ * what Enter runs); groups then follow in the order their best result appeared.
+ */
+export function groupResults(results: Result[]): { group: ResultGroup; results: Result[] }[] {
+    const groups: { group: ResultGroup; results: Result[] }[] = [];
+    for (const result of results) {
+        const existing = groups.find(g => g.group === result.group);
+        if (existing) existing.results.push(result);
+        else groups.push({ group: result.group, results: [result] });
+    }
+    return groups;
 }

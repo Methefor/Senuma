@@ -3,7 +3,7 @@ import { launch, remember, setupNames } from '../../app/actions';
 import { recentlyClosed, restoreClosed, type ClosedTab } from '../../browser/sessions';
 import { CATEGORIES } from '../../core/catalog';
 import {
-    activeDock, activeMode, itemsOf, locateItem, removeRecent, reorderDock, reorderSpace, setActiveMode, shiftSpace, toggleDock, visibleSpaces,
+    activeDock, activeMode, itemsOf, locateItem, removeRecent, reorderDock, reorderSpace, setActiveMode, setPrefs, shiftSpace, toggleDock, visibleSpaces,
 } from '../../core/ops';
 import { applyStarter } from '../../core/setup';
 import type { AppState, DockEntry, ID, Space } from '../../core/types';
@@ -16,7 +16,9 @@ import { useFlip } from '../../ui/useFlip';
 import { Launcher } from '../command/Launcher';
 import { spaceMenu } from '../spaces/menus';
 
-const MAX_CONTINUE = 6;
+/** Continue shows a few high-value items; the rest are one click away, not always on screen. */
+const CONTINUE_SHOWN = 4;
+const CONTINUE_MORE = 8;
 const PLATE_PREVIEW = 5;
 /** Above this many Spaces the deck switches to compact rows so Home stays calm. */
 const ROOMY_LIMIT = 8;
@@ -26,6 +28,12 @@ const DOCK_DRAG = 'application/x-dock-entry';
 
 function linkTarget(state: AppState) {
     return state.prefs.openInNewTab ? { target: '_blank', rel: 'noopener' } : {};
+}
+
+/** Opens a Space so that it grows out of the control that was used. */
+function openSpaceFrom(element: Element, spaceId: ID): void {
+    const rect = element.getBoundingClientRect();
+    setUi({ spaceId, origin: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } });
 }
 
 // ---------- Top bar ----------
@@ -73,9 +81,20 @@ function ModeSwitch({ state }: { state: AppState }) {
 interface ContinueEntry {
     url: string;
     title: string;
+    at?: number;
     spaceId?: ID;
     /** Present for a recently closed tab, which is restored rather than re-opened. */
     sessionId?: string;
+}
+
+/** "now", "32m", "3h", "2d": short enough to sit beside a title without becoming a label. */
+function ago(at: number, now = Date.now()): string {
+    const minutes = Math.floor((now - at) / 60_000);
+    if (minutes < 1) return t('continue.now');
+    if (minutes < 60) return `${minutes}${t('unit.minute')}`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}${t('unit.hour')}`;
+    return `${Math.floor(hours / 24)}${t('unit.day')}`;
 }
 
 function useClosedTabs(enabled: boolean): ClosedTab[] {
@@ -96,20 +115,19 @@ function useClosedTabs(enabled: boolean): ClosedTab[] {
 
 function Continue({ state }: { state: AppState }) {
     const closed = useClosedTabs(state.prefs.showContinue && state.prefs.showClosedTabs);
+    const [expanded, setExpanded] = useState(false);
     if (!state.prefs.showContinue) return null;
 
     const seen = new Set<string>();
-    const entries = [...state.recents, ...closed]
-        .filter((entry: ContinueEntry) => !seen.has(entry.url) && !!seen.add(entry.url))
-        .slice(0, MAX_CONTINUE);
-    if (!entries.length) return null;
+    const all = [...state.recents, ...closed].filter((entry: ContinueEntry) => !seen.has(entry.url) && !!seen.add(entry.url)).slice(0, CONTINUE_MORE);
+    if (!all.length) return null;
+    const entries = expanded ? all : all.slice(0, CONTINUE_SHOWN);
 
     return (
         <nav class="continue" aria-label={t('continue.title')}>
             <span class="eyebrow">{t('continue.title')}</span>
             {entries.map((entry: ContinueEntry) => (
-                <a key={entry.url} class="continue-link" href={entry.url} {...linkTarget(state)}
-                    title={entry.sessionId ? `${t('continue.closed')} · ${hostOf(entry.url)}` : hostOf(entry.url)}
+                <a key={entry.url} class="continue-link" href={entry.url} {...linkTarget(state)} title={hostOf(entry.url)}
                     onClick={event => {
                         if (!entry.sessionId) return remember(entry.url, entry.title, entry.spaceId);
                         event.preventDefault();
@@ -120,9 +138,15 @@ function Continue({ state }: { state: AppState }) {
                         openMenu(event, [{ label: t('continue.remove'), glyph: 'x', run: () => update(s => removeRecent(s, entry.url)) }]);
                     }}>
                     <AppIcon url={entry.url} title={entry.title} size={20} />
-                    <span>{entry.title}</span>
+                    <span class="continue-title">{entry.title}</span>
+                    <span class="continue-when">{entry.sessionId ? t('continue.closed') : entry.at ? ago(entry.at) : ''}</span>
                 </a>
             ))}
+            {all.length > CONTINUE_SHOWN && (
+                <button type="button" class="quiet-button continue-more" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
+                    {expanded ? t('continue.less') : t('continue.more', { n: all.length - CONTINUE_SHOWN })}
+                </button>
+            )}
         </nav>
     );
 }
@@ -147,6 +171,8 @@ function Plate({ state, space, index, compact, drop, dragging, onDrag, onHover }
 }) {
     const items = itemsOf(state, space);
     const dropClass = drop?.overId === space.id ? (drop.after ? 'is-drop-after' : 'is-drop-before') : '';
+    // A Space says what it is for (its note) when it has one; a count only where there is no preview.
+    const detail = space.note ?? (compact ? t('space.count', { n: items.length }) : '');
 
     const move = (delta: -1 | 1) => {
         update(s => shiftSpace(s, space.id, delta));
@@ -158,7 +184,7 @@ function Plate({ state, space, index, compact, drop, dragging, onDrag, onHover }
         <button type="button" class={`plate ${dropClass} ${dragging ? 'is-dragging' : ''}`} data-flip={space.id}
             style={{ '--tint': space.accent, '--i': index }} draggable
             aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight"
-            onClick={() => setUi({ spaceId: space.id })}
+            onClick={event => openSpaceFrom(event.currentTarget, space.id)}
             onContextMenu={event => openMenu(event, spaceMenu(state, space, true))}
             onKeyDown={event => {
                 if (!event.altKey || (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')) return;
@@ -182,12 +208,12 @@ function Plate({ state, space, index, compact, drop, dragging, onDrag, onHover }
             }}
             onDragEnd={() => onDrag(null)}>
             <span class="plate-top">
-                <span class="plate-glyph"><Icon name={space.glyph} size={compact ? 18 : 22} /></span>
+                <span class="plate-glyph"><Icon name={space.glyph} size={compact ? 18 : 21} /></span>
                 {index < 9 && <kbd class="plate-key" aria-hidden="true">{index + 1}</kbd>}
             </span>
             <span class="plate-text">
                 <span class="plate-name">{space.name}</span>
-                <span class="plate-count">{space.note ?? t('space.count', { n: items.length })}</span>
+                {detail && <span class="plate-detail">{detail}</span>}
             </span>
             {!compact && (
                 <span class="plate-icons">
@@ -238,7 +264,7 @@ function Deck({ state }: { state: AppState }) {
     };
 
     return (
-        <section class="deck-section" aria-labelledby="deck-title">
+        <section class="deck-section scene" aria-labelledby="deck-title">
             <header class="deck-head">
                 <h2 id="deck-title" class="eyebrow">{mode ? mode.name : t('spaces.title')}</h2>
                 <button type="button" class="quiet-button" onClick={() => setUi({ editor: { kind: 'space' } })}>
@@ -275,12 +301,18 @@ function Deck({ state }: { state: AppState }) {
 
 const entryKey = (entry: DockEntry) => `${entry.kind}:${entry.id}`;
 
+/**
+ * A small shelf of the shortcuts that matter most: links and whole Spaces. Each item names
+ * itself on hover or focus (or always, if the user prefers); a long dock scrolls sideways
+ * with faded edges rather than shrinking or wrapping.
+ */
 function Dock({ state }: { state: AppState }) {
-    const ref = useRef<HTMLElement>(null);
+    const ref = useRef<HTMLDivElement>(null);
     const entries = activeDock(state).filter(e => (e.kind === 'item' ? state.items[e.id] : state.spaces[e.id]));
     const [over, setOver] = useState<string | null>(null);
     useFlip(ref, entries.map(entryKey).join());
     if (!state.prefs.showDock || !entries.length) return null;
+    const labels = state.prefs.dockLabels;
 
     const dragProps = (entry: DockEntry) => ({
         draggable: true,
@@ -307,37 +339,44 @@ function Dock({ state }: { state: AppState }) {
             }
         },
     });
-    const unpin = (entry: DockEntry): MenuItem => ({ label: t('dock.remove'), glyph: 'pin', run: () => update(s => toggleDock(s, entry)) });
+    const dockItems = (entry: DockEntry): MenuItem[] => [
+        { label: t('dock.remove'), glyph: 'pin', run: () => update(s => toggleDock(s, entry)) },
+        { label: labels ? t('dock.hideNames') : t('dock.showNames'), glyph: 'info', separatorBefore: true, run: () => update(s => setPrefs(s, { dockLabels: !labels })) },
+    ];
 
     return (
-        <nav ref={ref} class="dock" aria-label={t('dock.title')}>
-            {entries.map(entry => {
-                const dropClass = over === entryKey(entry) ? 'is-drop' : '';
-                if (entry.kind === 'space') {
-                    const space = state.spaces[entry.id]!;
+        <nav class={`dock scene ${labels ? 'has-labels' : ''}`} aria-label={t('dock.title')}>
+            <div class="dock-rail" ref={ref}>
+                {entries.map(entry => {
+                    const dropClass = over === entryKey(entry) ? 'is-drop' : '';
+                    if (entry.kind === 'space') {
+                        const space = state.spaces[entry.id]!;
+                        return (
+                            <button type="button" key={entryKey(entry)} class={`dock-item ${dropClass}`} style={{ '--tint': space.accent }}
+                                data-label={space.name} aria-label={space.name} {...dragProps(entry)}
+                                onClick={event => openSpaceFrom(event.currentTarget, space.id)}
+                                onContextMenu={event => openMenu(event, dockItems(entry))}>
+                                <span class="dock-space"><Icon name={space.glyph} size={19} /></span>
+                                {labels && <span class="dock-name">{space.name}</span>}
+                            </button>
+                        );
+                    }
+                    const item = state.items[entry.id]!;
+                    const spaceId = locateItem(state, item.id)?.spaceId;
                     return (
-                        <button type="button" key={entryKey(entry)} class={`dock-item dock-space ${dropClass}`} style={{ '--tint': space.accent }}
-                            title={space.name} aria-label={space.name} {...dragProps(entry)}
-                            onClick={() => setUi({ spaceId: space.id })}
-                            onContextMenu={event => openMenu(event, [unpin(entry)])}>
-                            <Icon name={space.glyph} size={19} />
-                        </button>
+                        <a key={entryKey(entry)} href={item.url} {...linkTarget(state)} class={`dock-item ${dropClass}`}
+                            data-label={item.title} aria-label={item.title} {...dragProps(entry)}
+                            onClick={() => remember(item.url, item.title, spaceId)}
+                            onContextMenu={event => openMenu(event, [
+                                { label: t('item.openNewTab'), glyph: 'external', run: () => launch(item.url, item.title, { newTab: true, spaceId }) },
+                                ...dockItems(entry),
+                            ])}>
+                            <AppIcon url={item.url} title={item.title} icon={item.icon} size={38} />
+                            {labels && <span class="dock-name">{item.title}</span>}
+                        </a>
                     );
-                }
-                const item = state.items[entry.id]!;
-                const spaceId = locateItem(state, item.id)?.spaceId;
-                return (
-                    <a key={entryKey(entry)} href={item.url} {...linkTarget(state)} class={`dock-item ${dropClass}`}
-                        title={item.title} aria-label={item.title} {...dragProps(entry)}
-                        onClick={() => remember(item.url, item.title, spaceId)}
-                        onContextMenu={event => openMenu(event, [
-                            { label: t('item.openNewTab'), glyph: 'external', run: () => launch(item.url, item.title, { newTab: true, spaceId }) },
-                            unpin(entry),
-                        ])}>
-                        <AppIcon url={item.url} title={item.title} icon={item.icon} size={38} />
-                    </a>
-                );
-            })}
+                })}
+            </div>
         </nav>
     );
 }
@@ -352,15 +391,24 @@ function greeting(): string {
     return t('greeting.evening');
 }
 
-export function Home({ state, covered }: { state: AppState; covered: boolean }) {
-    // Keyed by Mode: switching replays the entrance, so the change of context is felt.
-    const modeKey = state.activeModeId ?? 'all';
+/**
+ * Composition, top to bottom: utilities, search, Continue, Spaces, dock. The search is the
+ * one strongly drawn object; everything else earns its place with spacing rather than boxes.
+ */
+export function Home({ state, covered, previewing }: { state: AppState; covered: boolean; previewing: boolean }) {
+    // Deck and dock are keyed by Mode: a switch replays one shared entrance, so the Spaces,
+    // the dock and the backdrop arrive together as a single change of scene.
+    const scene = state.activeModeId ?? 'all';
     return (
-        <div class="home" inert={covered}>
+        <div class={`home ${previewing ? 'is-previewing' : ''}`} inert={covered}>
             <header class="topbar">
                 <ModeSwitch state={state} />
                 <div class="topbar-end">
                     <Clock />
+                    <button type="button" class="icon-button" title={t('customize.title')} aria-label={t('customize.title')}
+                        onClick={() => setUi({ customize: true })}>
+                        <Icon name="swatch" />
+                    </button>
                     <button type="button" class="icon-button" title={t('settings.title')} aria-label={t('settings.title')}
                         onClick={() => setUi({ settings: 'appearance' })}>
                         <Icon name="sliders" />
@@ -374,10 +422,10 @@ export function Home({ state, covered }: { state: AppState; covered: boolean }) 
                         <Launcher variant="home" />
                         <Continue state={state} />
                     </div>
-                    <Deck key={modeKey} state={state} />
+                    <Deck key={scene} state={state} />
                 </main>
             </div>
-            <Dock key={modeKey} state={state} />
+            <Dock key={scene} state={state} />
         </div>
     );
 }

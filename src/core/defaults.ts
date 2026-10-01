@@ -1,3 +1,4 @@
+import { DEFAULT_BACKGROUND } from './background';
 import { SCHEMA_VERSION, type AppState, type ID, type Prefs, type SearchProvider } from './types';
 
 export const MAX_RECENTS = 30;
@@ -28,6 +29,8 @@ export const DEFAULT_PROVIDER_ID = BUILTIN_PROVIDERS[0]!.id;
 export const DEFAULT_PREFS: Prefs = {
     language: 'en',
     themeId: 'dusk',
+    background: DEFAULT_BACKGROUND,
+    atmosphere: 'cinematic',
     motion: 'full',
     iconSource: 'site',
     openInNewTab: false,
@@ -35,6 +38,7 @@ export const DEFAULT_PREFS: Prefs = {
     // Needs an optional browser permission, so it starts off and is enabled by the user.
     showClosedTabs: false,
     showDock: true,
+    dockLabels: false,
     defaultProviderId: DEFAULT_PROVIDER_ID,
 };
 
@@ -50,10 +54,11 @@ export function emptyState(): AppState {
         modeOrder: [],
         activeModeId: null,
         dock: [],
+        wallpapers: {},
         providers: BUILTIN_PROVIDERS.map(p => ({ ...p, aliases: [...p.aliases] })),
         recents: [],
         usage: {},
-        prefs: { ...DEFAULT_PREFS },
+        prefs: { ...DEFAULT_PREFS, background: { ...DEFAULT_BACKGROUND } },
     };
 }
 

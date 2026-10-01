@@ -4,6 +4,7 @@
  */
 import { useEffect, useState } from 'preact/hooks';
 import { emptyState } from '../core/defaults';
+import type { Appearance } from '../app/appearance';
 import type { AppState, ID, Snapshot } from '../core/types';
 import { saveState } from './storage';
 
@@ -97,6 +98,8 @@ export interface MenuItem {
     /** A non-interactive section label. */
     heading?: boolean;
     separatorBefore?: boolean;
+    /** A key hint shown at the end of the row, e.g. a search shortcut. */
+    shortcut?: string;
     run?: () => void;
 }
 
@@ -119,9 +122,17 @@ export interface UiState {
     editor: EditorTarget | null;
     menu: { x: number; y: number; items: MenuItem[] } | null;
     toasts: Toast[];
+    /** The Customize panel is open. */
+    customize: boolean;
+    /** A look being tried out in Customize. Shown instead of the saved one; never persisted. */
+    preview: Appearance | null;
+    /** Where on screen the open Space was launched from, so it can grow out of that point. */
+    origin: { x: number; y: number } | null;
 }
 
-export const ui = createStore<UiState>({ palette: false, spaceId: null, settings: null, editor: null, menu: null, toasts: [] });
+export const ui = createStore<UiState>({
+    palette: false, spaceId: null, settings: null, editor: null, menu: null, toasts: [], customize: false, preview: null, origin: null,
+});
 
 export function setUi(patch: Partial<UiState>): void {
     ui.set({ ...ui.get(), ...patch });

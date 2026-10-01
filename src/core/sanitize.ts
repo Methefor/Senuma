@@ -2,6 +2,7 @@
  * Rebuilds a trustworthy AppState from anything read off disk or imported. Damaged entries
  * are dropped one by one, so a single corrupted record can never break the page.
  */
+import { ATMOSPHERE_LEVELS, sanitizeBackground, sanitizeWallpapers, type WallpaperAsset } from './background';
 import { BUILTIN_PROVIDERS, DEFAULT_PREFS, MAX_DOCK, MAX_RECENTS, MAX_USAGE, emptyState, newId } from './defaults';
 import { isValidTemplate, parseAliases } from './ops';
 import {
@@ -105,19 +106,22 @@ function sanitizeProviders(raw: unknown): SearchProvider[] {
     return providers;
 }
 
-function sanitizePrefs(raw: unknown, providers: SearchProvider[]): Prefs {
+function sanitizePrefs(raw: unknown, providers: SearchProvider[], wallpapers: Record<ID, WallpaperAsset>): Prefs {
     const p = isDict(raw) ? raw : {};
     const bool = (key: keyof Prefs) => (typeof p[key] === 'boolean' ? (p[key] as boolean) : (DEFAULT_PREFS[key] as boolean));
     const providerId = str(p.defaultProviderId);
     return {
         language: oneOf(p.language, ['en', 'tr'] as const, DEFAULT_PREFS.language),
         themeId: str(p.themeId, DEFAULT_PREFS.themeId) || DEFAULT_PREFS.themeId,
+        background: sanitizeBackground(p.background, wallpapers),
+        atmosphere: oneOf(p.atmosphere, ATMOSPHERE_LEVELS, DEFAULT_PREFS.atmosphere),
         motion: oneOf(p.motion, ['full', 'reduced', 'off'] as const, DEFAULT_PREFS.motion),
         iconSource: oneOf(p.iconSource, ['site', 'service', 'none'] as const, DEFAULT_PREFS.iconSource),
         openInNewTab: bool('openInNewTab'),
         showContinue: bool('showContinue'),
         showClosedTabs: bool('showClosedTabs'),
         showDock: bool('showDock'),
+        dockLabels: bool('dockLabels'),
         defaultProviderId: providers.some(x => x.id === providerId) ? providerId : DEFAULT_PREFS.defaultProviderId,
     };
 }
@@ -139,6 +143,7 @@ export function sanitize(raw: unknown): AppState {
     const items = sanitizeItems(raw.items);
     const spaces = sanitizeSpaces(raw.spaces, items);
     const providers = sanitizeProviders(raw.providers);
+    const wallpapers = sanitizeWallpapers(raw.wallpapers);
 
     const modes: Record<ID, Mode> = {};
     if (isDict(raw.modes)) {
@@ -151,6 +156,7 @@ export function sanitize(raw: unknown): AppState {
                 spaceIds: [...new Set(arr(value.spaceIds).filter((x): x is ID => typeof x === 'string' && x in spaces))],
             };
             if (str(value.themeId)) mode.themeId = str(value.themeId);
+            if (isDict(value.background)) mode.background = sanitizeBackground(value.background, wallpapers);
             if (providers.some(p => p.id === value.providerId)) mode.providerId = str(value.providerId);
             if (Array.isArray(value.dock)) mode.dock = sanitizeDock(value.dock, items, spaces);
             modes[id] = mode;
@@ -177,10 +183,11 @@ export function sanitize(raw: unknown): AppState {
         modeOrder: orderFor(raw.modeOrder, modes),
         activeModeId: typeof raw.activeModeId === 'string' && raw.activeModeId in modes ? raw.activeModeId : null,
         dock: sanitizeDock(raw.dock, items, spaces),
+        wallpapers,
         providers,
         recents: sanitizeRecents(raw.recents, spaces),
         usage,
-        prefs: sanitizePrefs(raw.prefs, providers),
+        prefs: sanitizePrefs(raw.prefs, providers, wallpapers),
     };
     if (isDict(raw.legacy)) {
         const summary = isDict(raw.legacy.summary) ? raw.legacy.summary : {};

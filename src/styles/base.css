@@ -1,36 +1,36 @@
-/* Base: reset, the three visual layers, the motion scale, and shared primitives. All colour,
-   type, radius, blur and atmosphere values come from theme tokens (see core/themes.ts). */
+/* Base: reset, the backdrop and atmosphere layers, the motion scale, shared primitives.
+   Every colour, font, radius, blur and effect strength is a theme token (core/themes.ts);
+   nothing in the stylesheets names a theme. */
 
 *, *::before, *::after { box-sizing: border-box; }
 
 :root {
-    /* Motion scale. Four durations and two curves cover every transition in the product. */
-    --t-feedback: 120ms;   /* hover, press, toggles: must feel instant */
-    --t-ui: 200ms;         /* menus, toasts, small state changes */
-    --t-panel: 300ms;      /* a Space, the command center, settings: a surface arriving */
-    --t-scene: 520ms;      /* Mode and theme changes: the whole environment shifting */
+    /* Motion scale. Four durations and two curves cover every transition in the product.
+       A theme sets --motion-scale to make the whole interface feel brisker or calmer. */
+    --motion-fast: calc(120ms * var(--motion-scale, 1));       /* hover, press, toggles */
+    --motion-standard: calc(200ms * var(--motion-scale, 1));   /* menus, toasts, small state changes */
+    --motion-panel: calc(280ms * var(--motion-scale, 1));      /* a Space, a panel: a surface arriving */
+    --motion-scene: calc(480ms * var(--motion-scale, 1));      /* Mode, theme, wallpaper: the scene changing */
     --ease-out: cubic-bezier(.2, .7, .2, 1);
     --ease-in-out: cubic-bezier(.6, 0, .3, 1);
-    --stagger: 20ms;
 
-    --focus: 0 0 0 2px var(--backdrop-color), 0 0 0 4px var(--accent);
+    /* Atmosphere level (0, .55 or 1), set from the user's choice. Scales every effect below. */
+    --atmo: 1;
+
+    --focus: 0 0 0 2px var(--bg-color), 0 0 0 4px var(--accent);
 }
-
-/* A Space's glyph takes the Space colour as far as the theme allows; monochrome themes
-   (tint strength 0) fall back to their own accent. Resolved wherever --tint is set. */
-[style*='--tint'] { --glyph: color-mix(in srgb, var(--tint) calc(100% * var(--tint-strength)), var(--accent)); }
 
 html, body { height: 100%; margin: 0; }
 
 body {
-    background: var(--backdrop-color);
-    color: var(--ink);
+    background: var(--bg-color);
+    color: var(--text-primary);
     font: 400 14px/1.45 var(--font-ui);
     -webkit-font-smoothing: antialiased;
     overflow: hidden;
 }
 
-h1, h2, h3, p, ul, ol, fieldset { margin: 0; padding: 0; }
+h1, h2, h3, h4, p, ul, ol, fieldset { margin: 0; padding: 0; }
 ul, ol { list-style: none; }
 fieldset { border: 0; min-width: 0; }
 a { color: inherit; text-decoration: none; }
@@ -42,35 +42,62 @@ img { display: block; }
 
 :focus-visible { outline: none; box-shadow: var(--focus); }
 
-* { scrollbar-width: thin; scrollbar-color: var(--line-hi) transparent; }
+* { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
 
-/* ---------- Layer 1 + 2: backdrop and atmosphere ---------- */
+/* A Space's glyph takes the Space colour as far as the theme allows; monochrome themes
+   (tint strength 0) fall back to their own accent. Resolved wherever --tint is set. */
+[style*='--tint'] { --glyph: color-mix(in srgb, var(--tint) calc(100% * var(--tint-strength)), var(--accent)); }
+
+/* ---------- Backdrop: theme background → picture → wash → atmosphere ---------- */
 
 .backdrop {
     position: fixed;
     inset: 0;
-    background: var(--backdrop);
+    background: var(--bg-image);
     overflow: hidden;
-    animation: fade var(--t-scene) var(--ease-in-out);
+    animation: fade var(--motion-scene) var(--ease-in-out);
 }
-/* The light source: a separate layer so it can drift without repainting the page. */
+.backdrop > i, .backdrop-stage, .backdrop-picture { position: absolute; inset: 0; }
+
+/* The theme's light source: its own layer so it can drift without repainting anything. */
 .backdrop-glow {
-    position: absolute;
-    inset: -6%;
-    background: var(--glow);
+    inset: -6% !important;
+    background: var(--bg-glow);
+    opacity: calc(.45 + .55 * var(--atmo));
     transform-origin: 50% 100%;
-    will-change: transform, opacity;
 }
-[data-motion='full'] .backdrop-glow { animation: breathe 26s var(--ease-in-out) infinite alternate; }
-/* Vignette and optional scanlines: strength comes from theme tokens, so 0 means absent. */
+[data-motion='full']:not([data-atmosphere='off']) .backdrop-glow { animation: breathe 26s var(--ease-in-out) infinite alternate; will-change: transform; }
+/* Over a picture the theme's glow would fight the photograph; the picture is the light. */
+.backdrop[data-picture] .backdrop-glow { display: none; }
+
+.backdrop-picture { width: 100%; height: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; }
+/* A few hundred bytes of the photo, blurred, shown the instant the page opens. */
+.backdrop-lqip { filter: blur(24px); transform: scale(1.12); }
+.backdrop-photo { opacity: 0; transition: opacity var(--motion-scene) var(--ease-in-out); }
+.backdrop-photo.is-ready { opacity: 1; }
+
+/* The wash pulls any picture into the theme's mood and keeps text readable over it. */
+.backdrop-wash { background: rgb(var(--bg-wash)); }
+
+/* Bloom: a soft highlight from above, in the accent colour. Mostly a "Cinematic" effect. */
+.backdrop-bloom {
+    background: radial-gradient(70% 46% at 50% -6%, color-mix(in srgb, var(--accent) 26%, transparent) 0%, transparent 70%);
+    opacity: calc(var(--atmo-bloom) * var(--atmo) * var(--atmo));
+}
+/* Fog: the lower third settles into the theme's colour, grounding the dock. */
+.backdrop-fog {
+    background: linear-gradient(to top, rgb(var(--atmo-fog) / .62) 0%, rgb(var(--atmo-fog) / .22) 22%, transparent 46%);
+    opacity: var(--atmo);
+}
+/* Vignette and scanlines. */
 .backdrop::before {
     content: '';
     position: absolute;
     inset: 0;
     z-index: 1;
     background:
-        repeating-linear-gradient(0deg, rgb(0 0 0 / calc(var(--scan) * .45)) 0 1px, transparent 1px 3px),
-        radial-gradient(120% 90% at 50% 40%, transparent 55%, rgb(0 0 0 / var(--vignette)) 130%);
+        repeating-linear-gradient(0deg, rgb(0 0 0 / calc(var(--atmo-scan) * var(--atmo) * .45)) 0 1px, transparent 1px 3px),
+        radial-gradient(120% 90% at 50% 40%, transparent 55%, rgb(0 0 0 / calc(var(--atmo-vignette) * var(--atmo))) 130%);
 }
 /* Film grain: a tiny inline noise tile, no asset request. */
 .backdrop::after {
@@ -79,12 +106,21 @@ img { display: block; }
     inset: 0;
     z-index: 2;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
-    opacity: var(--grain);
+    opacity: calc(var(--atmo-grain) * var(--atmo));
     mix-blend-mode: overlay;
 }
 [data-scheme='light'] .backdrop::after { mix-blend-mode: multiply; }
 
-/* ---------- Layer 3: interface primitives ---------- */
+/* Over a picture, resting surfaces become glass and loose text gets a soft halo: whatever
+   the photograph, what you read sits on something the theme controls. */
+[data-backdrop='picture'] body {
+    --surface-primary: color-mix(in srgb, var(--surface-glass) 62%, transparent);
+    --surface-secondary: color-mix(in srgb, var(--surface-glass) 84%, transparent);
+    --space-surface: color-mix(in srgb, var(--surface-glass) 58%, transparent);
+    --on-backdrop-shadow: 0 1px 14px rgb(var(--bg-wash) / .7), 0 0 2px rgb(var(--bg-wash) / .5);
+}
+
+/* ---------- Interface primitives ---------- */
 
 .icon { flex: none; display: block; }
 .glyph-text { line-height: 1; }
@@ -94,7 +130,7 @@ img { display: block; }
     font-style: var(--label-style);
     letter-spacing: var(--label-tracking);
     text-transform: var(--label-transform);
-    color: var(--ink-3);
+    color: var(--text-tertiary);
 }
 
 kbd {
@@ -103,10 +139,10 @@ kbd {
     min-width: 20px;
     height: 20px;
     padding: 0 5px;
-    border: 1px solid var(--line);
+    border: 1px solid var(--border-subtle);
     border-radius: 5px;
-    background: var(--surface);
-    color: var(--ink-2);
+    background: var(--surface-primary);
+    color: var(--text-secondary);
     font: 500 11px/1 var(--font-ui);
 }
 
@@ -117,16 +153,17 @@ kbd {
     gap: 7px;
     height: 34px;
     padding: 0 14px;
-    border: 1px solid var(--line);
-    border-radius: calc(var(--radius) * .7);
-    background: var(--surface);
-    color: var(--ink);
+    border: 1px solid var(--border-subtle);
+    border-radius: calc(var(--radius-control) * .7);
+    background: var(--surface-primary);
+    color: var(--text-primary);
     font-weight: 500;
     white-space: nowrap;
-    transition: background var(--t-feedback), border-color var(--t-feedback);
+    transition: background var(--motion-fast), border-color var(--motion-fast), transform var(--motion-fast);
 }
-.button:hover:not(:disabled) { background: var(--surface-hi); border-color: var(--line-hi); }
-.button.is-primary { background: var(--accent); border-color: transparent; color: var(--on-accent); font-weight: 600; }
+.button:hover:not(:disabled) { background: var(--surface-secondary); border-color: var(--border-strong); }
+.button:active:not(:disabled) { transform: scale(.98); }
+.button.is-primary { background: var(--accent); border-color: transparent; color: var(--accent-contrast); font-weight: 600; }
 .button.is-primary:hover:not(:disabled) { background: var(--accent); filter: brightness(1.08); }
 .button.is-danger { background: var(--danger); border-color: transparent; color: #fff; }
 
@@ -135,11 +172,11 @@ kbd {
     place-items: center;
     width: 34px;
     height: 34px;
-    border-radius: calc(var(--radius) * .7);
-    color: var(--ink-2);
-    transition: background var(--t-feedback), color var(--t-feedback);
+    border-radius: calc(var(--radius-control) * .7);
+    color: var(--text-secondary);
+    transition: background var(--motion-fast), color var(--motion-fast);
 }
-.icon-button:hover:not(:disabled) { background: var(--surface-hi); color: var(--ink); }
+.icon-button:hover:not(:disabled) { background: var(--surface-secondary); color: var(--text-primary); }
 .icon-button.is-small { width: 28px; height: 28px; }
 
 .text-button { color: var(--accent); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
@@ -151,31 +188,33 @@ kbd {
     gap: 5px;
     height: 28px;
     padding: 0 9px;
-    margin-right: -9px;
-    border-radius: calc(var(--radius) * .6);
-    color: var(--ink-3);
+    border-radius: calc(var(--radius-control) * .6);
+    color: var(--text-tertiary);
     font-size: 12px;
     font-weight: 500;
-    transition: background var(--t-feedback), color var(--t-feedback);
+    white-space: nowrap;
+    transition: background var(--motion-fast), color var(--motion-fast);
 }
-.quiet-button:hover { color: var(--ink); background: var(--surface); }
+.quiet-button:hover { color: var(--text-primary); background: var(--surface-primary); }
 
 input[type='text'], select, textarea {
     height: 36px;
     padding: 0 11px;
-    border: 1px solid var(--line);
-    border-radius: calc(var(--radius) * .6);
-    background: var(--surface);
-    color: var(--ink);
-    transition: border-color var(--t-feedback);
+    border: 1px solid var(--border-subtle);
+    border-radius: calc(var(--radius-control) * .6);
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    transition: border-color var(--motion-fast);
 }
 textarea { height: auto; padding: 9px 11px; resize: vertical; width: 100%; line-height: 1.5; }
-input[type='text']:hover, select:hover, textarea:hover { border-color: var(--line-hi); }
+input[type='text']:hover, select:hover, textarea:hover { border-color: var(--border-strong); }
 input[type='text']:focus-visible, select:focus-visible, textarea:focus-visible { box-shadow: none; border-color: var(--accent); }
-input::placeholder, textarea::placeholder { color: var(--ink-3); }
+input::placeholder, textarea::placeholder { color: var(--text-tertiary); }
 input[aria-invalid='true'] { border-color: var(--danger); }
-select option { background: var(--backdrop-color); color: var(--ink); }
+select option { background: var(--bg-color); color: var(--text-primary); }
 input[type='checkbox'] { width: 16px; height: 16px; flex: none; accent-color: var(--accent); }
+input[type='range'] { width: 100%; accent-color: var(--accent); }
+input[type='color'] { width: 34px; height: 28px; padding: 0; border: 1px solid var(--border-strong); border-radius: 6px; background: none; cursor: pointer; }
 
 .switch {
     position: relative;
@@ -183,9 +222,9 @@ input[type='checkbox'] { width: 16px; height: 16px; flex: none; accent-color: va
     width: 38px;
     height: 22px;
     border-radius: 11px;
-    background: var(--surface-hi);
-    border: 1px solid var(--line-hi);
-    transition: background var(--t-feedback);
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-strong);
+    transition: background var(--motion-fast);
 }
 .switch::after {
     content: '';
@@ -195,14 +234,40 @@ input[type='checkbox'] { width: 16px; height: 16px; flex: none; accent-color: va
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: var(--ink-2);
-    transition: transform var(--t-ui) var(--ease-out), background var(--t-feedback);
+    background: var(--text-secondary);
+    transition: transform var(--motion-standard) var(--ease-out), background var(--motion-fast);
 }
 .switch[aria-checked='true'] { background: var(--accent); border-color: transparent; }
-.switch[aria-checked='true']::after { transform: translateX(16px); background: var(--on-accent); }
+.switch[aria-checked='true']::after { transform: translateX(16px); background: var(--accent-contrast); }
+
+/* One choice out of a few, all visible at once. */
+.segmented {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 2px;
+    padding: 3px;
+    border-radius: calc(var(--radius-control) * .8);
+    background: var(--surface-primary);
+    box-shadow: inset 0 0 0 1px var(--border-subtle);
+}
+.segmented button {
+    height: 30px;
+    padding: 0 10px;
+    border-radius: calc(var(--radius-control) * .6);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: background var(--motion-fast), color var(--motion-fast);
+}
+.segmented button:hover { color: var(--text-primary); }
+.segmented button[aria-checked='true'] { background: var(--accent); color: var(--accent-contrast); font-weight: 600; }
 
 .field-error { color: var(--danger); font-size: 12px; }
-.note { color: var(--ink-2); font-size: 13px; max-width: 62ch; }
+.note { color: var(--text-secondary); font-size: 13px; max-width: 62ch; }
 
 /* ---------- App icon: one container shape everywhere ---------- */
 
@@ -215,10 +280,10 @@ input[type='checkbox'] { width: 16px; height: 16px; flex: none; accent-color: va
     height: var(--size);
     border-radius: 28%;
     background: hsl(var(--hue) 28% 50% / calc(.22 * var(--tint-strength) + .06));
-    box-shadow: inset 0 0 0 1px var(--line);
+    box-shadow: inset 0 0 0 1px var(--border-subtle);
     overflow: hidden;
 }
-.app-icon-mono { font: 600 calc(var(--size) * .44)/1 var(--font-ui); color: var(--ink); opacity: .85; }
+.app-icon-mono { font: 600 calc(var(--size) * .44)/1 var(--font-ui); color: var(--text-primary); opacity: .85; }
 .app-icon-emoji { font-size: calc(var(--size) * .56); line-height: 1; }
 .app-icon img {
     position: absolute;
@@ -229,12 +294,17 @@ input[type='checkbox'] { width: 16px; height: 16px; flex: none; accent-color: va
     object-fit: contain;
     opacity: 0;
     filter: var(--icon-filter);
+    transition: filter var(--motion-fast);
 }
 .app-icon img.is-loaded { opacity: 1; }
 /* Black-on-transparent icons (GitHub, Vercel…) vanish on dark surfaces; a hairline of light keeps their outline. */
 [data-scheme='dark'] .app-icon img { filter: var(--icon-filter) drop-shadow(0 0 .7px rgb(255 255 255 / .8)); }
-/* Colour comes back under the pointer, so a monochrome theme never hides which app is which. */
-a:hover > .app-icon img, button:hover > .app-icon img, .result.is-active .app-icon img { filter: drop-shadow(0 0 .7px rgb(255 255 255 / .5)); }
+/* Monochrome themes tint icons on Home for calm. Where an app is being chosen — under the
+   pointer, on the selected result, inside an open Space — its true colours come back. */
+a:hover > .app-icon img, a:focus-visible > .app-icon img, button:hover > .app-icon img,
+.result.is-active .app-icon img, .overlay-space .app-icon img, .swatch-tile .app-icon img {
+    filter: drop-shadow(0 0 .7px rgb(255 255 255 / .5));
+}
 
 /* ---------- Choice cards (two or three large alternatives) ---------- */
 
@@ -245,16 +315,16 @@ a:hover > .app-icon img, button:hover > .app-icon img, .result.is-active .app-ic
     justify-items: start;
     align-content: start;
     padding: 16px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-control);
+    background: var(--surface-primary);
     text-align: left;
-    transition: background var(--t-feedback), border-color var(--t-feedback), transform var(--t-feedback) var(--ease-out);
+    transition: background var(--motion-fast), border-color var(--motion-fast), transform var(--motion-fast) var(--ease-out);
 }
-.choice:hover { background: var(--surface-hi); border-color: var(--accent); transform: translateY(-1px); }
+.choice:hover { background: var(--surface-secondary); border-color: var(--accent); transform: translateY(-1px); }
 .choice .icon { color: var(--accent); margin-bottom: 4px; }
 .choice strong { font-weight: 600; }
-.choice span { font-size: 12.5px; color: var(--ink-2); line-height: 1.45; }
+.choice span { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; }
 
 /* ---------- Context menu ---------- */
 
@@ -262,16 +332,16 @@ a:hover > .app-icon img, button:hover > .app-icon img, .result.is-active .app-ic
     position: fixed;
     z-index: 900;
     min-width: 200px;
-    max-width: 280px;
+    max-width: 300px;
     max-height: calc(100vh - 16px);
     overflow-y: auto;
     padding: 5px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--panel);
-    backdrop-filter: blur(var(--blur));
-    box-shadow: var(--shadow);
-    animation: pop var(--t-ui) var(--ease-out);
+    border: 1px solid var(--palette-border);
+    border-radius: var(--radius-control);
+    background: var(--palette-surface);
+    backdrop-filter: blur(var(--blur-surface));
+    box-shadow: var(--shadow-card);
+    animation: pop var(--motion-standard) var(--ease-out);
     transform-origin: 0 0;
 }
 .menu button {
@@ -281,17 +351,17 @@ a:hover > .app-icon img, button:hover > .app-icon img, .result.is-active .app-ic
     width: 100%;
     height: 32px;
     padding: 0 10px;
-    border-radius: calc(var(--radius) * .55);
-    color: var(--ink);
+    border-radius: calc(var(--radius-control) * .55);
+    color: var(--text-primary);
     text-align: left;
 }
 .menu button span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.menu button .icon { color: var(--ink-3); }
-.menu button:hover:not(:disabled), .menu button:focus-visible { background: var(--surface-hi); box-shadow: none; }
+.menu button .icon { color: var(--text-tertiary); }
+.menu button:hover:not(:disabled), .menu button:focus-visible { background: var(--surface-secondary); box-shadow: none; }
 .menu button.is-danger, .menu button.is-danger .icon { color: var(--danger); }
 .menu button[aria-checked='true'] .icon:last-child { color: var(--accent); }
-.menu-sep { height: 1px; margin: 5px 6px; background: var(--line); }
-.menu-heading { padding: 6px 10px 4px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.menu-sep { height: 1px; margin: 5px 6px; background: var(--border-subtle); }
+.menu-heading { padding: 6px 10px 4px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-tertiary); }
 
 /* ---------- Toasts ---------- */
 
@@ -312,15 +382,16 @@ a:hover > .app-icon img, button:hover > .app-icon img, .result.is-active .app-ic
     gap: 14px;
     max-width: min(560px, calc(100vw - 32px));
     padding: 10px 14px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--panel);
-    backdrop-filter: blur(var(--blur));
-    box-shadow: var(--shadow);
+    border: 1px solid var(--palette-border);
+    border-radius: var(--radius-control);
+    background: var(--palette-surface);
+    backdrop-filter: blur(var(--blur-surface));
+    box-shadow: var(--shadow-card);
     pointer-events: auto;
-    animation: rise var(--t-ui) var(--ease-out);
+    animation: rise var(--motion-standard) var(--ease-out);
 }
 .toast-action { flex: none; color: var(--accent); font-weight: 600; }
+.toast-action:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---------- Upgrade summary (1.x → 2) ---------- */
 
@@ -333,18 +404,18 @@ a:hover > .app-icon img, button:hover > .app-icon img, .result.is-active .app-ic
     display: grid;
     gap: 12px;
     padding: 18px 18px 16px;
-    border: 1px solid var(--line-hi);
-    border-radius: var(--radius-lg);
-    background: var(--panel);
-    backdrop-filter: blur(var(--blur));
-    box-shadow: var(--shadow);
-    animation: rise var(--t-panel) var(--ease-out) 400ms backwards;
+    border: 1px solid var(--palette-border);
+    border-radius: var(--radius-card);
+    background: var(--palette-surface);
+    backdrop-filter: blur(var(--blur-surface));
+    box-shadow: var(--shadow-card);
+    animation: rise var(--motion-panel) var(--ease-out) 400ms backwards;
 }
 .migration h2 { font: var(--display-weight) 17px/1.25 var(--font-display); letter-spacing: var(--display-tracking); padding-right: 24px; }
 .migration ul { display: grid; gap: 6px; }
 .migration li { display: flex; align-items: center; gap: 8px; }
 .migration li .icon { color: var(--accent); }
-.migration li.is-muted, .migration li.is-muted .icon, .migration p { color: var(--ink-2); }
+.migration li.is-muted, .migration li.is-muted .icon, .migration p { color: var(--text-secondary); }
 .migration p { font-size: 12.5px; }
 .migration-actions { display: flex; gap: 8px; }
 .migration-close { position: absolute; top: 10px; right: 10px; }
@@ -354,15 +425,19 @@ a:hover > .app-icon img, button:hover > .app-icon img, .result.is-active .app-ic
 @keyframes pop { from { opacity: 0; transform: scale(.97); } }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
 @keyframes fade { from { opacity: 0; } }
+/* One entrance shared by everything that changes with the scene (Spaces, dock): a Mode
+   switch reads as a single movement, in step with the backdrop's cross-fade. */
+@keyframes scene { from { opacity: 0; transform: translateY(6px) scale(.992); } }
 @keyframes breathe {
-    from { transform: scale(1); opacity: .86; }
-    to { transform: scale(1.07) translateY(-1.5%); opacity: 1; }
+    from { transform: scale(1); }
+    to { transform: scale(1.07) translateY(-1.5%); }
 }
+.scene { animation: scene var(--motion-scene) var(--ease-out); }
 
 /* Reduced: no movement and no ambient animation; quick fades still confirm what changed. */
 [data-motion='reduced'] *, [data-motion='reduced'] *::before, [data-motion='reduced'] *::after {
     animation-name: fade !important;
-    animation-duration: var(--t-feedback) !important;
+    animation-duration: 120ms !important;
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-property: opacity, background, background-color, border-color, color !important;

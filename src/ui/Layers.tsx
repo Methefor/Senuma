@@ -72,6 +72,7 @@ export function ContextMenu() {
                             }}>
                             {item.glyph && <Icon name={item.glyph} size={15} />}
                             <span>{item.label}</span>
+                            {item.shortcut && <kbd>{item.shortcut}</kbd>}
                             {item.checked && <Icon name="check" size={14} />}
                         </button>
                     )}

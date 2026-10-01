@@ -6,6 +6,8 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), selec
 interface Props {
     label: string;
     class?: string;
+    /** Custom properties for the panel, e.g. where its entrance should come from. */
+    style?: Record<string, string>;
     /** Omit to make the overlay non-dismissable (onboarding). */
     onClose?: () => void;
     children: ComponentChildren;
@@ -15,7 +17,7 @@ interface Props {
  * Modal surface: traps Tab, closes on Escape or a click on the scrim, and returns focus to
  * whatever opened it. Overlays may stack; the one holding focus handles the keys.
  */
-export function Overlay({ label, class: className = '', onClose, children }: Props) {
+export function Overlay({ label, class: className = '', style, onClose, children }: Props) {
     const ref = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -48,7 +50,7 @@ export function Overlay({ label, class: className = '', onClose, children }: Pro
 
     return (
         <div class="scrim" onMouseDown={event => event.target === event.currentTarget && onClose?.()}>
-            <div ref={ref} class={`overlay ${className}`} role="dialog" aria-modal="true" aria-label={label} tabIndex={-1} onKeyDown={onKeyDown}>
+            <div ref={ref} class={`overlay ${className}`} style={style} role="dialog" aria-modal="true" aria-label={label} tabIndex={-1} onKeyDown={onKeyDown}>
                 {children}
             </div>
         </div>

@@ -10,7 +10,7 @@ import { toast, update } from '../../storage/store';
 import { Icon } from '../../ui/Icon';
 import { Overlay } from '../../ui/Overlay';
 import { ImportReview } from '../settings/ImportReview';
-import { ThemePicker } from '../settings/Settings';
+import { ThemePicker } from '../customize/ThemePicker';
 
 const STEPS = ['web', 'look', 'bring'] as const;
 

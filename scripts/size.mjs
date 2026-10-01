@@ -5,9 +5,12 @@ import { gzipSync } from 'node:zlib';
 
 /** [label, file pattern, budget in kB gzip]. Raise a budget deliberately, in review, or not at all. */
 const BUDGETS = [
+    // What every new tab parses before Home appears.
     ['startup JS (newtab-*.js)', /^newtab-.*\.js$/, 44],
-    ['CSS (newtab-*.css)', /^newtab-.*\.css$/, 9],
-    ['all JS, including lazy screens', /\.js$/, 60],
+    ['CSS (newtab-*.css)', /^newtab-.*\.css$/, 9.5],
+    // Screens loaded on demand (Space view, settings, customize, onboarding), language packs excluded.
+    ['on-demand JS', /^(?!newtab-|tr-).*\.js$/, 22],
+    ['language pack (tr)', /^tr-.*\.js$/, 8],
 ];
 
 const dir = 'dist/assets';

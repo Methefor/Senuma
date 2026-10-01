@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { categorize } from './catalog';
-import { buildResults, defaultResults, interpret, matchScore } from './commands';
+import { CATEGORIES, categorize } from './catalog';
+import { buildResults, defaultResults, groupResults, interpret, matchScore } from './commands';
 import { MAX_DOCK, MAX_RECENTS, MAX_USAGE, emptyState } from './defaults';
 import { context, labels, names, seeded } from './fixtures';
 import { iconCandidates, knownAppIcon } from './icons';
@@ -275,10 +275,12 @@ describe('command engine', () => {
         const base = seeded();
         const state = ops.addMode(base.state, { name: 'Dev', glyph: 'code', spaceIds: [base.spaceId] }).state;
         const kinds = (q: string) => buildResults(q, state, context()).map(r => `${r.kind}:${r.title}`);
-        expect(kinds('dev')).toEqual(expect.arrayContaining(['space:Dev', 'mode:Dev']));
-        expect(kinds('new')).toContain('command:New Space');
-        expect(kinds('search set')).toContain('command:Search settings');
-        expect(kinds('noir')).toContain('theme:Noir');
+        expect(kinds('dev')).toEqual(expect.arrayContaining(['space:Open Dev', 'mode:Switch to Dev Mode']));
+        expect(kinds('new')).toContain('command:Create Space');
+        expect(kinds('privacy')).toContain('command:Open Settings: Privacy');
+        expect(kinds('settings')).toContain('command:Open Settings');
+        expect(kinds('wallpaper')).toContain('command:Customize appearance');
+        expect(kinds('noir')).toContain('theme:Use Noir theme');
         expect(kinds('youtube')).toContain('search:Search YouTube…');
         expect(buildResults('dev', state, context()).find(r => r.kind === 'space')?.shortcut).toBe('1');
     });
@@ -309,6 +311,25 @@ describe('command engine', () => {
         expect(buildResults('git', used, context())[0]?.title).toBe('GitLab');
     });
 
+    it('uses one verb per kind of action', () => {
+        const base = seeded();
+        const state = ops.addMode(base.state, { name: 'Dev', glyph: 'code', spaceIds: [base.spaceId] }).state;
+        const titles = [...defaultResults(state, labels), ...buildResults('dev', state, context()), ...buildResults('noir', state, context())]
+            .filter(r => r.kind !== 'item' && r.kind !== 'recent')
+            .map(r => r.title);
+        for (const title of titles) expect(title).toMatch(/^(Open|Switch to|Show|Search|Create|Use|Customize|Go to) /);
+    });
+
+    it('groups results for display without changing what Enter runs', () => {
+        const base = seeded();
+        const state = ops.addMode(base.state, { name: 'Dev', glyph: 'code', spaceIds: [base.spaceId] }).state;
+        const results = buildResults('dev', state, context());
+        const groups = groupResults(results);
+        expect(groups[0]!.results[0]).toBe(results[0]);
+        expect(groups.map(g => g.group)).toEqual([...new Set(results.map(r => r.group))]);
+        expect(groups.flatMap(g => g.results)).toHaveLength(results.length);
+    });
+
     it('bounds remembered usage', () => {
         let state = emptyState();
         for (let i = 0; i < MAX_USAGE + 10; i++) state = ops.recordUsage(state, `k${i}`);
@@ -319,7 +340,7 @@ describe('command engine', () => {
         const base = seeded();
         const state = ops.addMode(base.state, { name: 'Dev', glyph: 'code', spaceIds: [base.spaceId] }).state;
         expect(interpret('switch to dev mode', state)).toEqual({ only: 'mode', term: 'dev' });
-        expect(buildResults('switch to dev mode', state, context())[0]).toMatchObject({ kind: 'mode', title: 'Dev' });
+        expect(buildResults('switch to dev mode', state, context())[0]).toMatchObject({ kind: 'mode', title: 'Switch to Dev Mode' });
         expect(buildResults('open github', state, context())[0]).toMatchObject({ kind: 'item', title: 'GitHub' });
         expect(buildResults('open dev space', state, context())[0]).toMatchObject({ kind: 'space' });
         expect(buildResults('search youtube for react animations', state, context())[0]?.action)
@@ -332,7 +353,7 @@ describe('command engine', () => {
         const base = seeded();
         let state = ops.addMode(base.state, { name: 'Dev', glyph: 'code', spaceIds: [base.spaceId] }).state;
         state = ops.recordRecent(state, { url: 'https://github.com/', title: 'GitHub' });
-        expect(defaultResults(state, labels).map(r => r.kind)).toEqual(['mode', 'recent', 'command', 'command']);
+        expect(defaultResults(state, labels).map(r => r.kind)).toEqual(['recent', 'mode', 'command', 'command', 'command']);
         expect(buildResults('  ', state, context())).toEqual([]);
     });
 });
@@ -361,7 +382,9 @@ describe('icons', () => {
 
 describe('catalog and import', () => {
     it('categorizes by the most specific known host', () => {
-        expect(categorize('https://music.youtube.com/watch')).toBe('music');
+        expect(categorize('https://music.youtube.com/watch')).toBe('entertainment');
+        expect(categorize('https://open.spotify.com/album/1')).toBe('entertainment');
+        expect(categorize('https://www.figma.com/file/x')).toBe('design');
         expect(categorize('https://www.youtube.com/')).toBe('entertainment');
         expect(categorize('https://gist.github.com/x')).toBe('dev');
         expect(categorize('https://www.google.com/')).toBeNull();
@@ -373,6 +396,12 @@ describe('catalog and import', () => {
         expect(state.spaceOrder.map(id => state.spaces[id]!.name)).toEqual(['AI', 'DEV', 'ENTERTAINMENT']);
         expect(state.modeOrder.map(id => state.modes[id]!.name)).toEqual(['dev mode', 'chill mode']);
         expect(Object.keys(state.items).length).toBeGreaterThan(15);
+        // Starter sets stay short enough to take in at a glance.
+        for (const category of CATEGORIES) {
+            const count = category.groups.reduce((sum, g) => sum + g.services.length, 0);
+            expect(count, category.id).toBeLessThanOrEqual(10);
+            for (const group of category.groups) expect(group.services.length, `${category.id}/${group.name}`).toBeLessThanOrEqual(5);
+        }
         expect(applyStarter(emptyState(), ['ai'], names).modeOrder).toHaveLength(0);
         // Running it again (onboarding reopened) adds nothing.
         expect(applyStarter(state, ['ai', 'dev', 'entertainment'], names)).toBe(state);

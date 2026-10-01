@@ -1,6 +1,6 @@
 import { useRef, useState } from 'preact/hooks';
 import { remember, removeGroupWithUndo } from '../../app/actions';
-import { CATEGORIES } from '../../core/catalog';
+import { CATEGORIES, type Category } from '../../core/catalog';
 import { addGroup, addItem, isDocked, itemsOf, moveItem, renameGroup, shiftGroup } from '../../core/ops';
 import { fillFromCategory } from '../../core/setup';
 import type { AppState, ID, Item, Space, SpaceGroup } from '../../core/types';
@@ -11,6 +11,8 @@ import { AppIcon } from '../../ui/AppIcon';
 import { Icon } from '../../ui/Icon';
 import { Overlay } from '../../ui/Overlay';
 import { itemMenu, openAll, spaceMenu } from './menus';
+
+export { Editor } from './Editors';
 
 const DRAG_TYPE = 'application/x-space-item';
 const RECENT_TILES = 4;
@@ -150,8 +152,30 @@ function moveFocus(body: HTMLElement, key: string): boolean {
     return true;
 }
 
-export function SpaceView({ state, space }: { state: AppState; space: Space }) {
+/**
+ * Which starter set an empty Space most likely wants: the category it was made from, or one
+ * whose name it shares ("Design", "Gaming"). Null when the name says nothing we recognise.
+ */
+function categoryFor(space: Space): Category | null {
+    const name = space.name.trim().toLowerCase();
+    return (
+        CATEGORIES.find(c => c.id === space.templateId) ??
+        CATEGORIES.find(c => c.id === name || t(`cat.${c.id}` as MessageKey).toLowerCase() === name) ??
+        null
+    );
+}
+
+/** How far the entrance leans toward where the Space was opened from (0 = none). */
+const ORIGIN_PULL = 0.16;
+
+export function SpaceView({ state, space, origin }: { state: AppState; space: Space; origin: { x: number; y: number } | null }) {
     const [filterText, setFilterText] = useState('');
+    const suggested = categoryFor(space);
+    // The panel arrives from the direction of the plate or dock icon that opened it.
+    const entrance = {
+        '--from-x': `${origin ? Math.round((origin.x - innerWidth / 2) * ORIGIN_PULL) : 0}px`,
+        '--from-y': `${origin ? Math.round((origin.y - innerHeight / 2) * ORIGIN_PULL) : 0}px`,
+    };
     const bodyRef = useRef<HTMLDivElement>(null);
     const items = itemsOf(state, space);
     const count = items.length;
@@ -166,7 +190,7 @@ export function SpaceView({ state, space }: { state: AppState; space: Space }) {
     const nothingMatches = !!filter && !items.some(item => matches(item, filter));
 
     return (
-        <Overlay label={space.name} class="overlay-space" onClose={close}>
+        <Overlay label={space.name} class="overlay-space" style={entrance} onClose={close}>
             <div class="space" style={{ '--tint': space.accent }}
                 onKeyDown={event => {
                     const typing = (event.target as HTMLElement).tagName === 'INPUT';
@@ -204,17 +228,37 @@ export function SpaceView({ state, space }: { state: AppState; space: Space }) {
                 <div class="space-body" ref={bodyRef}>
                     {count === 0 && (
                         <div class="space-empty">
-                            <p>{t('space.emptyHint')}</p>
-                            <p class="eyebrow">{t('space.startWith')}</p>
-                            <div class="pick-row">
-                                {CATEGORIES.map(category => (
-                                    <button type="button" class="pick" key={category.id} style={{ '--tint': category.accent }}
-                                        onClick={() => update(s => fillFromCategory(s, space.id, category.id))}>
-                                        <Icon name={category.glyph} size={16} />
-                                        {t(`cat.${category.id}` as MessageKey)}
+                            <h3>{t('space.emptyTitle', { name: space.name })}</h3>
+                            {suggested ? (
+                                <>
+                                    <p>{t('space.emptyAdd')}</p>
+                                    <div class="pick-row">
+                                        {suggested.groups.flatMap(group => group.services).map(([title, url]) => (
+                                            <button type="button" class="pick" key={url} onClick={() => update(s => addItem(s, space.id, null, { title, url }).state)}>
+                                                <AppIcon url={url} title={title} size={20} />
+                                                {title}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <button type="button" class="button" onClick={() => update(s => fillFromCategory(s, space.id, suggested.id))}>
+                                        {t('space.addAll')}
                                     </button>
-                                ))}
-                            </div>
+                                </>
+                            ) : (
+                                <>
+                                    <p>{t('space.emptyHint')}</p>
+                                    <p class="eyebrow">{t('space.startWith')}</p>
+                                    <div class="pick-row">
+                                        {CATEGORIES.filter(c => c.onboarding !== false).map(category => (
+                                            <button type="button" class="pick" key={category.id} style={{ '--tint': category.accent }}
+                                                onClick={() => update(s => fillFromCategory(s, space.id, category.id))}>
+                                                <Icon name={category.glyph} size={16} />
+                                                {t(`cat.${category.id}` as MessageKey)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
                     {recent.length >= RECENT_MIN_ENTRIES && (

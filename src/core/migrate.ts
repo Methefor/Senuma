@@ -55,6 +55,9 @@ const MIGRATIONS: Record<number, (raw: Dict) => Dict> = {
         const legacy = isDict(raw.legacy) ? { acknowledged: true, ...raw.legacy } : raw.legacy;
         return { ...raw, dock, providers, recents, prefs, legacy, schema: 3 };
     },
+    // v3 → v4: backgrounds, atmosphere and the wallpaper library arrive. Every new field has
+    // a default that sanitize fills in, so the step only has to move the version on.
+    3: raw => ({ ...raw, schema: 4 }),
 };
 
 /** Brings a stored or imported state up to the current schema and validates it. Null if unusable. */

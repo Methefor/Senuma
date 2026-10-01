@@ -6,13 +6,27 @@ import { MAX_SNAPSHOTS, newId } from './defaults';
 import { fromLegacy, upgrade } from './migrate';
 import { addGroup, addItem, addSpace, itemsOf } from './ops';
 import { isDict } from './sanitize';
-import type { AppState, Snapshot } from './types';
+import { DEFAULT_BACKGROUND, type Background } from './background';
+import type { AppState, Mode, Snapshot } from './types';
 
 const BACKUP_KIND = 'browser-os-backup';
 
+/**
+ * Uploaded images never leave the device inside a backup: a file holds no pixels, so a
+ * background that points at an upload is exported as the theme default. Everything else
+ * about the look (theme, presets, colours, adjustments) travels with the file.
+ */
+export function withoutUploads(state: AppState): AppState {
+    const portable = (background: Background): Background =>
+        background.source.kind === 'upload' ? { ...background, source: DEFAULT_BACKGROUND.source } : background;
+    const modes: Record<string, Mode> = {};
+    for (const [id, mode] of Object.entries(state.modes)) modes[id] = mode.background ? { ...mode, background: portable(mode.background) } : mode;
+    return { ...state, wallpapers: {}, modes, prefs: { ...state.prefs, background: portable(state.prefs.background) } };
+}
+
 export function exportBackup(state: AppState): string {
     // Activity is private to this device and is left out of files meant to be shared.
-    const portable: AppState = { ...state, recents: [], usage: {} };
+    const portable: AppState = { ...withoutUploads(state), recents: [], usage: {} };
     return JSON.stringify({ kind: BACKUP_KIND, schema: state.schema, exportedAt: new Date().toISOString(), state: portable }, null, 2);
 }
 

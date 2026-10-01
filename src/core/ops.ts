@@ -1,5 +1,6 @@
 /** Pure state transitions. Every function returns a new AppState and never mutates its input. */
 import { ACCENTS, DEFAULT_PROVIDER_ID, MAX_DOCK, MAX_RECENTS, MAX_USAGE, newId } from './defaults';
+import { DEFAULT_BACKGROUND, MAX_WALLPAPERS, type Background, type WallpaperAsset } from './background';
 import type { AppState, DockEntry, ID, Item, Mode, Prefs, SearchProvider, Space, SpaceGroup } from './types';
 import { normalizeUrl, titleFromUrl } from './url';
 
@@ -447,6 +448,13 @@ export function setModeDock(s: AppState, modeId: ID, own: boolean): AppState {
     return { ...s, modes: { ...s.modes, [modeId]: next } };
 }
 
+/** Replaces the entries of a Mode's own dock. Does nothing for a Mode that shares the dock. */
+export function updateModeDock(s: AppState, modeId: ID, dock: DockEntry[]): AppState {
+    const mode = s.modes[modeId];
+    if (!mode?.dock) return s;
+    return { ...s, modes: { ...s.modes, [modeId]: { ...mode, dock: dock.slice(0, MAX_DOCK) } } };
+}
+
 // ---------- Modes ----------
 
 export function addMode(s: AppState, init: Omit<Mode, 'id'>): { state: AppState; id: ID } {
@@ -457,10 +465,18 @@ export function addMode(s: AppState, init: Omit<Mode, 'id'>): { state: AppState;
     };
 }
 
-export function updateMode(s: AppState, id: ID, patch: Partial<Pick<Mode, 'name' | 'glyph' | 'spaceIds' | 'themeId' | 'providerId'>>): AppState {
+export function updateMode(
+    s: AppState,
+    id: ID,
+    patch: Partial<Pick<Mode, 'name' | 'glyph' | 'spaceIds' | 'themeId' | 'providerId'>> & { background?: Background | null },
+): AppState {
     const mode = s.modes[id];
     if (!mode) return s;
-    const next: Mode = { ...mode, ...patch, name: patch.name?.trim() || mode.name };
+    const { background, ...rest } = patch;
+    const next: Mode = { ...mode, ...rest, name: patch.name?.trim() || mode.name };
+    // null clears the override; undefined leaves it as it was.
+    if (background === null) delete next.background;
+    else if (background) next.background = background;
     if (!next.themeId) delete next.themeId;
     if (!next.providerId) delete next.providerId;
     return { ...s, modes: { ...s.modes, [id]: next } };
@@ -512,6 +528,11 @@ export function effectiveThemeId(s: AppState): string {
     return activeMode(s)?.themeId || s.prefs.themeId;
 }
 
+/** Background in effect: the active Mode's own, else the default one. */
+export function effectiveBackground(s: AppState): Background {
+    return activeMode(s)?.background ?? s.prefs.background;
+}
+
 export function effectiveProviderId(s: AppState): ID {
     return activeMode(s)?.providerId || s.prefs.defaultProviderId;
 }
@@ -532,6 +553,29 @@ export function removeRecent(s: AppState, url: string): AppState {
 export function recordUsage(s: AppState, key: string): AppState {
     const entries = Object.entries({ ...s.usage, [key]: Date.now() }).sort((a, b) => b[1] - a[1]).slice(0, MAX_USAGE);
     return { ...s, usage: Object.fromEntries(entries) };
+}
+
+// ---------- Wallpaper library ----------
+
+/** Adds an uploaded image to the library. Returns the same state when the library is full. */
+export function addWallpaper(s: AppState, asset: WallpaperAsset): AppState {
+    if (Object.keys(s.wallpapers).length >= MAX_WALLPAPERS && !s.wallpapers[asset.id]) return s;
+    return { ...s, wallpapers: { ...s.wallpapers, [asset.id]: asset } };
+}
+
+/** Removes an image and returns every background that used it to the theme default. */
+export function removeWallpaper(s: AppState, id: ID): AppState {
+    if (!s.wallpapers[id]) return s;
+    const wallpapers = { ...s.wallpapers };
+    delete wallpapers[id];
+    const release = (background: Background): Background =>
+        background.source.kind === 'upload' && background.source.assetId === id ? { ...background, source: DEFAULT_BACKGROUND.source } : background;
+    return {
+        ...s,
+        wallpapers,
+        prefs: { ...s.prefs, background: release(s.prefs.background) },
+        modes: mapModes(s, mode => (mode.background ? { ...mode, background: release(mode.background) } : mode)),
+    };
 }
 
 // ---------- Preferences & search ----------
