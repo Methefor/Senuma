@@ -70,6 +70,7 @@ function ItemEditor({ state, target }: { state: AppState; target: Extract<Editor
 function SpaceEditor({ state, spaceId }: { state: AppState; spaceId?: ID }) {
     const space = spaceId ? state.spaces[spaceId] : undefined;
     const [name, setName] = useState(space?.name ?? '');
+    const [note, setNote] = useState(space?.note ?? '');
     const [glyph, setGlyph] = useState(space?.glyph ?? 'folder');
     const [accent, setAccent] = useState(space?.accent ?? ACCENTS[state.spaceOrder.length % ACCENTS.length]!);
 
@@ -77,12 +78,12 @@ function SpaceEditor({ state, spaceId }: { state: AppState; spaceId?: ID }) {
         event.preventDefault();
         if (!name.trim()) return;
         if (space) {
-            update(s => updateSpace(s, space.id, { name, glyph, accent }));
+            update(s => updateSpace(s, space.id, { name, glyph, accent, note }));
             return close();
         }
         let createdId: ID | null = null;
         update(s => {
-            const created = addSpace(s, { name, glyph, accent });
+            const created = addSpace(s, { name, glyph, accent, note });
             createdId = created.id;
             return created.state;
         });
@@ -98,6 +99,11 @@ function SpaceEditor({ state, spaceId }: { state: AppState; spaceId?: ID }) {
                     <span>{t('field.name')}</span>
                     <input type="text" value={name} autofocus required autocomplete="off" placeholder={t('space.namePlaceholder')}
                         onInput={event => setName(event.currentTarget.value)} />
+                </label>
+                <label class="field">
+                    <span>{t('field.note')} <em>{t('field.optional')}</em></span>
+                    <input type="text" value={note} autocomplete="off" maxLength={60} placeholder={t('space.notePlaceholder')}
+                        onInput={event => setNote(event.currentTarget.value)} />
                 </label>
                 <fieldset class="field">
                     <legend>{t('field.icon')}</legend>

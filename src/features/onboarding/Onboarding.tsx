@@ -1,5 +1,6 @@
 import { useState } from 'preact/hooks';
-import { readBrowserBookmarks, setupNames } from '../../app/actions';
+import { setupNames } from '../../app/actions';
+import { readBookmarks } from '../../browser/bookmarks';
 import { CATEGORIES } from '../../core/catalog';
 import { setPrefs } from '../../core/ops';
 import { applyStarter, organize, type Proposal } from '../../core/setup';
@@ -11,9 +12,9 @@ import { Overlay } from '../../ui/Overlay';
 import { ImportReview } from '../settings/ImportReview';
 import { ThemePicker } from '../settings/Settings';
 
-const STEPS = ['interests', 'look', 'bookmarks'] as const;
+const STEPS = ['web', 'look', 'bring'] as const;
 
-/** First run: three short steps that end on a populated, personal Home. */
+/** First run for new users: three short steps that end on a populated, personal Home. */
 export function Onboarding({ state }: { state: AppState }) {
     const [step, setStep] = useState(0);
     const [picked, setPicked] = useState<string[]>([]);
@@ -21,17 +22,19 @@ export function Onboarding({ state }: { state: AppState }) {
 
     const finish = () => update(s => ({ ...s, onboarded: true }));
 
-    const toStepTwo = () => {
+    const toLook = () => {
         // Spaces are created as soon as interests are chosen, so the page behind fills in live.
         update(s => applyStarter(s, picked, setupNames()));
         setStep(1);
     };
 
     const importBookmarks = async () => {
-        const result = await readBrowserBookmarks();
-        if (!result.ok) return toast(t(result.reason === 'denied' ? 'import.denied' : 'import.unavailable'));
-        setProposals(organize(result.links));
+        const result = await readBookmarks();
+        if (!result.ok) return toast(t(`import.${result.reason}` as MessageKey));
+        setProposals(organize(result.value));
     };
+
+    const service = state.prefs.iconSource === 'service';
 
     return (
         <Overlay label={t('onboarding.title')} class="overlay-onboarding">
@@ -49,10 +52,11 @@ export function Onboarding({ state }: { state: AppState }) {
 
                 {step === 0 && (
                     <>
+                        <p class="eyebrow">{t('onboarding.step.web')}</p>
                         <h2>{t('onboarding.interestsTitle')}</h2>
                         <p class="lede">{t('onboarding.interestsBody')}</p>
                         <div class="interest-grid">
-                            {CATEGORIES.map(category => {
+                            {CATEGORIES.filter(c => c.onboarding !== false).map(category => {
                                 const on = picked.includes(category.id);
                                 return (
                                     <button type="button" key={category.id} class="interest" aria-pressed={on} style={{ '--tint': category.accent }}
@@ -66,7 +70,7 @@ export function Onboarding({ state }: { state: AppState }) {
                         </div>
                         <div class="form-actions">
                             <span class="note">{t('onboarding.editable')}</span>
-                            <button type="button" class="button is-primary" autofocus disabled={!picked.length} onClick={toStepTwo}>
+                            <button type="button" class="button is-primary" disabled={!picked.length} onClick={toLook}>
                                 {picked.length ? t('onboarding.createSpaces', { n: picked.length }) : t('onboarding.pickOne')}
                             </button>
                         </div>
@@ -75,11 +79,20 @@ export function Onboarding({ state }: { state: AppState }) {
 
                 {step === 1 && (
                     <>
+                        <p class="eyebrow">{t('onboarding.step.look')}</p>
                         <h2>{t('onboarding.lookTitle')}</h2>
                         <p class="lede">{t('onboarding.lookBody')}</p>
-                        <ThemePicker themeId={state.prefs.themeId} onPick={id => update(s => setPrefs(s, { themeId: id }))} />
+                        <ThemePicker large themeId={state.prefs.themeId} onPick={id => update(s => setPrefs(s, { themeId: id }))} />
+                        <label class="consent">
+                            <input type="checkbox" checked={service}
+                                onChange={() => update(s => setPrefs(s, { iconSource: service ? 'site' : 'service' }))} />
+                            <span>
+                                <strong>{t('onboarding.iconsTitle')}</strong>
+                                <span>{t('onboarding.iconsBody')}</span>
+                            </span>
+                        </label>
                         <div class="form-actions">
-                            <span />
+                            <button type="button" class="button" onClick={() => setStep(0)}>{t('back')}</button>
                             <button type="button" class="button is-primary" autofocus onClick={() => setStep(2)}>{t('continue')}</button>
                         </div>
                     </>
@@ -87,21 +100,37 @@ export function Onboarding({ state }: { state: AppState }) {
 
                 {step === 2 && (
                     <>
-                        <h2>{t('onboarding.bookmarksTitle')}</h2>
-                        <p class="lede">{t('onboarding.bookmarksBody')}</p>
+                        <p class="eyebrow">{t('onboarding.step.bring')}</p>
+                        <h2>{t('onboarding.bringTitle')}</h2>
                         {proposals ? (
-                            <ImportReview proposals={proposals} onDone={finish} />
+                            <>
+                                <ImportReview proposals={proposals} onDone={finish} />
+                                <div class="form-actions">
+                                    <span class="note">{t('onboarding.privacy')}</span>
+                                    <button type="button" class="button" onClick={finish}>{t('onboarding.skipImport')}</button>
+                                </div>
+                            </>
                         ) : (
-                            <button type="button" class="button" onClick={() => void importBookmarks()}>
-                                <Icon name="download" size={15} />{t('import.bookmarks')}
-                            </button>
+                            <>
+                                <p class="lede">{t('onboarding.bringBody')}</p>
+                                <div class="choice-row">
+                                    <button type="button" class="choice" onClick={() => void importBookmarks()}>
+                                        <Icon name="download" size={18} />
+                                        <strong>{t('import.bookmarks')}</strong>
+                                        <span>{t('onboarding.importWhy')}</span>
+                                    </button>
+                                    <button type="button" class="choice" autofocus onClick={finish}>
+                                        <Icon name="spark" size={18} />
+                                        <strong>{t('onboarding.fresh')}</strong>
+                                        <span>{t('onboarding.freshBody')}</span>
+                                    </button>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="button" onClick={() => setStep(1)}>{t('back')}</button>
+                                    <span class="note">{t('onboarding.privacy')}</span>
+                                </div>
+                            </>
                         )}
-                        <div class="form-actions">
-                            <span class="note">{t('onboarding.privacy')}</span>
-                            <button type="button" class="button is-primary" autofocus onClick={finish}>
-                                {proposals ? t('onboarding.skipImport') : t('onboarding.finish')}
-                            </button>
-                        </div>
                     </>
                 )}
             </div>

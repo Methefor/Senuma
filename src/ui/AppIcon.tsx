@@ -1,8 +1,8 @@
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
+import { iconFailed, markIconFailed } from '../browser/iconCache';
+import { iconCandidates } from '../core/icons';
 import { hostOf, isImageUrl } from '../core/url';
 import { app } from '../storage/store';
-
-const FAVICON_SERVICE = 'https://www.google.com/s2/favicons?sz=64&domain=';
 
 function hueOf(text: string): number {
     let hash = 0;
@@ -19,16 +19,24 @@ interface Props {
 }
 
 /**
- * One icon treatment everywhere: a fixed rounded container holding, in order of preference,
- * the user's own icon, the site favicon, or a monogram that needs no network at all.
+ * One icon treatment everywhere: a fixed rounded container holding the first image that
+ * loads from the candidate list, over a monogram that needs no network at all.
  */
 export function AppIcon({ url, title, icon, size = 40 }: Props) {
-    const [status, setStatus] = useState<'pending' | 'loaded' | 'failed'>('pending');
+    const source = app.get().prefs.iconSource;
+    const emoji = icon && !isImageUrl(icon) ? icon : undefined;
+    const candidates = emoji ? [] : iconCandidates(url, source, icon).filter(candidate => !iconFailed(candidate));
+    const key = candidates.join('|');
+    const [attempt, setAttempt] = useState(0);
+    const [loaded, setLoaded] = useState(false);
+
+    useEffect(() => {
+        setAttempt(0);
+        setLoaded(false);
+    }, [key]);
+
     const host = hostOf(url);
-    const custom = isImageUrl(icon) ? icon : undefined;
-    const emoji = icon && !custom ? icon : undefined;
-    const remote = app.get().prefs.iconSource === 'remote' && host ? FAVICON_SERVICE + encodeURIComponent(host) : undefined;
-    const src = custom ?? remote;
+    const src = candidates[attempt];
     const letter = (title.trim() || host || '?').charAt(0).toUpperCase();
 
     return (
@@ -37,11 +45,21 @@ export function AppIcon({ url, title, icon, size = 40 }: Props) {
                 <span class="app-icon-emoji">{emoji}</span>
             ) : (
                 <>
-                    {status !== 'loaded' && <span class="app-icon-mono">{letter}</span>}
-                    {src && status !== 'failed' && (
-                        <img src={src} alt="" loading="lazy" decoding="async" draggable={false}
-                            class={status === 'loaded' ? 'is-loaded' : ''}
-                            onLoad={() => setStatus('loaded')} onError={() => setStatus('failed')} />
+                    {!loaded && <span class="app-icon-mono">{letter}</span>}
+                    {src && (
+                        <img key={src} src={src} alt="" loading="lazy" decoding="async" draggable={false} referrerpolicy="no-referrer"
+                            class={loaded ? 'is-loaded' : ''}
+                            onLoad={event => {
+                                // Some servers answer a missing icon with a 1×1 placeholder.
+                                if (event.currentTarget.naturalWidth < 8) {
+                                    markIconFailed(src);
+                                    setAttempt(attempt + 1);
+                                } else setLoaded(true);
+                            }}
+                            onError={() => {
+                                markIconFailed(src);
+                                setAttempt(attempt + 1);
+                            }} />
                     )}
                 </>
             )}

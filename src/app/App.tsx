@@ -5,13 +5,14 @@ import { applyTheme, themeById } from '../core/themes';
 import type { AppState } from '../core/types';
 import { CommandPalette } from '../features/command/Launcher';
 import { Home } from '../features/home/Home';
+import { MigrationSummary } from '../features/onboarding/MigrationSummary';
 import { Editor } from '../features/spaces/Editors';
 import { SpaceView } from '../features/spaces/SpaceView';
-import { setLanguage } from '../i18n';
+import { ensureLanguage, setLanguage } from '../i18n';
 import { app, setUi, ui, useStore } from '../storage/store';
 import { ContextMenu, Toasts } from '../ui/Layers';
 
-/** Loads a secondary screen's code only when it is first shown. */
+/** Loads a secondary screen only when it is first shown, keeping it out of the startup path. */
 function useLazy<P>(wanted: boolean, loader: () => Promise<ComponentType<P>>): ComponentType<P> | null {
     const [component, setComponent] = useState<ComponentType<P> | null>(null);
     useEffect(() => {
@@ -37,11 +38,15 @@ function useShortcuts(): void {
                 if (app.get().onboarded) setUi({ palette: !state.palette, menu: null });
                 return;
             }
+            // Single-key shortcuts belong to Home only: never while typing, never with a
+            // modifier (those are the browser's), never while a panel or menu is open.
             const busy = state.palette || state.spaceId || state.settings || state.editor || state.menu || !app.get().onboarded;
             if (busy || isTyping(event.target) || event.ctrlKey || event.metaKey || event.altKey) return;
             if (event.key === '/') {
                 event.preventDefault();
                 document.getElementById('home-search')?.focus();
+            } else if (event.key.toLowerCase() === 'm') {
+                document.getElementById('mode-switch')?.click();
             } else if (/^[1-9]$/.test(event.key)) {
                 const space = visibleSpaces(app.get())[Number(event.key) - 1];
                 if (space) setUi({ spaceId: space.id });
@@ -65,6 +70,12 @@ export function App() {
     setLanguage(state.prefs.language);
     useShortcuts();
 
+    // Switching language may need its strings fetched; render again once they are here.
+    const [, setStringsReady] = useState(0);
+    useEffect(() => {
+        void ensureLanguage(state.prefs.language).then(() => setStringsReady(n => n + 1));
+    }, [state.prefs.language]);
+
     const themeId = effectiveThemeId(state);
     useLayoutEffect(() => applyAppearance(state), [themeId, state.prefs.motion, state.prefs.language]);
 
@@ -72,17 +83,20 @@ export function App() {
     const Onboarding = useLazy(!state.onboarded, loadOnboarding);
 
     const space = view.spaceId ? state.spaces[view.spaceId] : undefined;
-    const covered = !!(space || view.palette || view.settings || view.editor || !state.onboarded);
+    const covered = !!(space || view.palette || view.settings !== null || view.editor || !state.onboarded);
+    const showSummary = state.onboarded && state.legacy && !state.legacy.acknowledged && !covered;
 
     return (
         <>
-            <div class="backdrop" aria-hidden="true" />
+            {/* Keyed by theme so a new backdrop fades in over the old colour instead of snapping. */}
+            <div class="backdrop" key={themeId} aria-hidden="true"><i class="backdrop-glow" /></div>
             <Home state={state} covered={covered} />
-            {space && <SpaceView state={state} space={space} />}
+            {space && <SpaceView key={space.id} state={state} space={space} />}
             {view.settings !== null && Settings && <Settings state={state} section={view.settings} />}
             {view.editor && <Editor state={state} target={view.editor} />}
             {view.palette && <CommandPalette />}
             {!state.onboarded && Onboarding && <Onboarding state={state} />}
+            {showSummary && <MigrationSummary legacy={state.legacy!} />}
             <ContextMenu />
             <Toasts />
         </>

@@ -18,7 +18,7 @@ export function ContextMenu() {
         node.style.left = `${Math.max(EDGE_GAP, Math.min(menu.x, innerWidth - width - EDGE_GAP))}px`;
         node.style.top = `${Math.max(EDGE_GAP, Math.min(menu.y, innerHeight - height - EDGE_GAP))}px`;
         const opener = document.activeElement as HTMLElement | null;
-        node.querySelector<HTMLElement>('button')?.focus();
+        node.querySelector<HTMLElement>('button:not(:disabled)')?.focus();
         return () => opener?.focus?.();
     }, [menu]);
 
@@ -49,7 +49,7 @@ export function ContextMenu() {
         }
         if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
         event.preventDefault();
-        const buttons = [...ref.current!.querySelectorAll<HTMLElement>('button')];
+        const buttons = [...ref.current!.querySelectorAll<HTMLElement>('button:not(:disabled)')];
         const index = buttons.indexOf(document.activeElement as HTMLElement);
         const next = (index + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length;
         buttons[next]?.focus();
@@ -64,13 +64,15 @@ export function ContextMenu() {
                     {item.heading ? (
                         <div class="menu-heading">{item.label}</div>
                     ) : (
-                        <button type="button" role="menuitem" class={item.danger ? 'is-danger' : ''}
+                        <button type="button" role={item.checked === undefined ? 'menuitem' : 'menuitemradio'} aria-checked={item.checked}
+                            disabled={item.disabled} class={item.danger ? 'is-danger' : ''}
                             onClick={() => {
                                 setUi({ menu: null });
                                 item.run?.();
                             }}>
                             {item.glyph && <Icon name={item.glyph} size={15} />}
                             <span>{item.label}</span>
+                            {item.checked && <Icon name="check" size={14} />}
                         </button>
                     )}
                 </>
@@ -89,8 +91,7 @@ export function Toasts() {
                     {item.undo && (
                         <button type="button" class="toast-action"
                             onClick={() => {
-                                const previous = item.undo!;
-                                update(() => ({ ...previous }));
+                                update(item.undo!);
                                 dismissToast(item.id);
                             }}>
                             {t('undo')}

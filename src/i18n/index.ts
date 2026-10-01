@@ -1,20 +1,30 @@
 import type { Language } from '../core/types';
 import { en } from './en';
-import { tr } from './tr';
 
 export type MessageKey = keyof typeof en;
+type Dictionary = Partial<Record<MessageKey, string>>;
 
-const DICTIONARIES: Record<Language, Partial<Record<MessageKey, string>>> = { en, tr };
+/** English ships in the main bundle; other languages load only for the people who use them. */
+const LOADERS: Record<Exclude<Language, 'en'>, () => Promise<Dictionary>> = {
+    tr: () => import('./tr').then(m => m.tr),
+};
 
+const dictionaries: Partial<Record<Language, Dictionary>> = { en };
 let language: Language = 'en';
 
 export function setLanguage(next: Language): void {
     language = next;
 }
 
+/** Resolves once the strings for `lang` are in memory. Until then English is shown. */
+export async function ensureLanguage(lang: Language): Promise<void> {
+    if (lang === 'en' || dictionaries[lang]) return;
+    dictionaries[lang] = await LOADERS[lang]();
+}
+
 /** Looks up a message, falls back to English, picks the "one|many" form by `n`, fills {params}. */
 export function t(key: MessageKey, params: Record<string, string | number> = {}): string {
-    let text: string = DICTIONARIES[language][key] ?? en[key] ?? key;
+    let text: string = dictionaries[language]?.[key] ?? en[key] ?? key;
     if (text.includes('|')) {
         const [one, many] = text.split('|') as [string, string];
         text = params.n === 1 ? one : many;

@@ -1,14 +1,20 @@
 import { render } from 'preact';
 import { App, applyAppearance } from './app/App';
-import { setLanguage, t } from './i18n';
+import { ensureLanguage, setLanguage, t } from './i18n';
 import { loadState, onExternalChange, readCachedState, saveState } from './storage/storage';
 import { app, hydrate, onPersistError, toast } from './storage/store';
 import './styles/base.css';
 import './styles/home.css';
 import './styles/overlays.css';
 
+let mounted = false;
+
+/** Critical path: state → theme → Home shell. Everything optional loads after this. */
 function mount(): void {
+    if (mounted) return;
+    mounted = true;
     render(<App />, document.getElementById('app')!);
+    performance.mark('app:mounted');
 }
 
 async function boot(): Promise<void> {
@@ -16,41 +22,44 @@ async function boot(): Promise<void> {
     const cached = readCachedState();
     if (cached) {
         hydrate(cached);
+        // A packaged file, read from disk: this does not delay the first paint noticeably.
+        await ensureLanguage(cached.prefs.language);
+        setLanguage(cached.prefs.language);
         applyAppearance(cached);
         mount();
     }
 
-    // 2. Reconcile with the real store (and migrate a legacy install on first run).
+    onPersistError(() => toast(t('error.save')));
+
+    // 2. Reconcile with the real store (and convert a legacy install on first run).
     let resolved;
     try {
         resolved = await loadState();
     } catch {
-        if (!cached) mount();
+        // Storage is unreadable. Show what we have rather than a blank page, and say so.
+        mount();
+        toast(t('error.load'));
         return;
     }
-    const { source, dropped } = resolved;
-    // A brand-new install starts in the browser's language when we speak it.
+    const { source } = resolved;
+    // A brand-new install starts in the browser language when we speak it.
     const state = source === 'fresh' && navigator.language.toLowerCase().startsWith('tr')
         ? { ...resolved.state, prefs: { ...resolved.state.prefs, language: 'tr' as const } }
         : resolved.state;
-    const current = app.get();
-    if (!cached || state.updatedAt > current.updatedAt) {
+    if (!cached || state.updatedAt > app.get().updatedAt) {
         hydrate(state);
+        await ensureLanguage(state.prefs.language);
+        setLanguage(state.prefs.language);
         applyAppearance(state);
     }
-    if (!cached) mount();
+    mount();
 
-    // A migrated state exists only in memory until now; the mirror may also be ahead of the
-    // store if the last tab closed mid-write. Either way, make the store current.
+    // A converted legacy setup exists only in memory until now; the mirror may also be ahead
+    // of the store if the last tab closed mid-write. Either way, make the store current.
     if (source === 'legacy' || app.get().updatedAt > state.updatedAt) {
         saveState(app.get()).catch(() => toast(t('error.save')));
     }
-    if (source === 'legacy') {
-        setLanguage(app.get().prefs.language);
-        toast(dropped ? t('migrate.doneDropped', { n: dropped }) : t('migrate.done'));
-    }
 
-    onPersistError(() => toast(t('error.save')));
     onExternalChange(incoming => {
         if (incoming.updatedAt > app.get().updatedAt) hydrate(incoming);
     });

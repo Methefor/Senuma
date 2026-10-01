@@ -1,4 +1,5 @@
-/* Home: top bar, launcher, Continue, the Space deck and the dock. */
+/* Home. Visual weight, strongest first: search → Spaces → Continue → dock → everything else.
+   Hierarchy comes from size, space and tint; borders are reserved for things you type into. */
 
 .home {
     position: relative;
@@ -6,55 +7,41 @@
     flex-direction: column;
     height: 100vh;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--line-hi) transparent;
-    transition: transform var(--slow) var(--ease), opacity var(--slow) var(--ease), filter var(--slow) var(--ease);
+    transition: transform var(--t-panel) var(--ease-out), opacity var(--t-panel) var(--ease-out);
 }
 /* When a panel is open the page steps back instead of disappearing. */
-.home[inert] { transform: scale(.985); opacity: .5; filter: saturate(.8); }
+.home[inert] { transform: scale(.985); opacity: .45; }
 
-/* ---------- Top bar ---------- */
+/* ---------- Top bar: minimal supporting information ---------- */
 
 .topbar {
-    position: sticky;
-    top: 0;
-    z-index: 5;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 16px clamp(16px, 3vw, 32px);
+    min-height: 60px;
+    padding: 12px clamp(16px, 3vw, 28px);
 }
-.topbar-end { display: flex; align-items: center; gap: 14px; }
+.topbar-end { display: flex; align-items: center; gap: 10px; }
 
-.modes {
-    display: flex;
-    gap: 2px;
-    padding: 3px;
-    border: 1px solid var(--line);
-    border-radius: calc(var(--radius) + 3px);
-    background: var(--surface);
-    backdrop-filter: blur(var(--blur));
-    overflow-x: auto;
-    scrollbar-width: none;
-}
-.modes button {
+.mode-switch {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    height: 30px;
-    padding: 0 12px;
-    border-radius: var(--radius);
-    color: var(--ink-2);
+    gap: 8px;
+    height: 32px;
+    padding: 0 10px 0 11px;
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--ink);
     font-weight: 500;
-    white-space: nowrap;
-    transition: background var(--fast), color var(--fast);
+    transition: background var(--t-feedback);
 }
-.modes button:hover { color: var(--ink); }
-.modes button[aria-pressed='true'] { background: var(--surface-hi); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+.mode-switch:hover { background: var(--surface-hi); }
+.mode-switch .icon:first-child { color: var(--accent); }
+.mode-switch .icon:last-child { color: var(--ink-3); }
 
-.clock { display: flex; align-items: baseline; gap: 10px; color: var(--ink-2); white-space: nowrap; }
-.clock-time { font: var(--display-weight) 15px/1 var(--font-display); color: var(--ink); font-variant-numeric: tabular-nums; }
+.clock { display: flex; align-items: baseline; gap: 10px; white-space: nowrap; }
+.clock-time { font: var(--display-weight) 14px/1 var(--font-display); color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .clock-date { font-size: 12px; color: var(--ink-3); }
 
 /* ---------- Stage ---------- */
@@ -62,41 +49,41 @@
 .stage {
     flex: 1;
     width: 100%;
-    max-width: 1120px;
+    max-width: 1080px;
     margin: 0 auto;
-    padding: clamp(12px, 7vh, 84px) clamp(16px, 3vw, 32px) 120px;
+    padding: clamp(8px, 6vh, 72px) clamp(16px, 3vw, 28px) 132px;
     display: flex;
     flex-direction: column;
-    gap: clamp(28px, 5vh, 48px);
+    gap: clamp(30px, 6vh, 60px);
 }
 
-.hero { display: grid; gap: 20px; justify-items: center; }
+.hero { display: grid; gap: 22px; justify-items: center; }
 .greeting {
-    font: var(--display-weight) clamp(26px, 3.4vw, 40px)/1.1 var(--font-display);
+    font: var(--display-weight) clamp(26px, 3.2vw, 38px)/1.1 var(--font-display);
     letter-spacing: var(--display-tracking);
     text-wrap: balance;
     text-align: center;
 }
 
-/* ---------- Launcher (search box and command center share this) ---------- */
+/* ---------- Launcher: the one strongly drawn object on the page ---------- */
 
-.launcher { position: relative; width: min(680px, 100%); }
+.launcher { position: relative; width: min(660px, 100%); }
 .launcher-field {
     display: flex;
     align-items: center;
     gap: 12px;
-    height: 56px;
+    height: 58px;
     padding: 0 18px;
-    border: 1px solid var(--line);
+    border: 1px solid var(--line-hi);
     border-radius: var(--radius-lg);
-    background: var(--surface);
+    background: var(--surface-hi);
     backdrop-filter: blur(var(--blur));
+    box-shadow: var(--shadow);
     color: var(--ink-3);
     cursor: text;
-    transition: border-color var(--fast), background var(--fast), box-shadow var(--fast);
+    transition: border-color var(--t-feedback), color var(--t-feedback);
 }
-.launcher-field:hover { border-color: var(--line-hi); }
-.launcher-field:focus-within { border-color: var(--line-hi); background: var(--surface-hi); box-shadow: var(--shadow); color: var(--ink-2); }
+.launcher-field:focus-within { border-color: var(--accent); color: var(--ink-2); }
 .launcher-field input {
     flex: 1;
     min-width: 0;
@@ -109,15 +96,15 @@
 .launcher-field input:focus-visible { box-shadow: none; }
 .kbd-hint { display: flex; gap: 4px; }
 
-.launcher-home.is-open .launcher-field { border-bottom-left-radius: 0; border-bottom-right-radius: 0; background: var(--panel); }
+.launcher-home.is-open .launcher-field { border-bottom-left-radius: 0; border-bottom-right-radius: 0; background: var(--panel); box-shadow: none; }
 .launcher-home .results {
     position: absolute;
     z-index: 20;
     left: 0;
     right: 0;
     top: 100%;
-    border: 1px solid var(--line-hi);
-    border-top: 0;
+    border: 1px solid var(--accent);
+    border-top-color: var(--line);
     border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     background: var(--panel);
     backdrop-filter: blur(var(--blur));
@@ -137,94 +124,127 @@
 .result-icon { display: grid; place-items: center; width: 26px; color: var(--ink-2); }
 .result-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .result-hint { color: var(--ink-3); font-size: 12px; white-space: nowrap; }
+.result-key { opacity: .8; }
 .result-enter { color: var(--ink-3); opacity: 0; }
 .result.is-active .result-enter { opacity: 1; }
 
-/* ---------- Continue ---------- */
+/* ---------- Continue: one quiet line under the search ---------- */
 
-.continue, .deck-section { display: grid; gap: 14px; }
-.continue-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip {
+.continue {
     display: flex;
     align-items: center;
-    gap: 10px;
-    max-width: 230px;
-    padding: 7px 14px 7px 8px;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    background: var(--surface);
-    backdrop-filter: blur(var(--blur));
-    transition: background var(--fast), border-color var(--fast), transform var(--fast) var(--ease);
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    /* Exactly one row; what does not fit is simply not shown. */
+    height: 30px;
+    overflow: hidden;
+    width: min(880px, 100%);
+    margin-top: -6px;
 }
-.chip:hover { background: var(--surface-hi); border-color: var(--line-hi); transform: translateY(-1px); }
-.chip-text { display: grid; min-width: 0; line-height: 1.25; }
-.chip-title, .chip-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chip-title { font-weight: 500; font-size: 13px; }
-.chip-sub { font-size: 11px; color: var(--ink-3); }
+.continue .eyebrow { margin-right: 8px; line-height: 30px; }
+.continue-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 30px;
+    max-width: 180px;
+    padding: 0 9px 0 6px;
+    border-radius: 999px;
+    color: var(--ink-2);
+    font-size: 13px;
+    transition: background var(--t-feedback), color var(--t-feedback);
+}
+.continue-link span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.continue-link:hover { background: var(--surface-hi); color: var(--ink); }
 
 /* ---------- Deck: each Space is a plate ---------- */
 
-.deck { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 12px; }
+.deck-section { display: grid; gap: 12px; animation: rise var(--t-scene) var(--ease-out); }
+.deck-head { display: flex; align-items: center; justify-content: space-between; min-height: 28px; }
+.deck { display: grid; grid-template-columns: repeat(auto-fill, minmax(164px, 1fr)); gap: 10px; }
 
 .plate {
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    min-height: 184px;
-    padding: 16px;
-    border: 1px solid var(--line);
+    min-height: 168px;
+    padding: 15px 15px 14px;
     border-radius: var(--radius-lg);
-    /* The Space's own colour falls from the top edge like light on a surface. */
+    /* No outline: the Space's own colour falls from the top edge like light on a surface. */
     background:
-        radial-gradient(120% 70% at 20% -10%, color-mix(in srgb, var(--tint) 22%, transparent) 0%, transparent 70%),
+        radial-gradient(120% 75% at 18% -12%, color-mix(in srgb, var(--tint) calc(24% * var(--tint-strength)), transparent) 0%, transparent 70%),
         var(--surface);
-    backdrop-filter: blur(var(--blur));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 60%, transparent);
     text-align: left;
-    overflow: hidden;
-    transition: transform var(--fast) var(--ease), border-color var(--fast), background-color var(--fast);
-    animation: rise var(--slow) var(--ease) backwards;
-    animation-delay: calc(var(--i, 0) * 22ms);
+    transition: transform var(--t-feedback) var(--ease-out), background-color var(--t-feedback), box-shadow var(--t-feedback);
+    animation: rise var(--t-panel) var(--ease-out) backwards;
+    animation-delay: calc(var(--i, 0) * var(--stagger));
 }
-.plate::before {
+.plate:hover { transform: translateY(-3px); background-color: var(--surface-hi); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tint) 55%, var(--line-hi)); }
+.plate:active { transform: translateY(-1px); }
+.plate:focus-visible { box-shadow: var(--focus); }
+.plate.is-dragging { opacity: .35; }
+
+/* Where a dragged Space will land. */
+.plate.is-drop-before::after, .plate.is-drop-after::after {
     content: '';
     position: absolute;
-    left: 16px;
-    right: 16px;
-    top: 0;
-    height: 1px;
-    background: linear-gradient(90deg, var(--tint), transparent 80%);
-    opacity: .8;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--accent);
 }
-.plate:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--tint) 55%, var(--line-hi)); background-color: var(--surface-hi); }
-.plate:active { transform: translateY(-1px); }
+.plate.is-drop-before::after { left: -7px; }
+.plate.is-drop-after::after { right: -7px; }
 
 .plate-top { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; }
 .plate-glyph { color: var(--tint); }
-.plate-key { opacity: .7; }
+.plate-key { opacity: 0; transition: opacity var(--t-feedback); }
+.plate:hover .plate-key, .plate:focus-visible .plate-key { opacity: .8; }
+.plate-text { display: grid; gap: 2px; margin-top: 14px; min-width: 0; max-width: 100%; }
 .plate-name {
-    margin-top: 16px;
     font: var(--display-weight) 18px/1.2 var(--font-display);
     letter-spacing: var(--display-tracking);
     overflow-wrap: anywhere;
 }
-.plate-count { margin-top: 3px; font-size: 12px; color: var(--ink-3); }
-.plate-icons { display: flex; align-items: center; gap: 5px; margin-top: auto; padding-top: 16px; }
+.plate-count { font-size: 12px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plate-icons { display: flex; align-items: center; gap: 5px; margin-top: auto; padding-top: 14px; }
 .plate-more { margin-left: 3px; font-size: 11px; color: var(--ink-3); }
 
-.plate-new {
+/* Many Spaces: plates become one-line rows, so twenty take less room than eight did. */
+.deck.is-compact { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 4px 10px; }
+.is-compact .plate {
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
-    border-style: dashed;
-    background: transparent;
-    backdrop-filter: none;
-    color: var(--ink-3);
-    font-weight: 500;
-    animation: none;
+    gap: 12px;
+    min-height: 0;
+    height: 54px;
+    padding: 0 12px 0 10px;
+    border-radius: var(--radius);
+    background: none;
+    box-shadow: none;
 }
-.plate-new::before { display: none; }
-.plate-new:hover { color: var(--ink); border-color: var(--line-hi); }
+.is-compact .plate:hover { transform: none; background: var(--surface-hi); }
+.is-compact .plate:focus-visible { box-shadow: var(--focus); }
+.is-compact .plate-top { display: contents; }
+.is-compact .plate-glyph {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 28%;
+    background: color-mix(in srgb, var(--tint) calc(18% * var(--tint-strength) + 4%), var(--surface));
+}
+.is-compact .plate-key { order: 3; }
+.is-compact .plate-text { flex: 1; margin: 0; gap: 0; }
+.is-compact .plate-name { font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; overflow-wrap: normal; }
+.is-compact .plate.is-drop-before::after, .is-compact .plate.is-drop-after::after { top: auto; bottom: auto; left: 8px; right: 8px; width: auto; height: 3px; }
+.is-compact .plate.is-drop-before::after { top: -3px; }
+.is-compact .plate.is-drop-after::after { bottom: -3px; }
 
 .deck-note { color: var(--ink-2); }
 
@@ -244,7 +264,7 @@
     border-radius: 999px;
     background: var(--surface);
     font-weight: 500;
-    transition: background var(--fast), border-color var(--fast);
+    transition: background var(--t-feedback), border-color var(--t-feedback);
 }
 .pick .icon { color: var(--tint); }
 .pick:hover { background: var(--surface-hi); border-color: var(--tint); }
@@ -268,15 +288,27 @@
     box-shadow: var(--shadow);
     overflow-x: auto;
     scrollbar-width: none;
+    animation: fade var(--t-scene) var(--ease-out);
 }
-.dock-item { border-radius: 28%; transition: transform var(--fast) var(--ease); }
-.dock-item:hover { transform: translateY(-3px) scale(1.06); }
+.dock-item { flex: none; border-radius: 28%; transition: transform var(--t-feedback) var(--ease-out); }
+.dock-item:hover { transform: translateY(-3px); }
+.dock-item.is-drop { box-shadow: -4px 0 0 -1px var(--accent); }
+.dock-space {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    background: color-mix(in srgb, var(--tint) calc(22% * var(--tint-strength) + 6%), var(--surface));
+    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--tint);
+}
 
 @media (max-width: 720px) {
     .clock-date { display: none; }
     .deck { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-    .plate { min-height: 160px; }
+    .plate { min-height: 150px; }
 }
-@media (max-height: 620px) {
+@media (max-height: 640px) {
     .greeting { display: none; }
+    .stage { gap: 26px; }
 }
