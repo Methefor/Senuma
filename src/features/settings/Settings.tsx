@@ -465,7 +465,9 @@ function Privacy({ state }: { state: AppState }) {
     return (
         <>
             <h3>{t('settings.privacy')}</h3>
-            <p class="note">{t('privacy.statement')}</p>
+            <ul class="fact-list">
+                {(['local', 'none', 'search', 'images', 'optional'] as const).map(fact => <li key={fact}>{t(`privacy.fact.${fact}`)}</li>)}
+            </ul>
             <Row label={t('privacy.icons')} hint={t(`privacy.icons.${state.prefs.iconSource}` as MessageKey)}>
                 <select value={state.prefs.iconSource} aria-label={t('privacy.icons')}
                     onChange={event => update(s => setPrefs(s, { iconSource: event.currentTarget.value as IconSource }))}>

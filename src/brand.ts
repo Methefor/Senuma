@@ -27,5 +27,7 @@ export const BRAND = {
 export const STORAGE_KEYS = {
     state: 'bos.state',
     snapshots: 'bos.snapshots',
+    /** A state written by a newer release, kept untouched if an older build has to take over. */
+    newerState: 'bos.state.newer',
     legacyData: 'ntf_data',
 } as const;

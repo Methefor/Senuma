@@ -156,7 +156,7 @@ function sanitizeSource(raw: unknown, assets: Record<ID, unknown>): BackgroundSo
             return typeof s.id === 'string' && presetById(s.id) ? { kind: 'preset', id: s.id } : { kind: 'theme' };
         case 'upload':
             // A reference to an image that is not in the library can never be shown.
-            return typeof s.assetId === 'string' && s.assetId in assets ? { kind: 'upload', assetId: s.assetId } : { kind: 'theme' };
+            return typeof s.assetId === 'string' && Object.hasOwn(assets, s.assetId) ? { kind: 'upload', assetId: s.assetId } : { kind: 'theme' };
         default:
             return { kind: 'theme' };
     }

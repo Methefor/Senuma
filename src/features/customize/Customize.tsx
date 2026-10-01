@@ -1,6 +1,7 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { commitAppearance, savedAppearance, type Appearance } from '../../app/appearance';
+import { ensureSnapshots } from '../../app/actions';
 import { deleteWallpaper, listWallpaperIds, putWallpaper, wallpaperUrl } from '../../browser/assets';
 import {
     ATMOSPHERE_LEVELS, BACKGROUND_LIMITS, DEFAULT_BACKGROUND, MAX_WALLPAPERS, WALLPAPER_PHOTOS, WALLPAPER_PRESETS,
@@ -275,6 +276,12 @@ export function Customize({ state }: { state: AppState }) {
             if (!result.ok) return;
             const present = new Set(result.value);
             for (const id of Object.keys(app.get().wallpapers)) if (!present.has(id)) update(s => removeWallpaper(s, id));
+            // And the reverse: files nothing refers to any more (a reset, an import that
+            // replaced the setup). A restore point still counts as a reference.
+            void ensureSnapshots().then(points => {
+                const referenced = new Set([app.get(), ...points.map(point => point.state)].flatMap(s => Object.keys(s.wallpapers ?? {})));
+                for (const id of present) if (!referenced.has(id)) void deleteWallpaper(id);
+            });
         });
     }, []);
 

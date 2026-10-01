@@ -178,6 +178,31 @@ describe('sanitize', () => {
         expect(groups[0]!.id).not.toBe(groups[1]!.id);
     });
 
+    it('never treats inherited object properties as records (constructor, toString, __proto__)', () => {
+        const hostile = JSON.parse(`{
+            "schema": 4, "onboarded": true,
+            "spaces": { "__proto__": { "id": "__proto__", "name": "p" }, "constructor": { "id": "constructor", "name": "c" }, "ok": { "id": "ok", "name": "Real", "groups": [{ "id": "g", "itemIds": ["toString", "constructor", "valueOf"] }] } },
+            "spaceOrder": ["constructor", "toString", "__proto__", "ok"],
+            "items": {},
+            "modes": { "m": { "id": "m", "name": "M", "spaceIds": ["constructor", "hasOwnProperty", "ok"], "dock": [{ "kind": "item", "id": "toString" }, { "kind": "space", "id": "valueOf" }] } },
+            "modeOrder": ["constructor", "m"], "activeModeId": "constructor",
+            "dock": [{ "kind": "space", "id": "constructor" }, { "kind": "item", "id": "hasOwnProperty" }],
+            "recents": [{ "url": "https://example.com", "title": "x", "at": 1, "spaceId": "constructor" }],
+            "prefs": { "background": { "source": { "kind": "upload", "assetId": "constructor" } } }
+        }`);
+        const state = sanitize(hostile);
+        expect(state.spaceOrder).toEqual(['ok']);
+        expect(state.spaces.ok!.groups[0]!.itemIds).toEqual([]);
+        expect(state.modeOrder).toEqual(['m']);
+        expect(state.modes.m!.spaceIds).toEqual(['ok']);
+        expect(state.modes.m!.dock ?? []).toEqual([]);
+        expect(state.activeModeId).toBeNull();
+        expect(state.dock).toEqual([]);
+        expect(state.recents[0]!.spaceId).toBeUndefined();
+        expect(state.prefs.background.source).toEqual({ kind: 'theme' });
+        expect(({} as Record<string, unknown>).name).toBeUndefined();
+    });
+
     it('returns a usable empty state for garbage', () => {
         expect(sanitize(null).spaceOrder).toEqual([]);
         expect(sanitize('x').providers.length).toBeGreaterThan(0);

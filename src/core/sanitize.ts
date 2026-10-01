@@ -47,7 +47,7 @@ function sanitizeSpaces(raw: unknown, items: Record<ID, Item>): Record<ID, Space
             if (!isDict(g)) return [];
             // Each item belongs to exactly one group; a second claim is dropped.
             const itemIds = arr(g.itemIds).filter((x): x is ID => {
-                if (typeof x !== 'string' || !items[x] || claimed.has(x)) return false;
+                if (typeof x !== 'string' || !Object.hasOwn(items, x) || claimed.has(x)) return false;
                 claimed.add(x);
                 return true;
             });
@@ -73,7 +73,7 @@ function sanitizeSpaces(raw: unknown, items: Record<ID, Item>): Record<ID, Space
 }
 
 function orderFor(raw: unknown, known: Record<ID, unknown>): ID[] {
-    const order = [...new Set(arr(raw).filter((x): x is ID => typeof x === 'string' && x in known))];
+    const order = [...new Set(arr(raw).filter((x): x is ID => typeof x === 'string' && Object.hasOwn(known, x)))];
     for (const id of Object.keys(known)) if (!order.includes(id)) order.push(id);
     return order;
 }
@@ -83,7 +83,7 @@ function sanitizeDock(raw: unknown, items: Record<ID, Item>, spaces: Record<ID, 
     return arr(raw).flatMap((entry): DockEntry[] => {
         if (!isDict(entry) || typeof entry.id !== 'string') return [];
         const kind = entry.kind === 'space' ? 'space' : entry.kind === 'item' ? 'item' : null;
-        if (!kind || !(kind === 'space' ? spaces[entry.id] : items[entry.id])) return [];
+        if (!kind || !(typeof entry.id === 'string' && Object.hasOwn(kind === 'space' ? spaces : items, entry.id))) return [];
         const key = `${kind}:${entry.id}`;
         if (seen.has(key)) return [];
         seen.add(key);
@@ -134,7 +134,7 @@ function sanitizeRecents(raw: unknown, spaces: Record<ID, Space>): RecentItem[] 
         if (!isDict(r) || !url || seen.has(url)) return [];
         seen.add(url);
         const recent: RecentItem = { url, title: str(r.title) || url, at: num(r.at, 0), count: Math.max(1, Math.floor(num(r.count, 1))) };
-        if (typeof r.spaceId === 'string' && spaces[r.spaceId]) recent.spaceId = r.spaceId;
+        if (typeof r.spaceId === 'string' && Object.hasOwn(spaces, r.spaceId)) recent.spaceId = r.spaceId;
         return [recent];
     }).slice(0, MAX_RECENTS);
 }
@@ -154,7 +154,7 @@ export function sanitize(raw: unknown): AppState {
                 id,
                 name: str(value.name).trim() || 'Mode',
                 glyph: str(value.glyph, 'layers') || 'layers',
-                spaceIds: [...new Set(arr(value.spaceIds).filter((x): x is ID => typeof x === 'string' && x in spaces))],
+                spaceIds: [...new Set(arr(value.spaceIds).filter((x): x is ID => typeof x === 'string' && Object.hasOwn(spaces, x)))],
             };
             if (str(value.themeId)) mode.themeId = str(value.themeId);
             if (isDict(value.background)) mode.background = sanitizeBackground(value.background, wallpapers);
@@ -182,7 +182,7 @@ export function sanitize(raw: unknown): AppState {
         items,
         modes,
         modeOrder: orderFor(raw.modeOrder, modes),
-        activeModeId: typeof raw.activeModeId === 'string' && raw.activeModeId in modes ? raw.activeModeId : null,
+        activeModeId: typeof raw.activeModeId === 'string' && Object.hasOwn(modes, raw.activeModeId) ? raw.activeModeId : null,
         dock: sanitizeDock(raw.dock, items, spaces),
         wallpapers,
         providers,
