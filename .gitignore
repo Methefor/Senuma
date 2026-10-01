@@ -16,3 +16,7 @@ brain/
 *.bak
 *.tmp
 /tmp/
+
+# Build
+node_modules/
+dist/
