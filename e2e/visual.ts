@@ -196,6 +196,39 @@ const shots: Shot[] = [
 ];
 
 const only = process.argv.slice(2);
+// Packaged content added for the release candidate: photographs, brand marks, privacy facts.
+const withPhoto = (state: AppState, id: string, dim: number): AppState =>
+    ({ ...state, prefs: { ...state.prefs, background: { ...DEFAULT_BACKGROUND, source: { kind: 'preset', id }, dim } } });
+shots.push(
+    { name: '25-packaged-dark-photo-dusk', ...D, state: withPhoto(small, 'milky-way', 0.3) },
+    { name: '26-packaged-bright-photo-fjord', ...D, state: withPhoto(withTheme(small, 'fjord'), 'glass-facade', 0.35) },
+    { name: '27-packaged-photo-1366-20spaces', width: 1366, height: 768, state: withPhoto(large, 'mountain-mirror', 0.43) },
+    {
+        name: '28-customize-photographs-hint', ...D, state: small,
+        prepare: async page => {
+            await page.locator('.topbar button[aria-label="Customize"]').click();
+            await page.waitForSelector('.overlay-customize');
+            await page.locator('.swatch-tile[aria-label="Glass Facade"]').click();
+            await page.waitForSelector('.mood-hint');
+        },
+    },
+    {
+        name: '29-settings-privacy', ...D, state: small,
+        prepare: async page => {
+            await page.locator('.topbar button[aria-label="Settings"]').click();
+            await page.locator('.settings-nav button', { hasText: 'Privacy' }).click();
+        },
+    },
+    {
+        name: '30-marks-space-phosphor', ...D, state: withTheme(small, 'phosphor'),
+        prepare: async page => { await page.locator('.plate', { hasText: 'Media' }).click(); await page.waitForSelector('.overlay-space'); },
+    },
+    {
+        name: '31-marks-space-noir', ...D, state: withTheme(small, 'noir'),
+        prepare: async page => { await page.locator('.plate', { hasText: 'Coding' }).click(); await page.waitForSelector('.overlay-space'); },
+    },
+);
+
 for (const shot of shots) {
     if (only.length && !only.some(word => shot.name.includes(word))) continue;
     const profile = newProfile();
