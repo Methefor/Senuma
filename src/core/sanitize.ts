@@ -2,30 +2,33 @@
  * Rebuilds a trustworthy AppState from anything read off disk or imported. Damaged entries
  * are dropped one by one, so a single corrupted record can never break the page.
  */
-import { BUILTIN_PROVIDERS, DEFAULT_PREFS, MAX_RECENTS, emptyState, newId } from './defaults';
-import { parseAliases } from './ops';
-import { SCHEMA_VERSION, type AppState, type ID, type Item, type Mode, type Prefs, type SearchProvider, type Space } from './types';
+import { BUILTIN_PROVIDERS, DEFAULT_PREFS, MAX_DOCK, MAX_RECENTS, MAX_USAGE, emptyState, newId } from './defaults';
+import { isValidTemplate, parseAliases } from './ops';
+import {
+    SCHEMA_VERSION, type AppState, type DockEntry, type ID, type Item, type Mode, type Prefs, type RecentItem, type SearchProvider, type Space,
+} from './types';
 import { normalizeUrl } from './url';
 
 type Dict = Record<string, unknown>;
 
-const isDict = (v: unknown): v is Dict => typeof v === 'object' && v !== null && !Array.isArray(v);
+export const isDict = (v: unknown): v is Dict => typeof v === 'object' && v !== null && !Array.isArray(v);
 const str = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v : fallback);
 const num = (v: unknown, fallback: number): number => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
 const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 const oneOf = <T extends string>(v: unknown, options: readonly T[], fallback: T): T =>
     options.includes(v as T) ? (v as T) : fallback;
+/** IDs become object keys and DOM attributes; accept only plain tokens. */
+const isId = (v: unknown): v is ID => typeof v === 'string' && /^[\w-]{1,64}$/.test(v);
 
 function sanitizeItems(raw: unknown): Record<ID, Item> {
     const items: Record<ID, Item> = {};
     if (!isDict(raw)) return items;
     for (const [id, value] of Object.entries(raw)) {
-        if (!isDict(value)) continue;
+        if (!isId(id) || !isDict(value)) continue;
         const url = normalizeUrl(value.url);
         if (!url) continue;
         const item: Item = { id, title: str(value.title).trim() || url, url, createdAt: num(value.createdAt, 0) };
         if (str(value.icon).trim()) item.icon = str(value.icon).trim();
-        if (value.pinned === true) item.pinned = true;
         items[id] = item;
     }
     return items;
@@ -34,17 +37,21 @@ function sanitizeItems(raw: unknown): Record<ID, Item> {
 function sanitizeSpaces(raw: unknown, items: Record<ID, Item>): Record<ID, Space> {
     const spaces: Record<ID, Space> = {};
     const claimed = new Set<ID>();
+    const groupIds = new Set<ID>();
     if (!isDict(raw)) return spaces;
     for (const [id, value] of Object.entries(raw)) {
-        if (!isDict(value)) continue;
+        if (!isId(id) || !isDict(value)) continue;
         const groups = arr(value.groups).flatMap(g => {
             if (!isDict(g)) return [];
+            // Each item belongs to exactly one group; a second claim is dropped.
             const itemIds = arr(g.itemIds).filter((x): x is ID => {
                 if (typeof x !== 'string' || !items[x] || claimed.has(x)) return false;
                 claimed.add(x);
                 return true;
             });
-            return [{ id: str(g.id) || newId(), name: str(g.name), itemIds }];
+            const groupId = isId(g.id) && !groupIds.has(g.id) ? g.id : newId();
+            groupIds.add(groupId);
+            return [{ id: groupId, name: str(g.name), itemIds }];
         });
         const space: Space = {
             id,
@@ -54,6 +61,7 @@ function sanitizeSpaces(raw: unknown, items: Record<ID, Item>): Record<ID, Space
             groups: groups.length ? groups : [{ id: newId(), name: '', itemIds: [] }],
             createdAt: num(value.createdAt, 0),
         };
+        if (str(value.note).trim()) space.note = str(value.note).trim();
         if (str(value.templateId)) space.templateId = str(value.templateId);
         spaces[id] = space;
     }
@@ -68,18 +76,31 @@ function orderFor(raw: unknown, known: Record<ID, unknown>): ID[] {
     return order;
 }
 
+function sanitizeDock(raw: unknown, items: Record<ID, Item>, spaces: Record<ID, Space>): DockEntry[] {
+    const seen = new Set<string>();
+    return arr(raw).flatMap((entry): DockEntry[] => {
+        if (!isDict(entry) || typeof entry.id !== 'string') return [];
+        const kind = entry.kind === 'space' ? 'space' : entry.kind === 'item' ? 'item' : null;
+        if (!kind || !(kind === 'space' ? spaces[entry.id] : items[entry.id])) return [];
+        const key = `${kind}:${entry.id}`;
+        if (seen.has(key)) return [];
+        seen.add(key);
+        return [{ kind, id: entry.id }];
+    }).slice(0, MAX_DOCK);
+}
+
 function sanitizeProviders(raw: unknown): SearchProvider[] {
     const stored = new Map<ID, Dict>();
-    for (const p of arr(raw)) if (isDict(p) && str(p.id)) stored.set(str(p.id), p);
+    for (const p of arr(raw)) if (isDict(p) && isId(p.id)) stored.set(p.id, p);
     const aliasesOf = (p: Dict | undefined, fallback: string[]) =>
         p && Array.isArray(p.aliases) ? parseAliases(p.aliases.filter(a => typeof a === 'string').join(' ')) : fallback;
     // Built-ins are always present; only their aliases are user-editable.
     const providers: SearchProvider[] = BUILTIN_PROVIDERS.map(b => ({ ...b, aliases: aliasesOf(stored.get(b.id), [...b.aliases]) }));
     for (const [id, p] of stored) {
         if (providers.some(b => b.id === id)) continue;
-        const url = str(p.url);
-        if (!url.includes('%s') || !normalizeUrl(url.replace('%s', 'q'))) continue;
-        providers.push({ id, name: str(p.name).trim() || id, url, aliases: aliasesOf(p, []) });
+        const urlTemplate = str(p.urlTemplate).trim();
+        if (!isValidTemplate(urlTemplate)) continue;
+        providers.push({ id, name: str(p.name).trim() || id, urlTemplate, aliases: aliasesOf(p, []) });
     }
     return providers;
 }
@@ -92,13 +113,25 @@ function sanitizePrefs(raw: unknown, providers: SearchProvider[]): Prefs {
         language: oneOf(p.language, ['en', 'tr'] as const, DEFAULT_PREFS.language),
         themeId: str(p.themeId, DEFAULT_PREFS.themeId) || DEFAULT_PREFS.themeId,
         motion: oneOf(p.motion, ['full', 'reduced', 'off'] as const, DEFAULT_PREFS.motion),
-        iconSource: oneOf(p.iconSource, ['remote', 'none'] as const, DEFAULT_PREFS.iconSource),
+        iconSource: oneOf(p.iconSource, ['site', 'service', 'none'] as const, DEFAULT_PREFS.iconSource),
         openInNewTab: bool('openInNewTab'),
         showContinue: bool('showContinue'),
         showClosedTabs: bool('showClosedTabs'),
         showDock: bool('showDock'),
         defaultProviderId: providers.some(x => x.id === providerId) ? providerId : DEFAULT_PREFS.defaultProviderId,
     };
+}
+
+function sanitizeRecents(raw: unknown, spaces: Record<ID, Space>): RecentItem[] {
+    const seen = new Set<string>();
+    return arr(raw).flatMap((r): RecentItem[] => {
+        const url = isDict(r) ? normalizeUrl(r.url) : null;
+        if (!isDict(r) || !url || seen.has(url)) return [];
+        seen.add(url);
+        const recent: RecentItem = { url, title: str(r.title) || url, at: num(r.at, 0), count: Math.max(1, Math.floor(num(r.count, 1))) };
+        if (typeof r.spaceId === 'string' && spaces[r.spaceId]) recent.spaceId = r.spaceId;
+        return [recent];
+    }).slice(0, MAX_RECENTS);
 }
 
 export function sanitize(raw: unknown): AppState {
@@ -110,7 +143,7 @@ export function sanitize(raw: unknown): AppState {
     const modes: Record<ID, Mode> = {};
     if (isDict(raw.modes)) {
         for (const [id, value] of Object.entries(raw.modes)) {
-            if (!isDict(value)) continue;
+            if (!isId(id) || !isDict(value)) continue;
             const mode: Mode = {
                 id,
                 name: str(value.name).trim() || 'Mode',
@@ -119,16 +152,19 @@ export function sanitize(raw: unknown): AppState {
             };
             if (str(value.themeId)) mode.themeId = str(value.themeId);
             if (providers.some(p => p.id === value.providerId)) mode.providerId = str(value.providerId);
+            if (Array.isArray(value.dock)) mode.dock = sanitizeDock(value.dock, items, spaces);
             modes[id] = mode;
         }
     }
 
-    const recents = arr(raw.recents)
-        .flatMap(r => {
-            const url = isDict(r) ? normalizeUrl(r.url) : null;
-            return isDict(r) && url ? [{ url, title: str(r.title) || url, at: num(r.at, 0) }] : [];
-        })
-        .slice(0, MAX_RECENTS);
+    const usage = isDict(raw.usage)
+        ? Object.fromEntries(
+            Object.entries(raw.usage)
+                .filter((e): e is [string, number] => typeof e[1] === 'number' && Number.isFinite(e[1]))
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, MAX_USAGE),
+        )
+        : {};
 
     const state: AppState = {
         schema: SCHEMA_VERSION,
@@ -140,14 +176,20 @@ export function sanitize(raw: unknown): AppState {
         modes,
         modeOrder: orderFor(raw.modeOrder, modes),
         activeModeId: typeof raw.activeModeId === 'string' && raw.activeModeId in modes ? raw.activeModeId : null,
+        dock: sanitizeDock(raw.dock, items, spaces),
         providers,
-        recents,
+        recents: sanitizeRecents(raw.recents, spaces),
+        usage,
         prefs: sanitizePrefs(raw.prefs, providers),
     };
     if (isDict(raw.legacy)) {
+        const summary = isDict(raw.legacy.summary) ? raw.legacy.summary : {};
         state.legacy = {
             isPro: raw.legacy.isPro === true,
             proExpiresAt: typeof raw.legacy.proExpiresAt === 'number' ? raw.legacy.proExpiresAt : null,
+            migratedAt: num(raw.legacy.migratedAt, 0),
+            summary: { spaces: num(summary.spaces, 0), links: num(summary.links, 0), groups: num(summary.groups, 0), skipped: num(summary.skipped, 0) },
+            acknowledged: raw.legacy.acknowledged !== false,
         };
     }
     return state;

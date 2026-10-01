@@ -23,12 +23,14 @@ const dusk: Theme = {
     scheme: 'dark',
     tokens: {
         // Backdrop: a night sky with the last light on the horizon.
-        '--backdrop':
-            'radial-gradient(140% 55% at 50% 112%, rgba(244,170,112,.50) 0%, rgba(206,96,118,.30) 28%, rgba(96,62,140,.16) 52%, transparent 72%), linear-gradient(180deg, #070916 0%, #0c1024 48%, #151634 100%)',
+        '--backdrop': 'linear-gradient(180deg, #070916 0%, #0c1024 48%, #151634 100%)',
+        // The horizon is its own layer so it can breathe slowly.
+        '--glow': 'radial-gradient(140% 55% at 50% 112%, rgba(244,170,112,.50) 0%, rgba(206,96,118,.30) 28%, rgba(96,62,140,.16) 52%, transparent 72%)',
         '--backdrop-color': '#090b16',
         // Atmosphere
         '--grain': '.07',
         '--vignette': '.45',
+        '--scan': '0',
         // Interface
         '--ink': '#EEF0F7',
         '--ink-2': 'rgba(238,240,247,.66)',
@@ -49,6 +51,15 @@ const dusk: Theme = {
         '--font-display': SANS_DISPLAY,
         '--display-weight': '600',
         '--display-tracking': '-.02em',
+        // Small labels (section names, group names)
+        '--label-font': SANS,
+        '--label-style': 'normal',
+        '--label-transform': 'uppercase',
+        '--label-tracking': '.14em',
+        '--label-size': '11px',
+        // How strongly a Space tints its own surfaces, and how site icons are rendered
+        '--tint-strength': '1',
+        '--icon-filter': 'none',
     },
 };
 
@@ -60,6 +71,9 @@ export const THEMES: readonly Theme[] = [
     dusk,
     derive('noir', 'Noir', 'dark', {
         '--backdrop': 'linear-gradient(180deg, #000 0%, #000 100%)',
+        '--glow': 'none',
+        '--tint-strength': '0',
+        '--icon-filter': 'grayscale(1) contrast(1.1)',
         '--backdrop-color': '#000000',
         '--grain': '0',
         '--vignette': '0',
@@ -79,8 +93,9 @@ export const THEMES: readonly Theme[] = [
         '--shadow': '0 0 0 1px rgba(255,255,255,.08)',
     }),
     derive('atelier', 'Atelier', 'dark', {
-        '--backdrop':
-            'radial-gradient(90% 70% at 12% -10%, rgba(214,180,128,.20) 0%, transparent 60%), radial-gradient(70% 60% at 100% 100%, rgba(120,92,70,.22) 0%, transparent 65%), linear-gradient(160deg, #191715 0%, #211d19 55%, #2a241e 100%)',
+        '--backdrop': 'radial-gradient(70% 60% at 100% 100%, rgba(120,92,70,.22) 0%, transparent 65%), linear-gradient(160deg, #191715 0%, #211d19 55%, #2a241e 100%)',
+        '--glow': 'radial-gradient(90% 70% at 12% -10%, rgba(214,180,128,.22) 0%, transparent 60%)',
+        '--tint-strength': '.6',
         '--backdrop-color': '#1b1917',
         '--grain': '.10',
         '--vignette': '.35',
@@ -101,8 +116,8 @@ export const THEMES: readonly Theme[] = [
         '--display-tracking': '0',
     }),
     derive('fjord', 'Fjord', 'light', {
-        '--backdrop':
-            'radial-gradient(120% 60% at 50% 115%, rgba(255,255,255,.95) 0%, rgba(255,255,255,0) 60%), linear-gradient(180deg, #c9d6e2 0%, #dbe4ea 45%, #eef0ee 100%)',
+        '--backdrop': 'linear-gradient(180deg, #c9d6e2 0%, #dbe4ea 45%, #eef0ee 100%)',
+        '--glow': 'radial-gradient(120% 60% at 50% 115%, rgba(255,255,255,.95) 0%, rgba(255,255,255,0) 60%)',
         '--backdrop-color': '#d6dfe7',
         '--grain': '.05',
         '--vignette': '0',
@@ -121,6 +136,13 @@ export const THEMES: readonly Theme[] = [
     }),
     derive('editorial', 'Editorial', 'light', {
         '--backdrop': 'linear-gradient(180deg, #f3f3f0 0%, #ecece8 100%)',
+        '--glow': 'none',
+        '--tint-strength': '.35',
+        '--label-font': SERIF,
+        '--label-style': 'italic',
+        '--label-transform': 'none',
+        '--label-tracking': '0',
+        '--label-size': '14px',
         '--backdrop-color': '#f1f1ee',
         '--grain': '.09',
         '--vignette': '0',
@@ -144,8 +166,13 @@ export const THEMES: readonly Theme[] = [
         '--display-tracking': '-.01em',
     }),
     derive('phosphor', 'Phosphor', 'dark', {
-        '--backdrop':
-            'radial-gradient(100% 70% at 50% 0%, rgba(60,220,130,.10) 0%, transparent 70%), linear-gradient(180deg, #040806 0%, #06100b 100%)',
+        '--backdrop': 'linear-gradient(180deg, #040806 0%, #06100b 100%)',
+        '--glow': 'radial-gradient(100% 70% at 50% 0%, rgba(60,220,130,.12) 0%, transparent 70%)',
+        '--scan': '.5',
+        '--tint-strength': '0',
+        '--icon-filter': 'grayscale(1) sepia(1) hue-rotate(75deg) saturate(2.4) brightness(.95)',
+        '--label-font': MONO,
+        '--label-tracking': '.08em',
         '--backdrop-color': '#050a07',
         '--grain': '.08',
         '--vignette': '.5',

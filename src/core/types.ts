@@ -2,17 +2,15 @@
 
 export type ID = string;
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 /** A saved destination: an app, site or document. */
 export interface Item {
     id: ID;
     title: string;
     url: string;
-    /** Emoji or image URL. Absent means "use the site's favicon". */
+    /** Emoji or image URL. Absent means "resolve the site's icon". */
     icon?: string;
-    /** Pinned items appear in the dock. */
-    pinned?: boolean;
     createdAt: number;
 }
 
@@ -27,6 +25,8 @@ export interface SpaceGroup {
 export interface Space {
     id: ID;
     name: string;
+    /** Optional one-line context shown under the title. */
+    note?: string;
     glyph: string;
     accent: string;
     groups: SpaceGroup[];
@@ -35,45 +35,81 @@ export interface Space {
     createdAt: number;
 }
 
-/** A working environment: which Spaces are visible, and optionally the look and search default. */
+/** A shortcut in the dock: a saved link or a whole Space. */
+export interface DockEntry {
+    kind: 'item' | 'space';
+    id: ID;
+}
+
+/**
+ * A working environment. Everything a Mode overrides is listed here; anything absent
+ * falls through to the user's defaults. There is no inheritance beyond that.
+ */
 export interface Mode {
     id: ID;
     name: string;
     glyph: string;
+    /** Spaces shown on Home, in this Mode's own order. */
     spaceIds: ID[];
     themeId?: string;
-    providerId?: string;
+    providerId?: ID;
+    /** Present when the Mode has its own dock instead of the shared one. */
+    dock?: DockEntry[];
 }
 
 export interface SearchProvider {
     id: ID;
     name: string;
-    /** URL template; `%s` is replaced by the encoded query. Empty for the browser default. */
-    url: string;
     aliases: string[];
+    /** `%s` is replaced by the encoded query. */
+    urlTemplate?: string;
+    /** Routed through the browser's own default engine instead of a URL. */
+    browserDefault?: boolean;
     builtin?: boolean;
 }
 
+/** Something opened from inside this page. The only activity that is ever recorded. */
 export interface RecentItem {
     url: string;
     title: string;
+    /** Last opened. */
     at: number;
+    count: number;
+    spaceId?: ID;
 }
 
 export type Language = 'en' | 'tr';
 export type MotionLevel = 'full' | 'reduced' | 'off';
+/** site: each site's own icon. service: a third-party icon service. none: monograms only. */
+export type IconSource = 'site' | 'service' | 'none';
 
 export interface Prefs {
     language: Language;
     themeId: string;
     motion: MotionLevel;
-    /** 'remote' fetches favicons from Google's icon service; 'none' uses local monograms only. */
-    iconSource: 'remote' | 'none';
+    iconSource: IconSource;
     openInNewTab: boolean;
     showContinue: boolean;
     showClosedTabs: boolean;
     showDock: boolean;
     defaultProviderId: ID;
+}
+
+export interface MigrationSummary {
+    spaces: number;
+    links: number;
+    groups: number;
+    skipped: number;
+}
+
+export interface LegacyRecord {
+    /** Entitlement carried over from the previous product, kept so it can be honoured later. */
+    isPro: boolean;
+    proExpiresAt: number | null;
+    migratedAt: number;
+    summary: MigrationSummary;
+    /** False until the user has seen the upgrade summary. */
+    acknowledged: boolean;
 }
 
 export interface AppState {
@@ -87,11 +123,13 @@ export interface AppState {
     modes: Record<ID, Mode>;
     modeOrder: ID[];
     activeModeId: ID | null;
+    dock: DockEntry[];
     providers: SearchProvider[];
     recents: RecentItem[];
+    /** Command-center result key → last used time. Bounded; used only to rank results. */
+    usage: Record<string, number>;
     prefs: Prefs;
-    /** Entitlement carried over from the previous product, kept so it can be honoured later. */
-    legacy?: { isPro: boolean; proExpiresAt: number | null };
+    legacy?: LegacyRecord;
 }
 
 /** A link gathered from an import source before it is placed in a Space. */
@@ -99,4 +137,12 @@ export interface LooseLink {
     title: string;
     url: string;
     folder?: string;
+}
+
+/** A local restore point taken before a destructive operation. */
+export interface Snapshot {
+    id: ID;
+    at: number;
+    reason: 'import' | 'reset' | 'restore';
+    state: AppState;
 }

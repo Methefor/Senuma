@@ -19,24 +19,36 @@ function spaceForCategory(s: AppState, categoryId: string): ID | undefined {
 function createCategorySpace(s: AppState, categoryId: string, name: string, withServices: boolean): { state: AppState; id: ID } {
     const category = categoryById(categoryId);
     const created = addSpace(s, { name, glyph: category?.glyph, accent: category?.accent, templateId: categoryId });
-    let state = created.state;
-    if (!category || !withServices) return { state, id: created.id };
-    category.groups.forEach((group, index) => {
-        let groupId = state.spaces[created.id]!.groups[0]!.id;
-        if (index === 0) {
-            state = { ...state, spaces: { ...state.spaces, [created.id]: renameFirstGroup(state, created.id, group.name) } };
-        } else {
-            state = addGroup(state, created.id, group.name);
-            groupId = state.spaces[created.id]!.groups.at(-1)!.id;
-        }
-        for (const [title, url] of group.services) state = addItem(state, created.id, groupId, { title, url }).state;
-    });
-    return { state, id: created.id };
+    return { state: withServices ? fillFromCategory(created.state, created.id, categoryId) : created.state, id: created.id };
 }
 
-function renameFirstGroup(s: AppState, spaceId: ID, name: string) {
-    const space = s.spaces[spaceId]!;
-    return { ...space, groups: space.groups.map((g, i) => (i === 0 ? { ...g, name } : g)) };
+/** Adds a category's starter services to an existing Space, in their groups, skipping links it already has. */
+export function fillFromCategory(s: AppState, spaceId: ID, categoryId: string): AppState {
+    const category = categoryById(categoryId);
+    if (!category || !s.spaces[spaceId]) return s;
+    let state = s;
+    const existing = new Set(itemsOf(state, state.spaces[spaceId]!).map(i => i.url));
+    for (const group of category.groups) {
+        const space = state.spaces[spaceId]!;
+        // An untouched first group takes the first set of services instead of staying empty.
+        const first = space.groups[0]!;
+        let groupId = space.groups.find(g => g.name === group.name)?.id;
+        if (!groupId && space.groups.length === 1 && !first.name && first.itemIds.length === 0) {
+            state = { ...state, spaces: { ...state.spaces, [spaceId]: { ...space, groups: [{ ...first, name: group.name }] } } };
+            groupId = first.id;
+        }
+        if (!groupId) {
+            state = addGroup(state, spaceId, group.name);
+            groupId = state.spaces[spaceId]!.groups.at(-1)!.id;
+        }
+        for (const [title, url] of group.services) {
+            const added = addItem(state, spaceId, groupId, { title, url });
+            if (!added.id || existing.has(added.state.items[added.id]!.url)) continue;
+            existing.add(added.state.items[added.id]!.url);
+            state = added.state;
+        }
+    }
+    return state;
 }
 
 /** Onboarding: one starter Space per chosen category, plus Modes when at least two apply. */

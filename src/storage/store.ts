@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from 'preact/hooks';
 import { emptyState } from '../core/defaults';
-import type { AppState, ID } from '../core/types';
+import type { AppState, ID, Snapshot } from '../core/types';
 import { saveState } from './storage';
 
 export interface Store<T> {
@@ -82,12 +82,18 @@ if (typeof window !== 'undefined') {
     });
 }
 
+/** Local restore points; loaded on demand, kept in their own storage key. */
+export const snapshots = createStore<Snapshot[] | null>(null);
+
 // ---------- Session UI ----------
 
 export interface MenuItem {
     label: string;
     glyph?: string;
     danger?: boolean;
+    disabled?: boolean;
+    /** Shows a tick: the current choice in a list of alternatives. */
+    checked?: boolean;
     /** A non-interactive section label. */
     heading?: boolean;
     separatorBefore?: boolean;
@@ -97,8 +103,8 @@ export interface MenuItem {
 export interface Toast {
     id: number;
     message: string;
-    /** State to restore when the user chooses Undo. */
-    undo?: AppState;
+    /** Reverses exactly the change this toast announces; later edits are kept. */
+    undo?: (state: AppState) => AppState;
 }
 
 export type EditorTarget =
@@ -121,10 +127,11 @@ export function setUi(patch: Partial<UiState>): void {
     ui.set({ ...ui.get(), ...patch });
 }
 
-const TOAST_MS = 5000;
+/** How long a toast, and with it the chance to undo, stays available. */
+const TOAST_MS = 7000;
 let toastSeq = 0;
 
-export function toast(message: string, undo?: AppState): void {
+export function toast(message: string, undo?: Toast['undo']): void {
     const id = ++toastSeq;
     setUi({ toasts: [...ui.get().toasts.slice(-2), { id, message, ...(undo ? { undo } : {}) }] });
     setTimeout(() => dismissToast(id), TOAST_MS);
@@ -138,4 +145,10 @@ export function openMenu(event: MouseEvent, items: MenuItem[]): void {
     event.preventDefault();
     event.stopPropagation();
     setUi({ menu: { x: event.clientX, y: event.clientY, items } });
+}
+
+/** Opens a menu hanging from a control (a dropdown) rather than at the pointer. */
+export function openMenuBelow(anchor: HTMLElement, items: MenuItem[]): void {
+    const rect = anchor.getBoundingClientRect();
+    setUi({ menu: { x: rect.left, y: rect.bottom + 6, items } });
 }

@@ -11,6 +11,8 @@ export interface Category {
     glyph: string;
     accent: string;
     groups: readonly { name: string; services: readonly Service[] }[];
+    /** False keeps a category out of onboarding; it still sorts imported links. */
+    onboarding?: false;
     /** Extra domains that belong here without being starter services. */
     domains?: readonly string[];
 }
@@ -120,6 +122,7 @@ export const CATEGORIES: readonly Category[] = [
     },
     {
         id: 'shopping',
+        onboarding: false,
         glyph: 'bag',
         accent: '#F4BE8A',
         groups: [

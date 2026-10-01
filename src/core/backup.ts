@@ -1,17 +1,25 @@
-/** JSON backup: the whole setup (Spaces, Modes, search, preferences) in one portable file. */
-import { fromLegacy } from './migrate';
-import { sanitize } from './sanitize';
-import type { AppState } from './types';
+/**
+ * Backups. A backup file is the whole setup (Spaces, Modes, dock, search, preferences) in
+ * one portable JSON document; snapshots are the same thing kept locally as restore points.
+ */
+import { MAX_SNAPSHOTS, newId } from './defaults';
+import { fromLegacy, upgrade } from './migrate';
+import { addGroup, addItem, addSpace, itemsOf } from './ops';
+import { isDict } from './sanitize';
+import type { AppState, Snapshot } from './types';
 
 const BACKUP_KIND = 'browser-os-backup';
 
 export function exportBackup(state: AppState): string {
-    // Recent activity is private to this device and is left out of files meant to be shared.
-    const portable: AppState = { ...state, recents: [] };
+    // Activity is private to this device and is left out of files meant to be shared.
+    const portable: AppState = { ...state, recents: [], usage: {} };
     return JSON.stringify({ kind: BACKUP_KIND, schema: state.schema, exportedAt: new Date().toISOString(), state: portable }, null, 2);
 }
 
-/** Reads a backup from this product or an export from New Tab Folders 1.x. Null if unreadable. */
+/**
+ * Reads a backup from this product (any schema version) or an export from New Tab
+ * Folders 1.x. Everything is re-validated; null means the file holds nothing usable.
+ */
 export function importBackup(text: string): AppState | null {
     let parsed: unknown;
     try {
@@ -19,11 +27,80 @@ export function importBackup(text: string): AppState | null {
     } catch {
         return null;
     }
-    if (typeof parsed === 'object' && parsed !== null && (parsed as { kind?: unknown }).kind === BACKUP_KIND) {
-        const state = sanitize((parsed as { state?: unknown }).state);
-        if (state.spaceOrder.length === 0) return null;
-        return { ...state, onboarded: true, updatedAt: Date.now() };
+    let state: AppState | null;
+    if (isDict(parsed) && parsed.kind === BACKUP_KIND) {
+        // The envelope's schema is authoritative for files whose state omits its own.
+        const inner = isDict(parsed.state) ? { schema: parsed.schema, ...parsed.state } : null;
+        state = upgrade(inner);
+    } else {
+        state = fromLegacy(parsed);
+        if (state?.legacy) state.legacy.acknowledged = true;
     }
-    const legacy = fromLegacy(parsed);
-    return legacy && legacy.state.spaceOrder.length > 0 ? legacy.state : null;
+    if (!state || state.spaceOrder.length === 0) return null;
+    return { ...state, onboarded: true, updatedAt: Date.now() };
+}
+
+/**
+ * Adds an imported setup to the current one without removing anything. A Space whose name
+ * matches an existing one receives the links it does not already have; other Spaces are
+ * appended. Modes, dock and preferences of the current setup are kept.
+ */
+export function mergeBackup(current: AppState, incoming: AppState): { state: AppState; spaces: number; links: number } {
+    let state = current;
+    let spaces = 0;
+    let links = 0;
+    const byName = new Map(current.spaceOrder.map(id => [current.spaces[id]!.name.trim().toLowerCase(), id]));
+
+    for (const incomingId of incoming.spaceOrder) {
+        const source = incoming.spaces[incomingId]!;
+        let targetId = byName.get(source.name.trim().toLowerCase());
+        if (!targetId) {
+            const created = addSpace({ ...state, activeModeId: null }, { name: source.name, glyph: source.glyph, accent: source.accent, note: source.note, templateId: source.templateId });
+            state = { ...created.state, activeModeId: state.activeModeId };
+            targetId = created.id;
+            spaces++;
+        }
+        const existing = new Set(itemsOf(state, state.spaces[targetId]!).map(i => i.url));
+        for (const group of source.groups) {
+            for (const itemId of group.itemIds) {
+                const item = incoming.items[itemId];
+                if (!item || existing.has(item.url)) continue;
+                const space = state.spaces[targetId]!;
+                let groupId = space.groups.find(g => g.name === group.name)?.id;
+                if (!groupId) {
+                    state = addGroup(state, targetId, group.name);
+                    groupId = state.spaces[targetId]!.groups.at(-1)!.id;
+                }
+                const added = addItem(state, targetId, groupId, { title: item.title, url: item.url, icon: item.icon });
+                if (!added.id) continue;
+                state = added.state;
+                existing.add(item.url);
+                links++;
+            }
+        }
+        // A newly created Space starts with an untitled group; drop it if it stayed empty.
+        const space = state.spaces[targetId]!;
+        const first = space.groups[0]!;
+        if (space.groups.length > 1 && !first.name && first.itemIds.length === 0) {
+            state = { ...state, spaces: { ...state.spaces, [targetId]: { ...space, groups: space.groups.slice(1) } } };
+        }
+    }
+    return { state, spaces, links };
+}
+
+/** Adds a restore point, newest first, keeping only the most recent few. */
+export function addSnapshot(list: Snapshot[], state: AppState, reason: Snapshot['reason'], now = Date.now()): Snapshot[] {
+    return [{ id: newId(), at: now, reason, state: { ...state, recents: [], usage: {} } }, ...list].slice(0, MAX_SNAPSHOTS);
+}
+
+/** Validates snapshots read from storage; unreadable ones are dropped. */
+export function sanitizeSnapshots(raw: unknown): Snapshot[] {
+    if (!Array.isArray(raw)) return [];
+    return raw.flatMap((entry): Snapshot[] => {
+        if (!isDict(entry) || typeof entry.id !== 'string' || typeof entry.at !== 'number') return [];
+        const state = upgrade(entry.state);
+        if (!state) return [];
+        const reason = entry.reason === 'reset' || entry.reason === 'restore' ? entry.reason : 'import';
+        return [{ id: entry.id, at: entry.at, reason, state }];
+    }).slice(0, MAX_SNAPSHOTS);
 }
