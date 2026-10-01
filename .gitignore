@@ -20,3 +20,6 @@ brain/
 # Build
 node_modules/
 dist/
+dist-e2e/
+e2e/.out/
+e2e/_*
