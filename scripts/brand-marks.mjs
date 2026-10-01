@@ -20,19 +20,58 @@ const OUT = 'src/assets/marks';
 /** Licences that allow redistribution of an unmodified shape with no extra obligation on us. */
 const PERMISSIVE = new Set(['CC0-1.0', 'MIT', 'Apache-2.0', 'BSD-3-Clause', 'Unlicense']);
 
-/** Starter apps with a mark to bundle: [Simple Icons slug, starter app]. */
+/**
+ * Starter apps with a mark to bundle: [Simple Icons slug, starter app, basis].
+ * A mark is here only if its owner's own published guidance (read on 2026-10-02) allows
+ * (a) using the mark to link or refer to the service without asking first, and
+ * (b) showing it in black or white. Anything less clear is in REMOVED below.
+ */
 const APPROVED = [
-    ['claude', 'Claude'], ['perplexity', 'Perplexity'], ['huggingface', 'Hugging Face'], ['openrouter', 'OpenRouter'],
-    ['github', 'GitHub'], ['stackoverflow', 'Stack Overflow'], ['npm', 'npm'], ['vercel', 'Vercel'],
-    ['cloudflare', 'Cloudflare'], ['supabase', 'Supabase'], ['neon', 'Neon'], ['docker', 'Docker Hub'], ['figma', 'Figma'],
-    ['arxiv', 'arXiv'], ['medium', 'Medium'], ['substack', 'Substack'],
-    ['notion', 'Notion'], ['framer', 'Framer'], ['dribbble', 'Dribbble'], ['behance', 'Behance'], ['pinterest', 'Pinterest'],
-    ['netflix', 'Netflix'], ['spotify', 'Spotify'], ['imdb', 'IMDb'], ['letterboxd', 'Letterboxd'],
-    ['steam', 'Steam'], ['epicgames', 'Epic Games'], ['steamdb', 'SteamDB'], ['twitch', 'Twitch'],
-    ['tradingview', 'TradingView'], ['coinmarketcap', 'CoinMarketCap'],
-    ['x', 'X'], ['reddit', 'Reddit'], ['instagram', 'Instagram'], ['whatsapp', 'WhatsApp'],
-    ['ebay', 'eBay'], ['etsy', 'Etsy'],
-    ['coursera', 'Coursera'], ['khanacademy', 'Khan Academy'], ['duolingo', 'Duolingo'], ['quizlet', 'Quizlet'],
+    ['github', 'GitHub', 'brand.github.com/foundations/logo: the Invertocat may be used “as a social button to link to your GitHub profile or project”; it “should only appear in white, black…”'],
+    ['letterboxd', 'Letterboxd', 'letterboxd.com/about/brand: “You may use the logo assets below to link to our platform”; a mono version is provided'],
+    ['vercel', 'Vercel', 'vercel.com/geist/brands: marks may be used “to truthfully describe the products, services, and technologies that we offer”; supplied in black and white only'],
+];
+
+/** Reviewed and removed on 2026-10-02: [starter app, why]. These use the site icon or a letter. */
+const REMOVED = [
+    ["Netflix", "brand site: logo use needs Netflix approval; red-on-black rules conflict with a neutral single colour"],
+    ["Spotify", "design guidelines tie the icon to Spotify green/black/white and to approved integrations"],
+    ["Steam", "branding guidance is for Steamworks partners; no general permission"],
+    ["Epic Games", "guidelines are for Epic Account Services partners; no general permission"],
+    ["Instagram", "Meta brand resources: approved assets only, no modification, permission for most uses"],
+    ["WhatsApp", "Meta brand resources: approved assets only, no modification, permission for most uses"],
+    ["X", "brand toolkit forbids alteration and implies approval for product use; strict owner"],
+    ["Figma", "brand page: use of the logo requires permission"],
+    ["npm", "policy: “you may use them only with our permission”"],
+    ["Cloudflare", "trademark page: logo use “requires our written permission”; colour changes forbidden"],
+    ["Pinterest", "guidelines: badge use without a link to your own account “incorrectly implies a partnership”"],
+    ["Neon", "monochrome is offered, but permission for third-party use is not stated"],
+    ["Hugging Face", "asset download page only; no usage permission stated"],
+    ["IMDb", "full guidelines are for approved partners only"],
+    ["Twitch", "asset page only; usage rules not published where they could be read"],
+    ["Stack Overflow", "trademark guidance could not be retrieved for review"],
+    ["Medium", "guideline page could not be retrieved for review"],
+    ["Reddit", "guideline page could not be retrieved for review"],
+    ["Khan Academy", "policy page could not be retrieved for review"],
+    ["arXiv", "brand page no longer at the recorded address"],
+    ["Duolingo", "recorded address is now a design blog; no usage rules found"],
+    ["Claude", "no published permission for third-party use was found; ambiguous, so not bundled"],
+    ["Perplexity", "no published permission for third-party use was found; ambiguous, so not bundled"],
+    ["OpenRouter", "no published permission for third-party use was found; ambiguous, so not bundled"],
+    ["Supabase", "no published permission for third-party use was found; ambiguous, so not bundled"],
+    ["Docker Hub", "no published permission for third-party use was found; ambiguous, so not bundled"],
+    ["Substack", "no published permission for third-party use was found; ambiguous, so not bundled"],
+    ["Notion", "no published permission for third-party use was found; ambiguous, so not bundled"],
+    ["Framer", "no published permission for third-party use was found; ambiguous, so not bundled"],
+    ["Dribbble", "no published permission for third-party use was found; ambiguous, so not bundled"],
+    ["Behance", "no published permission for third-party use was found; ambiguous, so not bundled"],
+    ["SteamDB", "no published permission for third-party use was found; ambiguous, so not bundled"],
+    ["TradingView", "no published permission for third-party use was found; ambiguous, so not bundled"],
+    ["CoinMarketCap", "no published permission for third-party use was found; ambiguous, so not bundled"],
+    ["eBay", "no published permission for third-party use was found; ambiguous, so not bundled"],
+    ["Etsy", "no published permission for third-party use was found; ambiguous, so not bundled"],
+    ["Coursera", "no published permission for third-party use was found; ambiguous, so not bundled"],
+    ["Quizlet", "no published permission for third-party use was found; ambiguous, so not bundled"],
 ];
 
 /**
@@ -68,7 +107,7 @@ const bySlug = new Map(data.map(icon => [icon.slug, icon]));
 
 const problems = [];
 const records = [];
-for (const [slug, app] of APPROVED) {
+for (const [slug, app, basis] of APPROVED) {
     const icon = bySlug.get(slug);
     if (!icon) { problems.push(`${slug}: not in simple-icons ${version}`); continue; }
     if (icon.license && !PERMISSIVE.has(icon.license.type)) { problems.push(`${slug}: licence ${icon.license.type} is not on the permissive list`); continue; }
@@ -76,7 +115,7 @@ for (const [slug, app] of APPROVED) {
     const path = /<path d="([^"]+)"\/>/.exec(svg)?.[1];
     if (!path || /<(script|style|image|use|foreignObject)|\son\w+=|href=/i.test(svg)) { problems.push(`${slug}: unexpected SVG content`); continue; }
     records.push({
-        slug, app, title: icon.title, path,
+        slug, app, title: icon.title, path, basis,
         license: icon.license?.type ?? null,
         licenseUrl: icon.license?.url ?? null,
         guidelines: icon.guidelines ?? null,
@@ -102,6 +141,8 @@ writeFileSync('docs/brand-marks.json', `${JSON.stringify({
     packageLicense: 'CC0-1.0 (the collection; individual marks are checked separately)',
     generated: new Date().toISOString().slice(0, 10),
     bundled: records.map(({ path: _path, ...rest }) => rest),
+    reviewed: '2026-10-02',
+    removedAfterReview: REMOVED.map(([app, reason]) => ({ app, reason })),
     excluded: EXCLUDED.map(([app, reason]) => ({ app, reason })),
 }, null, 2)}\n`);
 console.log(`${readdirSync(OUT).length} marks written to ${OUT} (${(bytes / 1024).toFixed(1)} kB) from simple-icons@${version}`);

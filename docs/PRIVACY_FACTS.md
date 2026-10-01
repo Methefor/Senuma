@@ -20,7 +20,7 @@ in-product Privacy section, the store privacy form and the privacy policy.
 
 | Request | When | Who sees what |
 |---|---|---|
-| None | Opening a new tab with the default settings and only packaged icons | — |
+| None | Opening a new tab when every icon shown is packaged, an emoji or a letter | — |
 | A site's own `/favicon.ico` | A saved link has no packaged mark | That site sees a request for its icon (no referrer). |
 | Google's static host (`gstatic.com`) | A saved link is a Google app (Gmail, Drive, YouTube…) | Google sees a request for that product icon. |
 | Google's icon service (`google.com/s2/favicons`) | **Only** if the user chose “icon service” (off for new users; kept on for 1.x users, who already had it) | Google sees the site names of saved links. |
@@ -47,8 +47,8 @@ No host permissions, no content scripts, nothing runs on web pages.
 - **Analytics: none in this release.** Nothing is measured. If that ever changes it needs its
   own decision, opt-in consent, a policy update and a store disclosure.
 - **Accounts, sync, payments:** not present.
-- The 1.x PRO flag is copied into the new state so it can be honoured later. It is not sent
-  anywhere and unlocks nothing today.
+- The 1.x PRO flag is copied into the new state as history only. It is not sent anywhere,
+  nothing reads it and nothing is unlocked by it.
 
 ## For the store privacy form
 

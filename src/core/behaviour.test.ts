@@ -3,7 +3,9 @@ import { CATEGORIES, categorize } from './catalog';
 import { buildResults, defaultResults, groupResults, interpret, matchScore } from './commands';
 import { MAX_DOCK, MAX_RECENTS, MAX_USAGE, emptyState } from './defaults';
 import { context, labels, names, seeded } from './fixtures';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { BRAND } from '../brand';
+import { buildManifest } from '../manifest';
 import { iconCandidates, knownAppIcon, LOCAL_MARK_NAMES, localMark } from './icons';
 import * as ops from './ops';
 import { matchProviderName, routeQuery, searchUrl } from './search';
@@ -381,19 +383,34 @@ describe('icons', () => {
     });
 });
 
+describe('version labels', () => {
+    it('come from one place and cannot contradict each other', () => {
+        const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as { version: string };
+        const manifest = buildManifest();
+        expect(pkg.version).toBe(BRAND.version);
+        expect(manifest.version).toBe(BRAND.manifestVersion);
+        expect(manifest.version_name).toBe(BRAND.displayVersion);
+        // The display label is the machine version, written for people.
+        expect(BRAND.displayVersion.replace(/ RC /, '-rc.')).toBe(BRAND.version);
+        const prerelease = BRAND.version.includes('-');
+        // A pre-release never carries the public number in the manifest; a release always matches it.
+        if (prerelease) expect(BRAND.manifestVersion.startsWith('1.99.')).toBe(true);
+        else expect(BRAND.manifestVersion).toBe(BRAND.version);
+    });
+});
+
 describe('packaged brand marks', () => {
     it('matches a starter app by host or subdomain, and nothing that only looks like it', () => {
         expect(localMark('https://github.com/vercel')).toBe('github');
         expect(localMark('https://gist.github.com/')).toBe('github');
-        expect(localMark('https://open.spotify.com/')).toBe('spotify');
-        expect(localMark('https://store.steampowered.com/app/1')).toBe('steam');
+        expect(localMark('https://letterboxd.com/film/x/')).toBe('letterboxd');
         expect(localMark('https://github.com.evil.example/')).toBeUndefined();
         expect(localMark('https://notgithub.com/')).toBeUndefined();
         expect(localMark('not a url')).toBeUndefined();
     });
 
     it('leaves apps without a safe mark on the existing fallback', () => {
-        for (const url of ['https://app.slack.com', 'https://teams.microsoft.com', 'https://chatgpt.com', 'https://www.canva.com', 'https://www.linkedin.com', 'https://mail.google.com']) {
+        for (const url of ['https://app.slack.com', 'https://teams.microsoft.com', 'https://chatgpt.com', 'https://www.netflix.com', 'https://open.spotify.com', 'https://store.steampowered.com', 'https://www.figma.com', 'https://x.com', 'https://www.instagram.com', 'https://www.canva.com', 'https://www.linkedin.com', 'https://mail.google.com']) {
             expect(localMark(url)).toBeUndefined();
         }
     });

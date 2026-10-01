@@ -44,22 +44,12 @@ const KNOWN_APPS: readonly (readonly [match: string, icon: string])[] = [
 
 /**
  * Starter apps with a mark packaged in the extension: [host, file name in assets/marks].
- * Generated assets and their licence record come from scripts/brand-marks.mjs; an app that
- * is not listed there keeps the site icon and the letter fallback.
+ * Only marks whose owner publishes permission for this use (a link to their service, in
+ * black or white) are packaged; the review is recorded in docs/ASSET_LICENSES.md. Every other
+ * app keeps the site icon and the letter fallback.
  */
 const LOCAL_MARKS: readonly (readonly [host: string, mark: string])[] = [
-    ['claude.ai', 'claude'], ['perplexity.ai', 'perplexity'], ['huggingface.co', 'huggingface'], ['openrouter.ai', 'openrouter'],
-    ['github.com', 'github'], ['stackoverflow.com', 'stackoverflow'], ['npmjs.com', 'npm'], ['vercel.com', 'vercel'],
-    ['cloudflare.com', 'cloudflare'], ['supabase.com', 'supabase'], ['neon.tech', 'neon'], ['neon.com', 'neon'],
-    ['docker.com', 'docker'], ['figma.com', 'figma'], ['arxiv.org', 'arxiv'], ['medium.com', 'medium'], ['substack.com', 'substack'],
-    ['notion.so', 'notion'], ['notion.com', 'notion'], ['framer.com', 'framer'], ['dribbble.com', 'dribbble'],
-    ['behance.net', 'behance'], ['pinterest.com', 'pinterest'],
-    ['netflix.com', 'netflix'], ['spotify.com', 'spotify'], ['imdb.com', 'imdb'], ['letterboxd.com', 'letterboxd'],
-    ['steampowered.com', 'steam'], ['steamcommunity.com', 'steam'], ['epicgames.com', 'epicgames'], ['steamdb.info', 'steamdb'],
-    ['twitch.tv', 'twitch'], ['tradingview.com', 'tradingview'], ['coinmarketcap.com', 'coinmarketcap'],
-    ['x.com', 'x'], ['twitter.com', 'x'], ['reddit.com', 'reddit'], ['instagram.com', 'instagram'], ['whatsapp.com', 'whatsapp'],
-    ['ebay.com', 'ebay'], ['etsy.com', 'etsy'],
-    ['coursera.org', 'coursera'], ['khanacademy.org', 'khanacademy'], ['duolingo.com', 'duolingo'], ['quizlet.com', 'quizlet'],
+    ['github.com', 'github'], ['letterboxd.com', 'letterboxd'], ['vercel.com', 'vercel'],
 ];
 
 export const LOCAL_MARK_NAMES: readonly string[] = [...new Set(LOCAL_MARKS.map(([, mark]) => mark))];

@@ -51,8 +51,8 @@ Everything stays on your device. No account, no analytics.”
 | Testimonials (“Loved by productivity nerds”) | **Remove** unless each one is real, attributable and about V2 | — |
 | Pricing page | **Remove or rewrite**; it describes PRO and sync | — |
 
-Existing PRO customers: the flag is carried over and nothing is taken from them, but V2 has
-no paid features. What they are told is an open decision (RELEASE_STATUS.md, H4).
+Legacy PRO: the 1.x flag had no purchase record behind it. V2 has no paid plan, nobody is
+told they own one, and nothing is gated (RELEASE_STATUS.md, H4).
 
 ## Permission justifications (store form)
 

@@ -196,13 +196,13 @@ export const en = {
     'icons.site': 'From each site',
     'icons.service': 'Icon service',
     'icons.none': 'Letters only',
-    'privacy.icons.site': 'Icons for common apps are packaged with the extension. Every other icon is loaded from the site it belongs to, so no one else learns which sites you saved. Sites without an icon show a letter.',
+    'privacy.icons.site': 'Each icon is loaded from the site it belongs to, so no one else learns which sites you saved. A few are packaged with the extension and need no request at all. Sites without an icon show a letter.',
     'privacy.icons.service': 'Sharper icons for almost every site, loaded from Google’s icon service, which sees the site names of your saved links.',
     'privacy.icons.none': 'No icon requests at all. Every link shows a letter.',
     'privacy.continue': 'Show Continue',
     'privacy.continueHint': 'Lists links you opened from this page. Nothing else is recorded.',
     'privacy.closedTabs': 'Include recently closed tabs',
-    'privacy.closedTabsHint': 'Show recently closed pages in Continue. Chrome will ask for permission to “read your browsing history”; only the recently closed list is read, when this page opens, and it is never stored or sent anywhere.',
+    'privacy.closedTabsHint': 'Show recently closed pages in Continue. Chrome asks for this with its standard wording, “read your browsing history on all your signed-in devices”. This page uses it for one thing: the list of recently closed pages, read when the page opens. Nothing from it is stored or sent anywhere.',
     'closedTabs.denied': 'Permission was not granted, so recently closed pages stay off. Everything else works the same, and you can turn this on later.',
     'closedTabs.unavailable': 'Recently closed tabs are only available in the installed extension.',
     'closedTabs.failed': 'The browser did not answer the permission request. Try again.',
@@ -225,7 +225,6 @@ export const en = {
     'keys.prefixHint': 'Search shortcuts such as “g”, “y” or “gh” are set under Search.',
     'about.body': 'A launch surface for everything you do on the web: Spaces for each activity, one search box, and a command center.',
     'about.migrated': 'Upgraded from New Tab Folders on {date}. The original data is kept untouched.',
-    'about.legacyPro': 'Your earlier PRO status is kept on record.',
 
     // Onboarding
     'onboarding.title': 'Set up',

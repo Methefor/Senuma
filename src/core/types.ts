@@ -110,7 +110,11 @@ export interface MigrationSummary {
 }
 
 export interface LegacyRecord {
-    /** Entitlement carried over from the previous product, kept so it can be honoured later. */
+    /**
+     * The 1.x `isPro` flag, copied as it was. It was a local switch with no purchase record
+     * behind it, so it is history, not an entitlement: nothing reads it, nothing is unlocked
+     * by it, and the interface never presents it as a paid plan.
+     */
     isPro: boolean;
     proExpiresAt: number | null;
     migratedAt: number;

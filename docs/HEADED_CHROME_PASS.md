@@ -27,7 +27,8 @@ A person did not sit at the keyboard. Everything below is what the browser actua
 | Onboarding | Completes: 4 Spaces, 36 links, 3 Modes. |
 
 The bubble is Chrome's, not ours, and cannot be suppressed. Its default button turns the
-extension's new tab page off. See RELEASE_STATUS.md (H1).
+extension's new tab page off. Accepted as Chrome's behaviour; the update case is in
+RELEASE_STATUS.md (H1).
 
 ## 2. Keyboard focus on a fresh tab
 
@@ -62,14 +63,13 @@ the address bar (Chrome's behaviour); the page's shortcuts work after one click 
 
 | Step | Observed |
 |---|---|
-| Before the prompt | “Show recently closed pages in Continue. Chrome will ask for permission to ‘read your browsing history’…” |
+| Before the prompt | “Show recently closed pages in Continue. Chrome asks for this with its standard wording, ‘read your browsing history on all your signed-in devices’. This page uses it for one thing: the list of recently closed pages…” |
 | Prompt | “Şunları yapabilecek: **Oturum açtığınız tüm cihazlarda göz atma geçmişinizi okuma**” (Read your browsing history **on all your signed-in devices**). |
 | Decline | Not granted; setting stays off; message: “Permission was not granted, so recently closed pages stay off. Everything else works the same, and you can turn this on later.” |
 | Allow later | Granted (`sessions`, `tabs`); a new tab lists “Example Domain · Recently closed” in Continue. |
 | Turn off | `sessions` and `tabs` are removed again. |
 
-Note: Chrome's wording is broader than our explanation (“on all your signed-in devices”).
-Listed as H2 in RELEASE_STATUS.md.
+The explanation now quotes Chrome’s own wording (H2, fixed).
 
 ## 4. Search
 

@@ -23,17 +23,59 @@ Found and fixed during this phase:
   edit. The original is now set aside under `bos.state.newer` first.
 - `file:` and other non-web addresses were accepted for saved links. Now http/https only.
 
-## High — must be settled before the public release (P1)
+## Decisions locked on 2026-10-02
 
-| # | Item | Kind |
+| # | Decision | State |
 |---|---|---|
-| H1 | Chrome shows “Change back to Google?” on the first new tab, with **“Change back” as the default button**. New users can switch the page off with one Enter. It is not known whether existing users see it again after the update. | Product/communication; needs a staged rollout to observe |
-| H2 | Chrome's prompt for recently closed pages says “browsing history **on all your signed-in devices**”; our explanation says only “browsing history”. Make the explanation match. | Copy (en + tr), small |
-| H3 | Brand marks: Simple Icons records no licence conflict for the 41 bundled marks, but each owner's brand guideline was recorded, **not reviewed**. Netflix, Spotify, Steam, Epic, Twitch, Instagram, WhatsApp, X and Figma publish strict guidelines (colour, clear space, no alteration). Decide: review each, or ship without marks. Removing one is a two-line change. | Legal decision |
-| H4 | 1.x PRO customers: V2 has no paid features and no cloud sync. What they are told, and whether anything is refunded, is undecided. | Business decision |
-| H5 | Name, icon, store text, privacy policy page, landing and pricing pages are still 1.x. | See BRAND_DIRECTION.md, STORE_LISTING.md |
-| H6 | The final version number. The manifest says 1.99.10 on purpose. | Decision at release preparation |
-| H7 | A person has not used the build by hand. The headed pass is automated. | One sitting with docs/MANUAL_QA.md |
+| H1 | Chrome's “Change back to Google?” bubble is accepted as it is. Nothing suppresses, bypasses or steers it. | Observed locally (below); **staged-rollout observation item** |
+| H2 | The recently-closed explanation now quotes Chrome's wording, “on all your signed-in devices”, in English and Turkish. | Done |
+| H3 | Every bundled mark was reviewed against its owner's guidance. 3 kept (GitHub, Letterboxd, Vercel), 38 removed. | Done; see ASSET_LICENSES.md |
+| H4 | Legacy PRO is history, not an entitlement (below). | Done |
+| H5 | Name, icon, store text, screenshots, privacy policy, landing and pricing are replaced together in the brand phase. Production is untouched. | Next milestone |
+| H6 | Public version will be `2.0.0`. RC stays `2.0.0 RC 1` / manifest `1.99.10`. | Rule enforced by a test |
+| H7 | One hands-on session with docs/MANUAL_QA.md is required before publishing. | **Open — release gate** |
+
+### H1 — what was observed (`npm run headed:update`, visible Google Chrome 154)
+
+1.x and V2 loaded from one folder under one extension ID, so Chrome sees an update.
+
+| Case | First 1.x tab | After updating to V2, same session |
+|---|---|---|
+| User had pressed “Keep changes” in 1.x | bubble shown, kept; not shown again in 1.x | **not shown** |
+| User had never answered it in 1.x | bubble shown, and again on the next tab | **shown again** (it was still pending) |
+
+After quitting and restarting Chrome the bubble appeared in both cases, but that result is
+**not usable**: an extension loaded unpacked this way is installed afresh at each start, which
+Chrome treats as a new extension. So: an in-place update did not re-ask people who had already
+answered. Whether a Chrome Web Store update behaves the same cannot be reproduced outside the
+store. **Staged-rollout item:** release to a small percentage first and check, on a profile
+that had 1.x, whether the bubble returns after the update and after a restart.
+
+### H4 — legacy PRO
+
+- In 1.x, `isPro` was a local flag in `ntf_data`. The audit found no working payment system
+  and no purchase record behind it.
+- V2 has no paid plan and no gated feature. Everything is available to everyone.
+- The flag is copied into `state.legacy` during migration and kept only as history. No code
+  reads it and the interface no longer mentions it (the About line “Your earlier PRO status is
+  kept on record” was removed).
+- No migrated user is told they own a paid V2 plan.
+- **Separate commercial task, not guessed at here:** if payment-provider or store records of
+  real 1.x purchases exist outside this repository, they need their own decision.
+
+### H6 — version
+
+- Target: `2.0.0`. One source: `src/brand.ts` (`version`, `displayVersion`, `manifestVersion`);
+  `package.json` must match. A unit test fails the build if they disagree, if a pre-release
+  uses a manifest number outside `1.99.x`, or if a release's manifest number differs from its
+  version.
+- **Published version, as read from the public store page on 2026-10-02:** “New Tab Folders”,
+  version **1.8.0**, updated 10 July 2026, 17 users, ID `oghlifenjhpbebcdeboejbmemelkfobe`.
+  A search-engine snippet says 1.54; the repository's own manifest says 1.55.
+  Chrome compares versions number by number, so 1.55 > 1.8.0, and `2.0.0` is newer than all
+  three. **To verify in the developer dashboard before final packaging:** the exact published
+  version, and that the repository's 1.x files are the published build (the rehearsals used
+  the repository's files).
 
 ## Follow-up (P2/P3)
 
@@ -74,18 +116,19 @@ or found in stored data. Links that open a new tab carry `rel="noopener"`.
 | JavaScript | 186 kB (65 kB gzip), 10 files; 43.8 kB gzip parsed at startup |
 | CSS | 45 kB (8.9 kB gzip) |
 | Photographs | 3.28 MB (8 pictures + 8 previews) |
-| Brand marks | 40 kB (41 files) |
+| Brand marks | 1.5 kB (3 files) |
 | Inspection | no source maps, tests, dev config, local paths, secrets, debug logging, remote code or manifest key; strict CSP; no host permissions |
 
 ## Checks and how to run them
 
 | Command | What | Last result |
 |---|---|---|
-| `npm run check` | types, lint, 95 unit tests, build, budgets | pass |
+| `npm run check` | types, lint, 96 unit tests, build, budgets | pass |
 | `npm run test:e2e` | everyday paths in real Chromium | 65 pass |
 | `npm run test:rc` | edge data, damage, offline, several tabs, keyboard, names, reduced motion | 33 pass |
 | `npm run rehearse` | real 1.x → V2 in place, restart, rollback, forward | 13 pass |
 | `npm run headed` | visible Google Chrome, native prompts | 22 recorded, 0 failed |
+| `npm run headed:update` | 1.x → V2 in visible Chrome: does the bubble return? | recorded |
 | `npm run visual` | 31 captures | all reviewed |
 | `npm run package` | package inspection + zip | clean |
 

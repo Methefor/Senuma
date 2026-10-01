@@ -540,7 +540,6 @@ function About({ state }: { state: AppState }) {
             {state.legacy && (
                 <p class="note">
                     {t('about.migrated', { date: new Date(state.legacy.migratedAt).toLocaleDateString(state.prefs.language) })}
-                    {state.legacy.isPro ? ` ${t('about.legacyPro')}` : ''}
                 </p>
             )}
         </>

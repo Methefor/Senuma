@@ -160,70 +160,73 @@ Source: **simple-icons@16.33.0** (https://simpleicons.org), extracted on 2026-10
 `scripts/brand-marks.mjs`. The package is a development dependency only; just the files
 listed below are copied into the extension (`marks/*.svg`).
 
-What the licence situation actually is:
+An individual brand-usage review was done on 2026-10-02 for all 41 marks first bundled.
+Rule applied: a mark stays only if its owner's own published guidance allows (a) using the
+mark to link or refer to the service without asking first and (b) showing it in black or
+white. Where guidance was strict, missing, unreadable or unclear, the mark was removed and
+the app uses its site icon or a letter. **3 kept, 38 removed.**
 
-- The Simple Icons **collection** is CC0-1.0. That does **not** make each mark CC0, and the
-  project says so itself. Each icon was therefore checked on its own metadata entry.
-- A mark is bundled only if its entry carries **no conflicting licence** (none of the bundled
-  entries declares a licence at all; anything declaring a copyleft, non-commercial,
-  no-derivatives, attribution or custom licence is refused by the script).
-- Every mark is a **trademark of its owner**. It is used only to identify a link to that
-  owner's own service, at icon size, next to the service's name. No endorsement or
-  affiliation is implied or claimed.
-- Treatment: the shape is not altered. It is painted in a single neutral colour (near-white
-  on dark themes, near-black on light themes) and is never tinted with a theme colour.
-- Brand guideline links recorded by Simple Icons are listed per mark. They were recorded,
-  **not legally reviewed**; a review against each guideline is listed as a pre-release item.
-- If an owner asks for removal, delete the entry from `scripts/brand-marks.mjs` and
-  `LOCAL_MARKS` in `src/core/icons.ts`; the app falls back to the site icon or a letter.
+- The Simple Icons collection is CC0-1.0; that does not make each mark CC0. None of the kept
+  entries declares a licence that conflicts.
+- Every mark is a trademark of its owner, used only to identify a link to that owner's own
+  service, at icon size, next to its name. No endorsement or affiliation is implied.
+- Treatment: shape unaltered, painted near-white on dark themes and near-black on light
+  themes, never tinted.
+- This is a reading of public guidance, not legal advice. Removing a mark is a two-line change
+  (`scripts/brand-marks.mjs` and `LOCAL_MARKS` in `src/core/icons.ts`).
 
-| Starter app | File | Licence entry | Brand guidelines | Simple Icons source |
-|---|---|---|---|---|
-| Claude | `marks/claude.svg` | none declared | none recorded | https://claude.ai |
-| Perplexity | `marks/perplexity.svg` | none declared | none recorded | https://www.perplexity.ai |
-| Hugging Face | `marks/huggingface.svg` | none declared | https://huggingface.co/brand | https://huggingface.co/brand |
-| OpenRouter | `marks/openrouter.svg` | none declared | none recorded | https://openrouter.ai |
-| GitHub | `marks/github.svg` | none declared | https://github.com/logos | https://github.com/logos |
-| Stack Overflow | `marks/stackoverflow.svg` | none declared | https://stackoverflow.com/legal/trademark-guidance | https://stackoverflow.design/brand/logo/ |
-| npm | `marks/npm.svg` | none declared | https://docs.npmjs.com/policies/logos-and-usage | https://www.npmjs.com |
-| Vercel | `marks/vercel.svg` | none declared | https://vercel.com/geist/brands | https://vercel.com/geist/brands |
-| Cloudflare | `marks/cloudflare.svg` | none declared | https://www.cloudflare.com/trademark/ | https://www.cloudflare.com/logo/ |
-| Supabase | `marks/supabase.svg` | none declared | none recorded | https://github.com/supabase/supabase/blob/4031a7549f5d46da7bc79c01d56be4177dc7c114/packages/common/assets/images/supabase-logo-wordmark--light.svg |
-| Neon | `marks/neon.svg` | none declared | https://neon.com/brand | https://neon.com/brand |
-| Docker Hub | `marks/docker.svg` | none declared | none recorded | https://www.docker.com/company/newsroom/media-resources |
-| Figma | `marks/figma.svg` | none declared | https://www.figma.com/using-the-figma-brand/ | https://www.figma.com/using-the-figma-brand/ |
-| arXiv | `marks/arxiv.svg` | none declared | https://arxiv.org/about/brand | https://arxiv.org |
-| Medium | `marks/medium.svg` | none declared | https://medium.design/logos-and-brand-guidelines-f1a01a733592 | https://medium.design/logos-and-brand-guidelines-f1a01a733592 |
-| Substack | `marks/substack.svg` | none declared | none recorded | https://on.substack.com |
-| Notion | `marks/notion.svg` | none declared | none recorded | https://www.notion.so |
-| Framer | `marks/framer.svg` | none declared | none recorded | https://framer.com |
-| Dribbble | `marks/dribbble.svg` | none declared | none recorded | https://dribbble.com/branding |
-| Behance | `marks/behance.svg` | none declared | none recorded | https://www.behance.net |
-| Pinterest | `marks/pinterest.svg` | none declared | https://business.pinterest.com/en/brand-guidelines | https://business.pinterest.com/en/brand-guidelines |
-| Netflix | `marks/netflix.svg` | none declared | https://brand.netflix.com/en/assets/logos | https://brand.netflix.com/en/assets/logos |
-| Spotify | `marks/spotify.svg` | none declared | https://developer.spotify.com/documentation/general/design-and-branding/#using-our-logo | https://developer.spotify.com/documentation/general/design-and-branding/#using-our-logo |
-| IMDb | `marks/imdb.svg` | none declared | https://brand.imdb.com/imdb | https://brand.imdb.com/imdb |
-| Letterboxd | `marks/letterboxd.svg` | none declared | https://letterboxd.com/about/brand/ | https://letterboxd.com/about/brand/ |
-| Steam | `marks/steam.svg` | none declared | https://partner.steamgames.com/doc/marketing/branding | https://partner.steamgames.com/doc/marketing/branding |
-| Epic Games | `marks/epicgames.svg` | none declared | https://dev.epicgames.com/docs/services/en-US/EpicAccountServices/DesignGuidelines/index.html#epicgamesbrandguidelines | https://dev.epicgames.com/docs/services/en-US/EpicAccountServices/DesignGuidelines/index.html#epicgamesbrandguidelines |
-| SteamDB | `marks/steamdb.svg` | none declared | none recorded | https://steamdb.info |
-| Twitch | `marks/twitch.svg` | none declared | https://brand.twitch.tv | https://brand.twitch.tv |
-| TradingView | `marks/tradingview.svg` | none declared | none recorded | https://www.tradingview.com/media-kit |
-| CoinMarketCap | `marks/coinmarketcap.svg` | none declared | none recorded | https://www.coinmarketcap.com |
-| X | `marks/x.svg` | none declared | https://about.x.com/en/who-we-are/brand-toolkit | https://x.com |
-| Reddit | `marks/reddit.svg` | none declared | https://www.redditinc.com/brand | https://www.redditinc.com/brand |
-| Instagram | `marks/instagram.svg` | none declared | https://about.meta.com/brand/resources/instagram | https://about.meta.com/brand/resources/instagram |
-| WhatsApp | `marks/whatsapp.svg` | none declared | https://about.meta.com/brand/resources/whatsapp/whatsapp-brand | https://about.meta.com/brand/resources/whatsapp/whatsapp-brand |
-| eBay | `marks/ebay.svg` | none declared | none recorded | https://go.developer.ebay.com/logos |
-| Etsy | `marks/etsy.svg` | none declared | none recorded | https://www.etsy.com/uk/press |
-| Coursera | `marks/coursera.svg` | none declared | none recorded | https://about.coursera.org/press |
-| Khan Academy | `marks/khanacademy.svg` | none declared | https://support.khanacademy.org/hc/en-us/articles/202263034-Trademark-and-Brand-Usage-Policy | https://khanacademy.zendesk.com/hc/en-us/articles/202483630-Press-room |
-| Duolingo | `marks/duolingo.svg` | none declared | https://design.duolingo.com | https://design.duolingo.com |
-| Quizlet | `marks/quizlet.svg` | none declared | none recorded | https://quizlet.com |
+### Kept
 
-### Starter apps deliberately left without a packaged mark
+| Starter app | File | Basis (owner's guidance) |
+|---|---|---|
+| GitHub | `marks/github.svg` | brand.github.com/foundations/logo: the Invertocat may be used “as a social button to link to your GitHub profile or project”; it “should only appear in white, black…” |
+| Letterboxd | `marks/letterboxd.svg` | letterboxd.com/about/brand: “You may use the logo assets below to link to our platform”; a mono version is provided |
+| Vercel | `marks/vercel.svg` | vercel.com/geist/brands: marks may be used “to truthfully describe the products, services, and technologies that we offer”; supplied in black and white only |
 
-These keep the existing behaviour: the site's own icon when it loads, otherwise a letter.
+### Removed after review
+
+| Starter app | Why |
+|---|---|
+| Netflix | brand site: logo use needs Netflix approval; red-on-black rules conflict with a neutral single colour |
+| Spotify | design guidelines tie the icon to Spotify green/black/white and to approved integrations |
+| Steam | branding guidance is for Steamworks partners; no general permission |
+| Epic Games | guidelines are for Epic Account Services partners; no general permission |
+| Instagram | Meta brand resources: approved assets only, no modification, permission for most uses |
+| WhatsApp | Meta brand resources: approved assets only, no modification, permission for most uses |
+| X | brand toolkit forbids alteration and implies approval for product use; strict owner |
+| Figma | brand page: use of the logo requires permission |
+| npm | policy: “you may use them only with our permission” |
+| Cloudflare | trademark page: logo use “requires our written permission”; colour changes forbidden |
+| Pinterest | guidelines: badge use without a link to your own account “incorrectly implies a partnership” |
+| Neon | monochrome is offered, but permission for third-party use is not stated |
+| Hugging Face | asset download page only; no usage permission stated |
+| IMDb | full guidelines are for approved partners only |
+| Twitch | asset page only; usage rules not published where they could be read |
+| Stack Overflow | trademark guidance could not be retrieved for review |
+| Medium | guideline page could not be retrieved for review |
+| Reddit | guideline page could not be retrieved for review |
+| Khan Academy | policy page could not be retrieved for review |
+| arXiv | brand page no longer at the recorded address |
+| Duolingo | recorded address is now a design blog; no usage rules found |
+| Claude | no published permission for third-party use was found; ambiguous, so not bundled |
+| Perplexity | no published permission for third-party use was found; ambiguous, so not bundled |
+| OpenRouter | no published permission for third-party use was found; ambiguous, so not bundled |
+| Supabase | no published permission for third-party use was found; ambiguous, so not bundled |
+| Docker Hub | no published permission for third-party use was found; ambiguous, so not bundled |
+| Substack | no published permission for third-party use was found; ambiguous, so not bundled |
+| Notion | no published permission for third-party use was found; ambiguous, so not bundled |
+| Framer | no published permission for third-party use was found; ambiguous, so not bundled |
+| Dribbble | no published permission for third-party use was found; ambiguous, so not bundled |
+| Behance | no published permission for third-party use was found; ambiguous, so not bundled |
+| SteamDB | no published permission for third-party use was found; ambiguous, so not bundled |
+| TradingView | no published permission for third-party use was found; ambiguous, so not bundled |
+| CoinMarketCap | no published permission for third-party use was found; ambiguous, so not bundled |
+| eBay | no published permission for third-party use was found; ambiguous, so not bundled |
+| Etsy | no published permission for third-party use was found; ambiguous, so not bundled |
+| Coursera | no published permission for third-party use was found; ambiguous, so not bundled |
+| Quizlet | no published permission for third-party use was found; ambiguous, so not bundled |
+
+### Never bundled
 
 | Starter app | Reason |
 |---|---|

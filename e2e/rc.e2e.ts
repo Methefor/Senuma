@@ -308,7 +308,7 @@ await withSession(async session => {
         const page = await openNewTab(session);
         await page.waitForSelector('.backdrop-photo.is-ready', { timeout: 5000 });
         const marks = await page.locator('.app-icon-mark').count();
-        expect(marks > 5, `only ${marks} packaged marks shown`);
+        expect(marks >= 1, `no packaged marks shown`);
         const unpainted = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>('.app-icon')].filter(icon => !icon.querySelector('.app-icon-mark, .app-icon-mono, .app-icon-emoji, img.is-loaded')).length);
         expect(unpainted === 0, `${unpainted} icons are blank`);
         await page.locator('.plate', { hasText: 'Coding' }).click();

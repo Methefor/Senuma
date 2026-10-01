@@ -15,6 +15,7 @@
     "rehearse": "npm run build && vite-node e2e/rehearsal.ts",
     "headed": "npm run build && vite-node e2e/headed.ts",
     "package": "npm run build && node scripts/package-rc.mjs",
+    "headed:update": "npm run build && vite-node e2e/headed-update.ts",
     "check": "npm run typecheck && npm run lint && npm test && npm run build && npm run size",
     "visual": "npm run build && vite-node e2e/visual.ts",
     "size": "node scripts/size.mjs",
