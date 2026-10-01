@@ -6,6 +6,30 @@
 
 ---
 
+> ## V2 rebuild in progress (branch `rebuild/browser-os`)
+>
+> This repository currently holds two products:
+>
+> | | Legacy 1.x — **live in the Chrome Web Store** | V2 — release candidate, not published |
+> |---|---|---|
+> | Entry point | `index.html` | `newtab.html` → `src/` |
+> | How to run | load the repo root as an unpacked extension | `npm run build`, then load `dist/` unpacked |
+>
+> The rest of this README describes 1.x. For V2:
+>
+> ```
+> npm install
+> npm run dev        # preview at http://localhost:5173/newtab.html
+> npm run check      # typecheck, lint, unit tests, build, bundle budget
+> npm run build      # → dist/
+> npm run test:e2e   # runs the built extension in real Chromium
+> ```
+>
+> Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). What must change before V2 ships:
+> [docs/RELAUNCH_CHECKLIST.md](docs/RELAUNCH_CHECKLIST.md).
+
+---
+
 ## 🎯 Elevate Your Productivity
 
 New Tab Folders transforms your "New Tab" page into a powerful workstation. Say goodbye to bookmark clutter and hello to a structured, aesthetic, and lightning-fast workspace.

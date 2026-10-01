@@ -69,7 +69,7 @@
     border-radius: var(--radius);
     background: color-mix(in srgb, var(--tint) calc(20% * var(--tint-strength) + 5%), transparent);
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tint) 30%, transparent);
-    color: var(--tint);
+    color: var(--glyph);
 }
 .space-title { flex: 1; min-width: 0; }
 .space-title h2 { font-size: 27px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -151,7 +151,7 @@
     white-space: nowrap;
 }
 .tile:hover .tile-title, .tile:focus-visible .tile-title { color: var(--ink); }
-.tile-pin { position: absolute; top: 8px; right: 12px; color: var(--tint); }
+.tile-pin { position: absolute; top: 8px; right: 12px; color: var(--glyph); }
 .tile-add { color: var(--ink-3); opacity: 0; transition: opacity var(--t-feedback), background var(--t-feedback); }
 /* "Add link" stays out of the way until the group is being worked on. */
 .group:hover .tile-add, .tile-add:focus-visible, .tiles > .tile-add:only-child { opacity: 1; }
@@ -208,7 +208,7 @@
 .list-row { display: flex; align-items: center; gap: 6px; min-height: 46px; border-bottom: 1px solid var(--line); }
 .list-name { flex: 1; min-width: 0; display: grid; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
 .list-sub { font-size: 12px; font-weight: 400; color: var(--ink-3); }
-.check-glyph { display: grid; place-items: center; width: 28px; color: var(--tint, var(--ink-2)); }
+.check-glyph { display: grid; place-items: center; width: 28px; color: var(--glyph, var(--ink-2)); }
 .alias-input { width: 120px; height: 30px !important; font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
 .keys { display: flex; align-items: center; gap: 4px; color: var(--ink-3); }
 
@@ -222,7 +222,8 @@
 .card-head { display: flex; gap: 8px; align-items: center; }
 .card-head input { flex: 1; min-width: 0; font-weight: 600; }
 .card-label { margin-top: 10px; font-size: 12px; color: var(--ink-3); }
-.glyph-select { width: 110px; }
+.glyph-button { flex: none; border: 1px solid var(--line); color: var(--accent); }
+.settings-body > .note { margin-bottom: 14px; }
 .card .row:last-child { border-bottom: 0; padding-bottom: 0; }
 .chip-checks { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 0; }
 .chip-checks button {
@@ -309,7 +310,7 @@
     text-align: left;
     transition: background var(--t-feedback), border-color var(--t-feedback), transform var(--t-feedback) var(--ease-out);
 }
-.interest .icon { color: var(--tint); }
+.interest .icon { color: var(--glyph); }
 .interest:hover { background: var(--surface-hi); transform: translateY(-1px); }
 .interest[aria-pressed='true'] { border-color: var(--tint); background: color-mix(in srgb, var(--tint) 14%, transparent); }
 .interest-check { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--tint); color: #14121a; }

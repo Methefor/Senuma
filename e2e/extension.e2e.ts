@@ -365,6 +365,40 @@ async function freshInstall(): Promise<void> {
         return `median ${Math.round(median(samples))} ms, slowest ${Math.round(Math.max(...samples))} ms (7 new tabs, headless Chromium)`;
     });
 
+    await check('Reduced motion', 'the system setting removes animation and movement; hover feedback remains', async () => {
+        const tab = await openNewTab(session);
+        await tab.emulateMedia({ reducedMotion: 'reduce' });
+        const motion = await tab.evaluate(() => {
+            const style = (selector: string) => getComputedStyle(document.querySelector(selector)!);
+            return {
+                glow: style('.backdrop-glow').animationName,
+                plate: style('.plate').animationName,
+                plateTransition: style('.plate').transitionDuration,
+                deck: style('.deck-section').animationName,
+            };
+        });
+        expect(motion.glow === 'none' && motion.plate === 'none' && motion.deck === 'none', JSON.stringify(motion));
+        expect(/^0s(, 0s)*$/.test(motion.plateTransition), `transitions still run: ${motion.plateTransition}`);
+        const plate = tab.locator('.plate').first();
+        const rest = await plate.evaluate(el => getComputedStyle(el).backgroundColor);
+        await plate.hover();
+        expect((await plate.evaluate(el => getComputedStyle(el).backgroundColor)) !== rest, 'hover no longer gives feedback');
+        await tab.close();
+    });
+
+    await check('Reduced motion', 'the in-app "Reduced" setting stops ambient animation', async () => {
+        const state = await readStorage<any>(session, 'bos.state');
+        await writeStorage(session, { 'bos.state': { ...state, prefs: { ...state.prefs, motion: 'reduced' }, updatedAt: Date.now() } });
+        const tab = await openNewTab(session);
+        const glow = await tab.evaluate(() => {
+            const style = getComputedStyle(document.querySelector('.backdrop-glow')!);
+            return `${style.animationName} × ${style.animationIterationCount}`;
+        });
+        expect(glow === 'fade × 1' || glow === 'none × 1', `ambient glow: ${glow}`);
+        await writeStorage(session, { 'bos.state': { ...state, updatedAt: Date.now() + 1 } });
+        await tab.close();
+    });
+
     const before = await readStorage<any>(session, 'bos.state');
     allErrors.push(...session.errors);
     await session.context.close();

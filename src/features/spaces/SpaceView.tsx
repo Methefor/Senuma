@@ -15,7 +15,8 @@ import { itemMenu, openAll, spaceMenu } from './menus';
 const DRAG_TYPE = 'application/x-space-item';
 const RECENT_TILES = 4;
 /** "Recent" only earns its row once a Space is big enough to need a shortcut into it. */
-const RECENT_MIN_ITEMS = 8;
+const RECENT_MIN_ITEMS = 12;
+const RECENT_MIN_ENTRIES = 2;
 const ROW_TOLERANCE_PX = 6;
 
 function matches(item: Item, filter: string): boolean {
@@ -216,7 +217,7 @@ export function SpaceView({ state, space }: { state: AppState; space: Space }) {
                             </div>
                         </div>
                     )}
-                    {recent.length > 0 && (
+                    {recent.length >= RECENT_MIN_ENTRIES && (
                         <section class="group">
                             <header class="group-head"><span class="group-label">{t('space.recent')}</span></header>
                             <div class="tiles">

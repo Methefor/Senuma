@@ -59,7 +59,7 @@ const dusk: Theme = {
         '--label-size': '11px',
         // How strongly a Space tints its own surfaces, and how site icons are rendered
         '--tint-strength': '1',
-        '--icon-filter': 'none',
+        '--icon-filter': 'opacity(1)',
     },
 };
 

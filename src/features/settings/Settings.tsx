@@ -17,7 +17,7 @@ import { THEMES, type Theme } from '../../core/themes';
 import type { AppState, IconSource, Language, MotionLevel, Prefs } from '../../core/types';
 import { t, type MessageKey } from '../../i18n';
 import { MODIFIER_KEY } from '../command/Launcher';
-import { app, setUi, snapshots, toast, update, useStore } from '../../storage/store';
+import { app, openMenuBelow, setUi, snapshots, toast, update, useStore } from '../../storage/store';
 import { Icon, SPACE_GLYPHS } from '../../ui/Icon';
 import { Overlay } from '../../ui/Overlay';
 import { ImportReview } from './ImportReview';
@@ -140,10 +140,12 @@ function Modes({ state }: { state: AppState }) {
                 return (
                     <div class="card" key={id}>
                         <div class="card-head">
-                            <select class="glyph-select" value={mode.glyph} aria-label={t('field.icon')}
-                                onChange={event => update(s => updateMode(s, id, { glyph: event.currentTarget.value }))}>
-                                {SPACE_GLYPHS.map(glyph => <option key={glyph} value={glyph}>{glyph}</option>)}
-                            </select>
+                            <button type="button" class="icon-button glyph-button" aria-label={t('field.icon')} title={t('field.icon')} aria-haspopup="menu"
+                                onClick={event => openMenuBelow(event.currentTarget, SPACE_GLYPHS.map(glyph => ({
+                                    label: glyph, glyph, checked: glyph === mode.glyph, run: () => update(s => updateMode(s, id, { glyph })),
+                                })))}>
+                                <Icon name={mode.glyph} size={17} />
+                            </button>
                             <input type="text" value={mode.name} aria-label={t('field.name')}
                                 onChange={event => update(s => updateMode(s, id, { name: event.currentTarget.value }))} />
                             <button type="button" class="icon-button is-small" aria-label={t('delete')} title={t('delete')}

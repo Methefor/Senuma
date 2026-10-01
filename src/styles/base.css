@@ -16,6 +16,10 @@
     --focus: 0 0 0 2px var(--backdrop-color), 0 0 0 4px var(--accent);
 }
 
+/* A Space's glyph takes the Space colour as far as the theme allows; monochrome themes
+   (tint strength 0) fall back to their own accent. Resolved wherever --tint is set. */
+[style*='--tint'] { --glyph: color-mix(in srgb, var(--tint) calc(100% * var(--tint-strength)), var(--accent)); }
+
 html, body { height: 100%; margin: 0; }
 
 body {
@@ -227,8 +231,10 @@ input[type='checkbox'] { width: 16px; height: 16px; flex: none; accent-color: va
     filter: var(--icon-filter);
 }
 .app-icon img.is-loaded { opacity: 1; }
+/* Black-on-transparent icons (GitHub, Vercel…) vanish on dark surfaces; a hairline of light keeps their outline. */
+[data-scheme='dark'] .app-icon img { filter: var(--icon-filter) drop-shadow(0 0 .7px rgb(255 255 255 / .8)); }
 /* Colour comes back under the pointer, so a monochrome theme never hides which app is which. */
-a:hover > .app-icon img, button:hover > .app-icon img, .result.is-active .app-icon img { filter: none; }
+a:hover > .app-icon img, button:hover > .app-icon img, .result.is-active .app-icon img { filter: drop-shadow(0 0 .7px rgb(255 255 255 / .5)); }
 
 /* ---------- Choice cards (two or three large alternatives) ---------- */
 
@@ -293,7 +299,7 @@ a:hover > .app-icon img, button:hover > .app-icon img, .result.is-active .app-ic
     position: fixed;
     z-index: 950;
     left: 50%;
-    bottom: 92px;
+    bottom: 96px;
     transform: translateX(-50%);
     display: grid;
     gap: 8px;

@@ -15,8 +15,8 @@ export default tseslint.config(
         },
     },
     {
-        // Tests poke at deliberately malformed data; the browser test script logs its results.
-        files: ['**/*.test.ts', 'e2e/**'],
+        // Tests poke at deliberately malformed data; test and build scripts print their results.
+        files: ['**/*.test.ts', 'e2e/**', 'scripts/**'],
         rules: { '@typescript-eslint/no-explicit-any': 'off', 'no-console': 'off' },
     },
 );

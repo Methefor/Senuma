@@ -6,7 +6,6 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
-    overflow-y: auto;
     transition: transform var(--t-panel) var(--ease-out), opacity var(--t-panel) var(--ease-out);
 }
 /* When a panel is open the page steps back instead of disappearing. */
@@ -46,12 +45,18 @@
 
 /* ---------- Stage ---------- */
 
-.stage {
+/* Only this region scrolls; the top bar and dock stay put and never cover content. */
+.stage-scroll {
     flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+}
+.stage {
     width: 100%;
     max-width: 1080px;
     margin: 0 auto;
-    padding: clamp(8px, 6vh, 72px) clamp(16px, 3vw, 28px) 132px;
+    padding: clamp(8px, 6vh, 72px) clamp(16px, 3vw, 28px) 48px;
     display: flex;
     flex-direction: column;
     gap: clamp(30px, 6vh, 60px);
@@ -162,7 +167,8 @@
 
 .deck-section { display: grid; gap: 12px; animation: rise var(--t-scene) var(--ease-out); }
 .deck-head { display: flex; align-items: center; justify-content: space-between; min-height: 28px; }
-.deck { display: grid; grid-template-columns: repeat(auto-fill, minmax(164px, 1fr)); gap: 10px; }
+/* auto-fit: a handful of Spaces share the full width instead of leaving an empty column. */
+.deck { display: grid; grid-template-columns: repeat(auto-fit, minmax(164px, 1fr)); gap: 10px; }
 
 .plate {
     position: relative;
@@ -170,6 +176,7 @@
     flex-direction: column;
     align-items: flex-start;
     min-height: 168px;
+    max-width: 300px;
     padding: 15px 15px 14px;
     border-radius: var(--radius-lg);
     /* No outline: the Space's own colour falls from the top edge like light on a surface. */
@@ -201,7 +208,7 @@
 .plate.is-drop-after::after { right: -7px; }
 
 .plate-top { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; }
-.plate-glyph { color: var(--tint); }
+.plate-glyph { color: var(--glyph); }
 .plate-key { opacity: 0; transition: opacity var(--t-feedback); }
 .plate:hover .plate-key, .plate:focus-visible .plate-key { opacity: .8; }
 .plate-text { display: grid; gap: 2px; margin-top: 14px; min-width: 0; max-width: 100%; }
@@ -217,6 +224,7 @@
 /* Many Spaces: plates become one-line rows, so twenty take less room than eight did. */
 .deck.is-compact { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 4px 10px; }
 .is-compact .plate {
+    max-width: none;
     flex-direction: row;
     align-items: center;
     gap: 12px;
@@ -266,20 +274,18 @@
     font-weight: 500;
     transition: background var(--t-feedback), border-color var(--t-feedback);
 }
-.pick .icon { color: var(--tint); }
+.pick .icon { color: var(--glyph); }
 .pick:hover { background: var(--surface-hi); border-color: var(--tint); }
 
 /* ---------- Dock ---------- */
 
 .dock {
-    position: fixed;
-    z-index: 6;
-    left: 50%;
-    bottom: 18px;
-    transform: translateX(-50%);
+    flex: none;
+    align-self: center;
     display: flex;
     gap: 6px;
     max-width: calc(100vw - 32px);
+    margin: 6px 0 16px;
     padding: 7px;
     border: 1px solid var(--line);
     border-radius: calc(var(--radius-lg) + 2px);
@@ -300,7 +306,7 @@
     height: 38px;
     background: color-mix(in srgb, var(--tint) calc(22% * var(--tint-strength) + 6%), var(--surface));
     box-shadow: inset 0 0 0 1px var(--line);
-    color: var(--tint);
+    color: var(--glyph);
 }
 
 @media (max-width: 720px) {

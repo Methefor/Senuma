@@ -367,14 +367,16 @@ export function Home({ state, covered }: { state: AppState; covered: boolean }) 
                     </button>
                 </div>
             </header>
-            <main class="stage">
-                <div class="hero">
-                    <h1 class="greeting">{greeting()}</h1>
-                    <Launcher variant="home" />
-                    <Continue state={state} />
-                </div>
-                <Deck key={modeKey} state={state} />
-            </main>
+            <div class="stage-scroll">
+                <main class="stage">
+                    <div class="hero">
+                        <h1 class="greeting">{greeting()}</h1>
+                        <Launcher variant="home" />
+                        <Continue state={state} />
+                    </div>
+                    <Deck key={modeKey} state={state} />
+                </main>
+            </div>
             <Dock key={modeKey} state={state} />
         </div>
     );
