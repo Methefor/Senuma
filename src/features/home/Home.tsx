@@ -22,6 +22,8 @@ const CONTINUE_MORE = 8;
 const PLATE_PREVIEW = 5;
 /** Above this many Spaces the deck switches to compact rows so Home stays calm. */
 const ROOMY_LIMIT = 8;
+/** Up to this many Spaces keep a fixed comfortable width rather than stretching across the row. */
+const FEW_LIMIT = 3;
 const CLOCK_TICK_MS = 15_000;
 const SPACE_DRAG = 'application/x-space';
 const DOCK_DRAG = 'application/x-dock-entry';
@@ -271,7 +273,7 @@ function Deck({ state }: { state: AppState }) {
                     <Icon name="plus" size={14} />{t('space.new')}
                 </button>
             </header>
-            <div ref={ref} class={`deck ${compact ? 'is-compact' : ''}`}
+            <div ref={ref} class={`deck ${compact ? 'is-compact' : spaces.length <= FEW_LIMIT ? 'is-few' : ''}`}
                 onDragOver={event => event.dataTransfer!.types.includes(SPACE_DRAG) && event.preventDefault()}
                 onDrop={event => {
                     event.preventDefault();

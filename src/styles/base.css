@@ -78,6 +78,9 @@ img { display: block; }
 
 /* The wash pulls any picture into the theme's mood and keeps text readable over it. */
 .backdrop-wash { background: rgb(var(--bg-wash)); }
+/* A dark theme darkens the picture rather than veiling it: a bright photo becomes its own
+   evening, keeping its colour, instead of turning grey. Light themes veil with their paper tone. */
+[data-scheme='dark'] .backdrop-wash { mix-blend-mode: multiply; }
 
 /* Bloom: a soft highlight from above, in the accent colour. Mostly a "Cinematic" effect. */
 .backdrop-bloom {
@@ -302,7 +305,7 @@ input[type='color'] { width: 34px; height: 28px; padding: 0; border: 1px solid v
 /* Monochrome themes tint icons on Home for calm. Where an app is being chosen — under the
    pointer, on the selected result, inside an open Space — its true colours come back. */
 a:hover > .app-icon img, a:focus-visible > .app-icon img, button:hover > .app-icon img,
-.result.is-active .app-icon img, .overlay-space .app-icon img, .swatch-tile .app-icon img {
+.result.is-active .app-icon img, .overlay-space .app-icon img, .provider-button .app-icon img, .pick .app-icon img {
     filter: drop-shadow(0 0 .7px rgb(255 255 255 / .5));
 }
 

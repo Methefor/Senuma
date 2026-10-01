@@ -106,8 +106,7 @@ export function Backdrop({ themeId, background, assets }: { themeId: string; bac
         : undefined;
     return (
         // Keyed by theme and picture: a change cross-fades in as one scene instead of snapping.
-        <div class="backdrop" key={`${themeId}|${sourceKey(background.source)}`} data-picture={picture} aria-hidden="true">
-            <i class="backdrop-glow" />
+        <div class="backdrop" key={`${themeId}|${sourceKey(background.source)}`} data-picture={picture ? '' : undefined} aria-hidden="true">
             {picture && (
                 <>
                     <div class="backdrop-stage" style={tune}>
@@ -116,8 +115,9 @@ export function Backdrop({ themeId, background, assets }: { themeId: string; bac
                     <i class="backdrop-wash" style={{ opacity: background.dim }} />
                 </>
             )}
-            <i class="backdrop-bloom" />
             <i class="backdrop-fog" />
+            <i class="backdrop-glow" />
+            <i class="backdrop-bloom" />
         </div>
     );
 }

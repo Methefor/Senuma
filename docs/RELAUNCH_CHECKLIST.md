@@ -12,13 +12,16 @@ nothing has been published.
       `2.0.0-alpha.x`. The published number must be higher than the live 1.55.
 - [ ] **Free / Pro.** V2 has no paid tier and no limits. 1.x advertised one (below) but never
       had working payments; `legacy.isPro` is carried over in case it should be honoured.
-- [ ] **Default icon source.** Private-by-default shows real icons for about 60% of starter
-      apps; the icon service shows nearly all but tells Google which sites are saved.
-      Currently: private by default, opt-in at onboarding, existing users keep the service.
+- [x] **Default icon source.** Decided: private by default for new installs (site icons, then
+      a letter); the icon service is opt-in with the disclosure shown; users upgraded from 1.x
+      keep the service they already had.
 - [ ] **Languages.** 1.x offered TR, EN, DE, FR, PT, ES. V2 has EN and TR; other users get English.
-- [ ] **New-tab keyboard focus.** Chrome keeps focus in the address bar on a new tab, so
-      shortcuts need a click first. Decide whether to accept it or work around it (see Risks
-      in the phase report).
+- [x] **New-tab keyboard focus.** Decided: normal Chrome behaviour is kept. Focus starts in
+      the address bar; no focus-stealing workarounds. Shortcuts work once the page has focus.
+- [ ] **Photographic wallpapers.** The curated set is drawn in CSS and ships no image files.
+      Photographic categories (nature, architecture) need licensed images and a size budget.
+
+Manual checks to run in a real Chrome window before release are in `MANUAL_QA.md`.
 
 ## Public claims that become false
 

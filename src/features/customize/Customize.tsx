@@ -91,8 +91,8 @@ function BackgroundSection({ state, draft, onChange }: { state: AppState; draft:
     const full = assets.length >= MAX_WALLPAPERS;
 
     /** Picking a picture also picks a wash that keeps text readable over it. */
-    const pick = (luminance?: number) => (source: BackgroundSource) =>
-        onChange({ ...background, source, ...(luminance === undefined ? {} : { dim: suggestedDim(luminance, scheme) }) });
+    const pick = (luminance?: number, curated = false) => (source: BackgroundSource) =>
+        onChange({ ...background, source, ...(luminance === undefined ? {} : { dim: suggestedDim(luminance, scheme, curated) }) });
 
     const add = async (file: File | undefined) => {
         if (!file) return;
@@ -131,7 +131,7 @@ function BackgroundSection({ state, draft, onChange }: { state: AppState; draft:
                     <span class="swatch-caption">{t('background.theme')}</span>
                 </Tile>
                 {WALLPAPER_PRESETS.map(preset => (
-                    <Tile key={preset.id} source={{ kind: 'preset', id: preset.id }} name={preset.name} current={current} onChoose={pick(preset.luminance)}
+                    <Tile key={preset.id} source={{ kind: 'preset', id: preset.id }} name={preset.name} current={current} onChoose={pick(preset.luminance, true)}
                         style={{ backgroundColor: preset.color, backgroundImage: preset.css }} />
                 ))}
                 <Tile source={background.source.kind === 'solid' ? background.source : { kind: 'solid', color: SOLID_DEFAULT }} name={t('background.solid')} current={current} onChoose={pick()}>

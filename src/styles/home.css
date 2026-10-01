@@ -14,6 +14,9 @@
 .home[inert] { transform: scale(.985); opacity: .45; }
 /* …except while customizing, when the page is the preview and must be seen as it will be. */
 .home.is-previewing[inert] { transform: none; opacity: 1; }
+@media (min-width: 1100px) {
+    .home.is-previewing { padding-right: 404px; transition: padding var(--motion-panel) var(--ease-out); }
+}
 
 /* ---------- Top bar: minimal supporting information ---------- */
 
@@ -136,7 +139,13 @@
     animation: fade var(--motion-standard) linear;
 }
 
-.launcher-home.is-open .launcher-field { border-bottom-left-radius: 0; border-bottom-right-radius: 0; background: var(--palette-surface); }
+/* Open, the field and its results become one opaque sheet: nothing behind may show through. */
+.launcher-home.is-open .launcher-field, .launcher-home .results {
+    background-color: var(--bg-color);
+    background-image: linear-gradient(var(--surface-secondary), var(--surface-secondary));
+    backdrop-filter: none;
+}
+.launcher-home.is-open .launcher-field { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
 .launcher-home .results {
     position: absolute;
     z-index: 20;
@@ -146,8 +155,6 @@
     border: 1px solid var(--accent);
     border-top-color: var(--border-subtle);
     border-radius: 0 0 var(--radius-card) var(--radius-card);
-    background: var(--palette-surface);
-    backdrop-filter: blur(var(--blur-surface));
     box-shadow: var(--shadow-card);
     animation: fade var(--motion-fast) linear;
 }
@@ -216,6 +223,8 @@
 .deck-head .quiet-button { margin-right: -9px; }
 /* auto-fit: a handful of Spaces share the full width instead of leaving an empty column. */
 .deck { display: grid; grid-template-columns: repeat(auto-fit, minmax(164px, 1fr)); gap: 10px; }
+
+.deck.is-few { grid-template-columns: repeat(auto-fill, minmax(220px, 280px)); }
 
 /* Identity without a card: the Space's glyph and colour, its name, and a glimpse inside.
    The colour falls from the top edge like light on a surface; there is no frame to read. */

@@ -198,7 +198,9 @@ export function sourceKey(source: BackgroundSource): string {
  * A dim that keeps text readable for a picture of the given brightness under a theme of the
  * given scheme: a bright photo under a dark theme needs more wash than a dark one.
  */
-export function suggestedDim(luminance: number, scheme: 'dark' | 'light'): number {
+export function suggestedDim(luminance: number, scheme: 'dark' | 'light', curated = false): number {
     const mismatch = scheme === 'dark' ? luminance : 1 - luminance;
-    return Math.round((0.25 + mismatch * 0.45) * 100) / 100;
+    // Curated presets are drawn to be read over, so only a mismatch with the theme needs wash.
+    const base = curated ? 0.04 : 0.25;
+    return Math.round((base + mismatch * 0.45) * 100) / 100;
 }
