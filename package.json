@@ -1,7 +1,7 @@
 {
   "name": "browser-os",
   "private": true,
-  "version": "2.0.0-alpha.2",
+  "version": "2.0.0-rc.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,7 +13,8 @@
     "test:e2e": "npm run build && npm run build:e2e && vite-node e2e/extension.e2e.ts",
     "check": "npm run typecheck && npm run lint && npm test && npm run build && npm run size",
     "visual": "npm run build && vite-node e2e/visual.ts",
-    "size": "node scripts/size.mjs"
+    "size": "node scripts/size.mjs",
+    "marks": "node scripts/brand-marks.mjs"
   },
   "dependencies": {
     "preact": "^10.27.0"
@@ -24,6 +25,7 @@
     "cross-env": "^10.1.0",
     "eslint": "^10.11.0",
     "playwright": "^1.63.0",
+    "simple-icons": "^16.33.0",
     "typescript": "^5.9.0",
     "typescript-eslint": "^8.71.0",
     "vite": "^7.0.0",

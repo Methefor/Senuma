@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { commitAppearance, savedAppearance, type Appearance } from '../../app/appearance';
 import { deleteWallpaper, listWallpaperIds, putWallpaper, wallpaperUrl } from '../../browser/assets';
 import {
-    ATMOSPHERE_LEVELS, BACKGROUND_LIMITS, DEFAULT_BACKGROUND, MAX_WALLPAPERS, WALLPAPER_PRESETS, sourceKey, suggestedDim,
+    ATMOSPHERE_LEVELS, BACKGROUND_LIMITS, DEFAULT_BACKGROUND, MAX_WALLPAPERS, WALLPAPER_PHOTOS, WALLPAPER_PRESETS,
+    betterThemesFor, pictureMood, presetById, sourceKey, suggestedDim,
     type Background, type BackgroundSource, type WallpaperAsset,
 } from '../../core/background';
 import { newId } from '../../core/defaults';
@@ -14,6 +15,7 @@ import { t, type MessageKey } from '../../i18n';
 import { app, setUi, toast, ui, update, useStore } from '../../storage/store';
 import { Icon } from '../../ui/Icon';
 import { Overlay } from '../../ui/Overlay';
+import { photoUrl } from '../background/photos';
 import { ACCEPTED_IMAGE_TYPES, processImage } from '../background/processImage';
 import { ThemePicker } from './ThemePicker';
 
@@ -79,7 +81,13 @@ function UploadThumb({ asset }: { asset: WallpaperAsset }) {
     return <span class="swatch-fill" style={{ backgroundColor: asset.color, backgroundImage: url ? `url(${url})` : asset.lqip ? `url(${asset.lqip})` : undefined }} />;
 }
 
-function BackgroundSection({ state, draft, onChange }: { state: AppState; draft: Appearance; onChange: (background: Background) => void }) {
+function BackgroundSection({ state, draft, onChange, onTheme }: {
+    state: AppState;
+    draft: Appearance;
+    onChange: (background: Background) => void;
+    /** Tries a suggested theme, with the picture's wash recalculated for it. */
+    onTheme: (themeId: string, background: Background) => void;
+}) {
     const fileRef = useRef<HTMLInputElement>(null);
     const [busy, setBusy] = useState(false);
     const [confirming, setConfirming] = useState<string | null>(null);
@@ -120,7 +128,11 @@ function BackgroundSection({ state, draft, onChange }: { state: AppState; draft:
     };
 
     const isPicture = background.source.kind !== 'theme';
-    const placeable = background.source.kind === 'upload';
+    const chosenPreset = background.source.kind === 'preset' ? presetById(background.source.id) : undefined;
+    const placeable = background.source.kind === 'upload' || !!chosenPreset?.file;
+    // A picture that fights the theme gets a suggestion. The theme is never changed for the user.
+    const luminance = background.source.kind === 'upload' ? state.wallpapers[background.source.assetId]?.luminance : chosenPreset?.luminance;
+    const better = luminance === undefined ? [] : betterThemesFor(luminance, scheme);
 
     return (
         <section class="customize-section">
@@ -142,6 +154,14 @@ function BackgroundSection({ state, draft, onChange }: { state: AppState; draft:
                     <span class="swatch-fill" style={{ background: `linear-gradient(${GRADIENT_DEFAULT.angle}deg, ${GRADIENT_DEFAULT.from}, ${GRADIENT_DEFAULT.to})` }} />
                     <span class="swatch-caption">{t('background.gradient')}</span>
                 </Tile>
+            </div>
+
+            <h4>{t('background.photos')}</h4>
+            <div class="swatch-grid" role="radiogroup" aria-label={t('background.photos')}>
+                {WALLPAPER_PHOTOS.map(photo => (
+                    <Tile key={photo.id} source={{ kind: 'preset', id: photo.id }} name={photo.name} current={current} onChoose={pick(photo.luminance)}
+                        style={{ backgroundColor: photo.color, backgroundImage: `url("${photoUrl(photo.file!, 'thumb')}")` }} />
+                ))}
             </div>
 
             <h4>{t('background.mine')}</h4>
@@ -188,6 +208,17 @@ function BackgroundSection({ state, draft, onChange }: { state: AppState; draft:
                         onInput={event => background.source.kind === 'gradient' && onChange({ ...background, source: { ...background.source, from: event.currentTarget.value } })} />
                     <input type="color" aria-label={t('background.to')} value={background.source.to}
                         onInput={event => background.source.kind === 'gradient' && onChange({ ...background, source: { ...background.source, to: event.currentTarget.value } })} />
+                </div>
+            )}
+
+            {better.length > 0 && luminance !== undefined && (
+                <div class="mood-hint" role="status" ref={hint => hint?.scrollIntoView({ block: 'nearest' })}>
+                    <p>{t(`background.mood.${pictureMood(luminance)}` as MessageKey)}</p>
+                    <div class="mood-actions">
+                        {better.map(id => (
+                            <button type="button" class="quiet-button" key={id} onClick={() => onTheme(id, { ...background, dim: suggestedDim(luminance, themeById(id).scheme, !!chosenPreset && !chosenPreset.file) })}>{t('background.mood.use', { name: themeById(id).name })}</button>
+                        ))}
+                    </div>
                 </div>
             )}
 
@@ -265,7 +296,7 @@ export function Customize({ state }: { state: AppState }) {
                     <h3>{t('settings.theme')}</h3>
                     <ThemePicker themeId={draft.themeId} onPick={themeId => change({ themeId })} />
                 </section>
-                <BackgroundSection state={state} draft={draft} onChange={background => change({ background })} />
+                <BackgroundSection state={state} draft={draft} onChange={background => change({ background })} onTheme={(themeId, background) => change({ themeId, background })} />
                 <section class="customize-section">
                     <h3>{t('customize.atmosphere')}</h3>
                     <Segmented label={t('customize.atmosphere')} value={draft.atmosphere} options={ATMOSPHERE_LEVELS}

@@ -3,6 +3,7 @@ import { presetById, sourceKey, type Background, type BackgroundSource, type Wal
 import type { ID } from '../../core/types';
 import { t } from '../../i18n';
 import { toast } from '../../storage/store';
+import { photoUrl } from './photos';
 
 /** Images that failed this session, so the user is told once, not on every render. */
 const reported = new Set<ID>();
@@ -82,9 +83,15 @@ function Picture({ source, background, assets }: { source: BackgroundSource; bac
         case 'preset': {
             const preset = presetById(source.id);
             if (!preset) return null;
-            return preset.src
-                ? <img class="backdrop-picture backdrop-photo is-ready" src={preset.src} alt="" decoding="async" style={{ objectFit: background.fit, objectPosition: `${background.x}% ${background.y}%` }} />
-                : <div class="backdrop-picture" style={{ backgroundColor: preset.color, backgroundImage: preset.css }} />;
+            if (!preset.file) return <div class="backdrop-picture" style={{ backgroundColor: preset.color, backgroundImage: preset.css }} />;
+            const url = photoUrl(preset.file, 'full');
+            return (
+                <>
+                    {/* The picture's own average colour holds the page until the photograph has decoded. */}
+                    <div class="backdrop-picture" style={{ backgroundColor: preset.color }} />
+                    <Photo key={url} url={url} placement={{ objectFit: background.fit, objectPosition: `${background.x}% ${background.y}%` }} onBroken={() => undefined} />
+                </>
+            );
         }
         case 'upload': {
             const asset = assets[source.assetId];

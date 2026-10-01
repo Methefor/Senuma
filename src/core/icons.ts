@@ -2,9 +2,10 @@
  * Icon resolution. Pure: decides which image addresses to try for a link, in order. The
  * component walks the list and falls back to a monogram when all fail.
  *
- * Privacy order: the user's own icon → the vendor's own icon for well-known apps → the
- * site's own /favicon.ico → (only if the user opted in) a third-party icon service.
- * Nothing in the first three steps tells a third party which sites are saved.
+ * Privacy order: the user's own icon → a mark packaged with the extension (no request at
+ * all) → the vendor's own icon for well-known apps → the site's own /favicon.ico → (only if
+ * the user opted in) a third-party icon service.
+ * Nothing before the last step tells a third party which sites are saved.
  */
 import type { IconSource } from './types';
 import { isImageUrl } from './url';
@@ -40,6 +41,41 @@ const KNOWN_APPS: readonly (readonly [match: string, icon: string])[] = [
     ['www.google.com', `${GOOGLE_PRODUCT}googleg_48dp.png`],
     ['google.com', `${GOOGLE_PRODUCT}googleg_48dp.png`],
 ];
+
+/**
+ * Starter apps with a mark packaged in the extension: [host, file name in assets/marks].
+ * Generated assets and their licence record come from scripts/brand-marks.mjs; an app that
+ * is not listed there keeps the site icon and the letter fallback.
+ */
+const LOCAL_MARKS: readonly (readonly [host: string, mark: string])[] = [
+    ['claude.ai', 'claude'], ['perplexity.ai', 'perplexity'], ['huggingface.co', 'huggingface'], ['openrouter.ai', 'openrouter'],
+    ['github.com', 'github'], ['stackoverflow.com', 'stackoverflow'], ['npmjs.com', 'npm'], ['vercel.com', 'vercel'],
+    ['cloudflare.com', 'cloudflare'], ['supabase.com', 'supabase'], ['neon.tech', 'neon'], ['neon.com', 'neon'],
+    ['docker.com', 'docker'], ['figma.com', 'figma'], ['arxiv.org', 'arxiv'], ['medium.com', 'medium'], ['substack.com', 'substack'],
+    ['notion.so', 'notion'], ['notion.com', 'notion'], ['framer.com', 'framer'], ['dribbble.com', 'dribbble'],
+    ['behance.net', 'behance'], ['pinterest.com', 'pinterest'],
+    ['netflix.com', 'netflix'], ['spotify.com', 'spotify'], ['imdb.com', 'imdb'], ['letterboxd.com', 'letterboxd'],
+    ['steampowered.com', 'steam'], ['steamcommunity.com', 'steam'], ['epicgames.com', 'epicgames'], ['steamdb.info', 'steamdb'],
+    ['twitch.tv', 'twitch'], ['tradingview.com', 'tradingview'], ['coinmarketcap.com', 'coinmarketcap'],
+    ['x.com', 'x'], ['twitter.com', 'x'], ['reddit.com', 'reddit'], ['instagram.com', 'instagram'], ['whatsapp.com', 'whatsapp'],
+    ['ebay.com', 'ebay'], ['etsy.com', 'etsy'],
+    ['coursera.org', 'coursera'], ['khanacademy.org', 'khanacademy'], ['duolingo.com', 'duolingo'], ['quizlet.com', 'quizlet'],
+];
+
+export const LOCAL_MARK_NAMES: readonly string[] = [...new Set(LOCAL_MARKS.map(([, mark]) => mark))];
+
+/** Packaged mark for a link, matched on the host or any of its subdomains. */
+export function localMark(url: string): string | undefined {
+    let host: string;
+    try {
+        const parsed = new URL(url);
+        if (!/^https?:$/.test(parsed.protocol)) return undefined;
+        host = parsed.hostname.toLowerCase();
+    } catch {
+        return undefined;
+    }
+    return LOCAL_MARKS.find(([match]) => host === match || host.endsWith(`.${match}`))?.[1];
+}
 
 const ICON_SERVICE = 'https://www.google.com/s2/favicons?sz=64&domain=';
 

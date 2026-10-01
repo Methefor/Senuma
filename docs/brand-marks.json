@@ -1,0 +1,454 @@
+{
+  "package": "simple-icons@16.33.0",
+  "packageLicense": "CC0-1.0 (the collection; individual marks are checked separately)",
+  "generated": "2026-10-01",
+  "bundled": [
+    {
+      "slug": "claude",
+      "app": "Claude",
+      "title": "Claude",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://claude.ai"
+    },
+    {
+      "slug": "perplexity",
+      "app": "Perplexity",
+      "title": "Perplexity",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://www.perplexity.ai"
+    },
+    {
+      "slug": "huggingface",
+      "app": "Hugging Face",
+      "title": "Hugging Face",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://huggingface.co/brand",
+      "source": "https://huggingface.co/brand"
+    },
+    {
+      "slug": "openrouter",
+      "app": "OpenRouter",
+      "title": "OpenRouter",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://openrouter.ai"
+    },
+    {
+      "slug": "github",
+      "app": "GitHub",
+      "title": "GitHub",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://github.com/logos",
+      "source": "https://github.com/logos"
+    },
+    {
+      "slug": "stackoverflow",
+      "app": "Stack Overflow",
+      "title": "Stack Overflow",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://stackoverflow.com/legal/trademark-guidance",
+      "source": "https://stackoverflow.design/brand/logo/"
+    },
+    {
+      "slug": "npm",
+      "app": "npm",
+      "title": "npm",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://docs.npmjs.com/policies/logos-and-usage",
+      "source": "https://www.npmjs.com"
+    },
+    {
+      "slug": "vercel",
+      "app": "Vercel",
+      "title": "Vercel",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://vercel.com/geist/brands",
+      "source": "https://vercel.com/geist/brands"
+    },
+    {
+      "slug": "cloudflare",
+      "app": "Cloudflare",
+      "title": "Cloudflare",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://www.cloudflare.com/trademark/",
+      "source": "https://www.cloudflare.com/logo/"
+    },
+    {
+      "slug": "supabase",
+      "app": "Supabase",
+      "title": "Supabase",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://github.com/supabase/supabase/blob/4031a7549f5d46da7bc79c01d56be4177dc7c114/packages/common/assets/images/supabase-logo-wordmark--light.svg"
+    },
+    {
+      "slug": "neon",
+      "app": "Neon",
+      "title": "Neon",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://neon.com/brand",
+      "source": "https://neon.com/brand"
+    },
+    {
+      "slug": "docker",
+      "app": "Docker Hub",
+      "title": "Docker",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://www.docker.com/company/newsroom/media-resources"
+    },
+    {
+      "slug": "figma",
+      "app": "Figma",
+      "title": "Figma",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://www.figma.com/using-the-figma-brand/",
+      "source": "https://www.figma.com/using-the-figma-brand/"
+    },
+    {
+      "slug": "arxiv",
+      "app": "arXiv",
+      "title": "arXiv",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://arxiv.org/about/brand",
+      "source": "https://arxiv.org"
+    },
+    {
+      "slug": "medium",
+      "app": "Medium",
+      "title": "Medium",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://medium.design/logos-and-brand-guidelines-f1a01a733592",
+      "source": "https://medium.design/logos-and-brand-guidelines-f1a01a733592"
+    },
+    {
+      "slug": "substack",
+      "app": "Substack",
+      "title": "Substack",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://on.substack.com"
+    },
+    {
+      "slug": "notion",
+      "app": "Notion",
+      "title": "Notion",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://www.notion.so"
+    },
+    {
+      "slug": "framer",
+      "app": "Framer",
+      "title": "Framer",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://framer.com"
+    },
+    {
+      "slug": "dribbble",
+      "app": "Dribbble",
+      "title": "Dribbble",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://dribbble.com/branding"
+    },
+    {
+      "slug": "behance",
+      "app": "Behance",
+      "title": "Behance",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://www.behance.net"
+    },
+    {
+      "slug": "pinterest",
+      "app": "Pinterest",
+      "title": "Pinterest",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://business.pinterest.com/en/brand-guidelines",
+      "source": "https://business.pinterest.com/en/brand-guidelines"
+    },
+    {
+      "slug": "netflix",
+      "app": "Netflix",
+      "title": "Netflix",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://brand.netflix.com/en/assets/logos",
+      "source": "https://brand.netflix.com/en/assets/logos"
+    },
+    {
+      "slug": "spotify",
+      "app": "Spotify",
+      "title": "Spotify",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://developer.spotify.com/documentation/general/design-and-branding/#using-our-logo",
+      "source": "https://developer.spotify.com/documentation/general/design-and-branding/#using-our-logo"
+    },
+    {
+      "slug": "imdb",
+      "app": "IMDb",
+      "title": "IMDb",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://brand.imdb.com/imdb",
+      "source": "https://brand.imdb.com/imdb"
+    },
+    {
+      "slug": "letterboxd",
+      "app": "Letterboxd",
+      "title": "Letterboxd",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://letterboxd.com/about/brand/",
+      "source": "https://letterboxd.com/about/brand/"
+    },
+    {
+      "slug": "steam",
+      "app": "Steam",
+      "title": "Steam",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://partner.steamgames.com/doc/marketing/branding",
+      "source": "https://partner.steamgames.com/doc/marketing/branding"
+    },
+    {
+      "slug": "epicgames",
+      "app": "Epic Games",
+      "title": "Epic Games",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://dev.epicgames.com/docs/services/en-US/EpicAccountServices/DesignGuidelines/index.html#epicgamesbrandguidelines",
+      "source": "https://dev.epicgames.com/docs/services/en-US/EpicAccountServices/DesignGuidelines/index.html#epicgamesbrandguidelines"
+    },
+    {
+      "slug": "steamdb",
+      "app": "SteamDB",
+      "title": "SteamDB",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://steamdb.info"
+    },
+    {
+      "slug": "twitch",
+      "app": "Twitch",
+      "title": "Twitch",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://brand.twitch.tv",
+      "source": "https://brand.twitch.tv"
+    },
+    {
+      "slug": "tradingview",
+      "app": "TradingView",
+      "title": "TradingView",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://www.tradingview.com/media-kit"
+    },
+    {
+      "slug": "coinmarketcap",
+      "app": "CoinMarketCap",
+      "title": "CoinMarketCap",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://www.coinmarketcap.com"
+    },
+    {
+      "slug": "x",
+      "app": "X",
+      "title": "X",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://about.x.com/en/who-we-are/brand-toolkit",
+      "source": "https://x.com"
+    },
+    {
+      "slug": "reddit",
+      "app": "Reddit",
+      "title": "Reddit",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://www.redditinc.com/brand",
+      "source": "https://www.redditinc.com/brand"
+    },
+    {
+      "slug": "instagram",
+      "app": "Instagram",
+      "title": "Instagram",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://about.meta.com/brand/resources/instagram",
+      "source": "https://about.meta.com/brand/resources/instagram"
+    },
+    {
+      "slug": "whatsapp",
+      "app": "WhatsApp",
+      "title": "WhatsApp",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://about.meta.com/brand/resources/whatsapp/whatsapp-brand",
+      "source": "https://about.meta.com/brand/resources/whatsapp/whatsapp-brand"
+    },
+    {
+      "slug": "ebay",
+      "app": "eBay",
+      "title": "eBay",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://go.developer.ebay.com/logos"
+    },
+    {
+      "slug": "etsy",
+      "app": "Etsy",
+      "title": "Etsy",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://www.etsy.com/uk/press"
+    },
+    {
+      "slug": "coursera",
+      "app": "Coursera",
+      "title": "Coursera",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://about.coursera.org/press"
+    },
+    {
+      "slug": "khanacademy",
+      "app": "Khan Academy",
+      "title": "Khan Academy",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://support.khanacademy.org/hc/en-us/articles/202263034-Trademark-and-Brand-Usage-Policy",
+      "source": "https://khanacademy.zendesk.com/hc/en-us/articles/202483630-Press-room"
+    },
+    {
+      "slug": "duolingo",
+      "app": "Duolingo",
+      "title": "Duolingo",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": "https://design.duolingo.com",
+      "source": "https://design.duolingo.com"
+    },
+    {
+      "slug": "quizlet",
+      "app": "Quizlet",
+      "title": "Quizlet",
+      "license": null,
+      "licenseUrl": null,
+      "guidelines": null,
+      "source": "https://quizlet.com"
+    }
+  ],
+  "excluded": [
+    {
+      "app": "ChatGPT",
+      "reason": "not in Simple Icons"
+    },
+    {
+      "app": "Runway",
+      "reason": "not in Simple Icons"
+    },
+    {
+      "app": "Higgsfield",
+      "reason": "not in Simple Icons"
+    },
+    {
+      "app": "Slack",
+      "reason": "not in Simple Icons (removed)"
+    },
+    {
+      "app": "Teams",
+      "reason": "not in Simple Icons (removed)"
+    },
+    {
+      "app": "Canva",
+      "reason": "not in Simple Icons (removed)"
+    },
+    {
+      "app": "Prime Video",
+      "reason": "not in Simple Icons"
+    },
+    {
+      "app": "Disney+",
+      "reason": "not in Simple Icons (removed)"
+    },
+    {
+      "app": "Xbox",
+      "reason": "not in Simple Icons (removed)"
+    },
+    {
+      "app": "GeForce NOW",
+      "reason": "not in Simple Icons"
+    },
+    {
+      "app": "HowLongToBeat",
+      "reason": "not in Simple Icons"
+    },
+    {
+      "app": "Yahoo Finance",
+      "reason": "not in Simple Icons (removed)"
+    },
+    {
+      "app": "LinkedIn",
+      "reason": "not in Simple Icons (removed)"
+    },
+    {
+      "app": "Amazon",
+      "reason": "not in Simple Icons (removed)"
+    },
+    {
+      "app": "Anki",
+      "reason": "icon licence is AGPL-3.0-only"
+    },
+    {
+      "app": "Wikipedia",
+      "reason": "Wikimedia logo is separately licensed (CC BY-SA) and trademark-restricted"
+    },
+    {
+      "app": "Wolfram Alpha",
+      "reason": "only the Wolfram corporate mark is available, which is a different product"
+    },
+    {
+      "app": "Hacker News",
+      "reason": "only the Y Combinator mark is available, which is a different brand"
+    },
+    {
+      "app": "Gmail, Calendar, Drive, Docs, Sheets, Gemini, NotebookLM, Google Scholar, Google Finance, YouTube, YouTube Music",
+      "reason": "Google brand rules require permission; these keep the icon served by Google itself"
+    }
+  ]
+}

@@ -19,7 +19,8 @@ const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 const oneOf = <T extends string>(v: unknown, options: readonly T[], fallback: T): T =>
     options.includes(v as T) ? (v as T) : fallback;
 /** IDs become object keys and DOM attributes; accept only plain tokens. */
-const isId = (v: unknown): v is ID => typeof v === 'string' && /^[\w-]{1,64}$/.test(v);
+const RESERVED_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+const isId = (v: unknown): v is ID => typeof v === 'string' && /^[\w-]{1,64}$/.test(v) && !RESERVED_KEYS.has(v);
 
 function sanitizeItems(raw: unknown): Record<ID, Item> {
     const items: Record<ID, Item> = {};

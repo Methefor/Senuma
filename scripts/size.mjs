@@ -22,6 +22,17 @@ for (const [label, pattern, budget] of BUDGETS) {
     failed ||= over;
     console.log(`${over ? 'OVER ' : 'ok   '} ${label.padEnd(34)} ${total.toFixed(1).padStart(6)} kB  (budget ${budget} kB)`);
 }
+// Packaged content outside the bundle: [label, folder, budget in kB on disk].
+const ASSET_BUDGETS = [
+    ['photographs (wallpapers/)', 'dist/wallpapers', 3584],
+    ['brand marks (marks/)', 'dist/marks', 64],
+];
+for (const [label, folder, budget] of ASSET_BUDGETS) {
+    const total = readdirSync(folder).reduce((sum, name) => sum + readFileSync(`${folder}/${name}`).length, 0) / 1024;
+    const over = total > budget;
+    failed ||= over;
+    console.log(`${over ? 'OVER ' : 'ok   '} ${label.padEnd(34)} ${total.toFixed(0).padStart(6)} kB  (budget ${budget} kB, on disk)`);
+}
 const fonts = files.filter(f => /\.(woff2?|ttf|otf)$/.test(f.name));
 const media = files.filter(f => /\.(png|jpe?g|webp|avif|mp4|webm)$/.test(f.name));
 console.log(`     fonts shipped: ${fonts.length}   theme media shipped: ${media.length}`);

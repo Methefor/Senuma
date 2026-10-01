@@ -1,0 +1,298 @@
+[
+  {
+    "id": "toronto-night",
+    "name": "Toronto Night",
+    "title": "Night skyline of Toronto, Canada 374759.jpg",
+    "creator": "Andrew Gosine",
+    "source": "https://commons.wikimedia.org/wiki/File:Night_skyline_of_Toronto,_Canada_374759.jpg",
+    "license": "CC0 1.0 Universal (Public Domain Dedication)",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "licenseVerified": "file page and API metadata both state CC0 1.0",
+    "original": {
+      "width": 5472,
+      "height": 3648,
+      "bytes": 1670084
+    },
+    "download": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/Night_skyline_of_Toronto%2C_Canada_374759.jpg/3840px-Night_skyline_of_Toronto%2C_Canada_374759.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "bytes": 1033426
+    },
+    "acquired": "2026-10-01",
+    "color": "#372e26",
+    "luminance": 0.19,
+    "production": {
+      "file": "toronto-night.webp",
+      "width": 2560,
+      "height": 1707,
+      "bytes": 275990,
+      "format": "WebP",
+      "quality": 0.86
+    },
+    "preview": {
+      "file": "toronto-night.thumb.webp",
+      "width": 480,
+      "height": 320,
+      "bytes": 9638
+    },
+    "modifications": "Resized from the 3840×2560 rendition to 2560×1707 (aspect ratio kept, no crop, no upscale); re-encoded as WebP at quality 0.86; metadata removed."
+  },
+  {
+    "id": "glass-facade",
+    "name": "Glass Facade",
+    "title": "Futuristic facade (Unsplash).jpg",
+    "creator": "Scott Webb scottwebb",
+    "source": "https://commons.wikimedia.org/wiki/File:Futuristic_facade_(Unsplash).jpg",
+    "license": "CC0 1.0 Universal (Public Domain Dedication)",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "licenseVerified": "file page and API metadata both state CC0 1.0",
+    "original": {
+      "width": 4164,
+      "height": 2759,
+      "bytes": 9622602
+    },
+    "download": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/Futuristic_facade_%28Unsplash%29.jpg/3840px-Futuristic_facade_%28Unsplash%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "bytes": 2036660
+    },
+    "acquired": "2026-10-01",
+    "color": "#bdc8d0",
+    "luminance": 0.78,
+    "production": {
+      "file": "glass-facade.webp",
+      "width": 2560,
+      "height": 1696,
+      "bytes": 641070,
+      "format": "WebP",
+      "quality": 0.86
+    },
+    "preview": {
+      "file": "glass-facade.thumb.webp",
+      "width": 480,
+      "height": 318,
+      "bytes": 30764
+    },
+    "modifications": "Resized from the 3840×2544 rendition to 2560×1696 (aspect ratio kept, no crop, no upscale); re-encoded as WebP at quality 0.86; metadata removed."
+  },
+  {
+    "id": "forest-fog",
+    "name": "Forest Fog",
+    "title": "Heavy fog above a forest (Unsplash).jpg",
+    "creator": "Thomas Griesbeck jack_scorner",
+    "source": "https://commons.wikimedia.org/wiki/File:Heavy_fog_above_a_forest_(Unsplash).jpg",
+    "license": "CC0 1.0 Universal (Public Domain Dedication)",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "licenseVerified": "file page and API metadata both state CC0 1.0",
+    "original": {
+      "width": 3936,
+      "height": 2624,
+      "bytes": 1251447
+    },
+    "download": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Heavy_fog_above_a_forest_%28Unsplash%29.jpg/3840px-Heavy_fog_above_a_forest_%28Unsplash%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "bytes": 1945044
+    },
+    "acquired": "2026-10-01",
+    "color": "#5d6065",
+    "luminance": 0.37,
+    "production": {
+      "file": "forest-fog.webp",
+      "width": 2560,
+      "height": 1707,
+      "bytes": 672932,
+      "format": "WebP",
+      "quality": 0.86
+    },
+    "preview": {
+      "file": "forest-fog.thumb.webp",
+      "width": 480,
+      "height": 320,
+      "bytes": 5602
+    },
+    "modifications": "Resized from the 3840×2560 rendition to 2560×1707 (aspect ratio kept, no crop, no upscale); re-encoded as WebP at quality 0.86; metadata removed."
+  },
+  {
+    "id": "evergreen-mist",
+    "name": "Evergreen Mist",
+    "title": "Evergreen forest wreathed in fog (Unsplash).jpg",
+    "creator": "Milo McDowell milo_m",
+    "source": "https://commons.wikimedia.org/wiki/File:Evergreen_forest_wreathed_in_fog_(Unsplash).jpg",
+    "license": "CC0 1.0 Universal (Public Domain Dedication)",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "licenseVerified": "file page and API metadata both state CC0 1.0",
+    "original": {
+      "width": 4104,
+      "height": 2736,
+      "bytes": 411285
+    },
+    "download": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/48/Evergreen_forest_wreathed_in_fog_%28Unsplash%29.jpg/3840px-Evergreen_forest_wreathed_in_fog_%28Unsplash%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "bytes": 560409
+    },
+    "acquired": "2026-10-01",
+    "color": "#8b8b91",
+    "luminance": 0.55,
+    "production": {
+      "file": "evergreen-mist.webp",
+      "width": 2560,
+      "height": 1707,
+      "bytes": 147922,
+      "format": "WebP",
+      "quality": 0.86
+    },
+    "preview": {
+      "file": "evergreen-mist.thumb.webp",
+      "width": 480,
+      "height": 320,
+      "bytes": 7452
+    },
+    "modifications": "Resized from the 3840×2560 rendition to 2560×1707 (aspect ratio kept, no crop, no upscale); re-encoded as WebP at quality 0.86; metadata removed."
+  },
+  {
+    "id": "desert-dunes",
+    "name": "Desert Dunes",
+    "title": "Desert Dunes (Unsplash).jpg",
+    "creator": "Joe Mania joemania",
+    "source": "https://commons.wikimedia.org/wiki/File:Desert_Dunes_(Unsplash).jpg",
+    "license": "CC0 1.0 Universal (Public Domain Dedication)",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "licenseVerified": "file page and API metadata both state CC0 1.0",
+    "original": {
+      "width": 4550,
+      "height": 2560,
+      "bytes": 1046035
+    },
+    "download": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/Desert_Dunes_%28Unsplash%29.jpg/3840px-Desert_Dunes_%28Unsplash%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "bytes": 674109
+    },
+    "acquired": "2026-10-01",
+    "color": "#685e60",
+    "luminance": 0.38,
+    "production": {
+      "file": "desert-dunes.webp",
+      "width": 2560,
+      "height": 1441,
+      "bytes": 69088,
+      "format": "WebP",
+      "quality": 0.86
+    },
+    "preview": {
+      "file": "desert-dunes.thumb.webp",
+      "width": 480,
+      "height": 270,
+      "bytes": 3580
+    },
+    "modifications": "Resized from the 3840×2161 rendition to 2560×1441 (aspect ratio kept, no crop, no upscale); re-encoded as WebP at quality 0.86; metadata removed."
+  },
+  {
+    "id": "mountain-mirror",
+    "name": "Mountain Mirror",
+    "title": "Beautiful mountain reflection (Unsplash).jpg",
+    "creator": "Johannes Plenio jplenio",
+    "source": "https://commons.wikimedia.org/wiki/File:Beautiful_mountain_reflection_(Unsplash).jpg",
+    "license": "CC0 1.0 Universal (Public Domain Dedication)",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "licenseVerified": "file page and API metadata both state CC0 1.0",
+    "original": {
+      "width": 4563,
+      "height": 2567,
+      "bytes": 1811340
+    },
+    "download": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/Beautiful_mountain_reflection_%28Unsplash%29.jpg/3840px-Beautiful_mountain_reflection_%28Unsplash%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "bytes": 1113316
+    },
+    "acquired": "2026-10-01",
+    "color": "#6b675b",
+    "luminance": 0.4,
+    "production": {
+      "file": "mountain-mirror.webp",
+      "width": 2560,
+      "height": 1440,
+      "bytes": 283940,
+      "format": "WebP",
+      "quality": 0.86
+    },
+    "preview": {
+      "file": "mountain-mirror.thumb.webp",
+      "width": 480,
+      "height": 270,
+      "bytes": 7140
+    },
+    "modifications": "Resized from the 3840×2160 rendition to 2560×1440 (aspect ratio kept, no crop, no upscale); re-encoded as WebP at quality 0.86; metadata removed."
+  },
+  {
+    "id": "bokeh",
+    "name": "Bokeh",
+    "title": "Bokeh effect (Unsplash).jpg",
+    "creator": "Gabriel Santiago gabrielssantiago",
+    "source": "https://commons.wikimedia.org/wiki/File:Bokeh_effect_(Unsplash).jpg",
+    "license": "CC0 1.0 Universal (Public Domain Dedication)",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "licenseVerified": "file page and API metadata both state CC0 1.0",
+    "original": {
+      "width": 5184,
+      "height": 3456,
+      "bytes": 9028482
+    },
+    "download": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6d/Bokeh_effect_%28Unsplash%29.jpg/3840px-Bokeh_effect_%28Unsplash%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "bytes": 1101155
+    },
+    "acquired": "2026-10-01",
+    "color": "#4f4d60",
+    "luminance": 0.31,
+    "production": {
+      "file": "bokeh.webp",
+      "width": 2560,
+      "height": 1707,
+      "bytes": 251298,
+      "format": "WebP",
+      "quality": 0.86
+    },
+    "preview": {
+      "file": "bokeh.thumb.webp",
+      "width": 480,
+      "height": 320,
+      "bytes": 12450
+    },
+    "modifications": "Resized from the 3840×2560 rendition to 2560×1707 (aspect ratio kept, no crop, no upscale); re-encoded as WebP at quality 0.86; metadata removed."
+  },
+  {
+    "id": "milky-way",
+    "name": "Milky Way",
+    "title": "Milky Way Glacier Point (Unsplash).jpg",
+    "creator": "Jakub Gorajek cinegeek",
+    "source": "https://commons.wikimedia.org/wiki/File:Milky_Way_Glacier_Point_(Unsplash).jpg",
+    "license": "CC0 1.0 Universal (Public Domain Dedication)",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "licenseVerified": "file page and API metadata both state CC0 1.0",
+    "original": {
+      "width": 5472,
+      "height": 3648,
+      "bytes": 3227068
+    },
+    "download": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1d/Milky_Way_Glacier_Point_%28Unsplash%29.jpg/3840px-Milky_Way_Glacier_Point_%28Unsplash%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "bytes": 2609302
+    },
+    "acquired": "2026-10-01",
+    "color": "#0f1d27",
+    "luminance": 0.11,
+    "production": {
+      "file": "milky-way.webp",
+      "width": 2560,
+      "height": 1707,
+      "bytes": 927908,
+      "format": "WebP",
+      "quality": 0.86
+    },
+    "preview": {
+      "file": "milky-way.thumb.webp",
+      "width": 480,
+      "height": 320,
+      "bytes": 15656
+    },
+    "modifications": "Resized from the 3840×2560 rendition to 2560×1707 (aspect ratio kept, no crop, no upscale); re-encoded as WebP at quality 0.86; metadata removed."
+  }
+]

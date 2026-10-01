@@ -1,4 +1,9 @@
-const ALLOWED_PROTOCOLS = new Set(['http:', 'https:', 'file:']);
+/**
+ * The only schemes a saved link may use. Everything else (javascript:, vbscript:, data:,
+ * file:, chrome:, mailto:, custom app schemes) is rejected wherever a URL enters the product:
+ * typing, pasting, bookmark import, backup import, 1.x migration and stored state.
+ */
+const ALLOWED_PROTOCOLS = new Set(['http:', 'https:']);
 const LOCAL_HOST = /^(localhost|127\.0\.0\.1|\[::1\]|[\w-]+\.(localhost|test|local))(:\d+)?(\/|$)/i;
 const BARE_DOMAIN = /^[\w-]+(\.[\w-]+)*\.[a-z]{2,}(:\d+)?([/?#].*)?$/i;
 const IPV4 = /^\d{1,3}(\.\d{1,3}){3}(:\d+)?([/?#].*)?$/;

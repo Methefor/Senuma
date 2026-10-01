@@ -533,7 +533,7 @@ function About({ state }: { state: AppState }) {
     return (
         <>
             <h3>{t('settings.about')}</h3>
-            <p class="about-name">{BRAND.productName} <span>{BRAND.version}</span></p>
+            <p class="about-name">{BRAND.productName} <span>{BRAND.displayVersion}</span></p>
             <p class="note">{t('about.body')}</p>
             {state.legacy && (
                 <p class="note">

@@ -74,13 +74,12 @@ export interface WallpaperPreset {
     luminance: number;
     /** A CSS background (zero bytes shipped) … */
     css?: string;
-    /** … or a bundled image file. Photographic sets (nature, architecture) will use this. */
-    src?: string;
+    /** … or a photograph packaged with the extension: the file's base name in assets/wallpapers. */
+    file?: string;
 }
 
 /**
- * The starter set is drawn entirely in CSS, so it adds nothing to the package and nothing to
- * decode. Photographic categories exist in the model but ship empty for now.
+ * The drawn set is entirely CSS, so it adds nothing to the package and nothing to decode.
  */
 export const WALLPAPER_PRESETS: readonly WallpaperPreset[] = [
     {
@@ -117,8 +116,24 @@ export const WALLPAPER_PRESETS: readonly WallpaperPreset[] = [
     },
 ];
 
+/**
+ * Photographs packaged with the extension. All CC0; creator, source and sizes are recorded in
+ * docs/ASSET_LICENSES.md. Colour and brightness were measured from each picture by
+ * scripts/wallpapers-encode.mjs. A photograph is decoded only when it is the chosen background.
+ */
+export const WALLPAPER_PHOTOS: readonly WallpaperPreset[] = [
+    { id: 'toronto-night', name: 'Toronto Night', categories: ['cinematic', 'architecture', 'dark'], color: '#372e26', luminance: 0.19, file: 'toronto-night' },
+    { id: 'glass-facade', name: 'Glass Facade', categories: ['architecture', 'light'], color: '#bdc8d0', luminance: 0.78, file: 'glass-facade' },
+    { id: 'forest-fog', name: 'Forest Fog', categories: ['nature', 'minimal'], color: '#5d6065', luminance: 0.37, file: 'forest-fog' },
+    { id: 'evergreen-mist', name: 'Evergreen Mist', categories: ['nature', 'minimal'], color: '#8b8b91', luminance: 0.55, file: 'evergreen-mist' },
+    { id: 'desert-dunes', name: 'Desert Dunes', categories: ['nature', 'minimal'], color: '#685e60', luminance: 0.38, file: 'desert-dunes' },
+    { id: 'mountain-mirror', name: 'Mountain Mirror', categories: ['nature', 'cinematic'], color: '#6b675b', luminance: 0.4, file: 'mountain-mirror' },
+    { id: 'bokeh', name: 'Bokeh', categories: ['abstract', 'dark'], color: '#4f4d60', luminance: 0.31, file: 'bokeh' },
+    { id: 'milky-way', name: 'Milky Way', categories: ['nature', 'cinematic', 'dark'], color: '#0f1d27', luminance: 0.11, file: 'milky-way' },
+];
+
 export function presetById(id: string): WallpaperPreset | undefined {
-    return WALLPAPER_PRESETS.find(p => p.id === id);
+    return WALLPAPER_PRESETS.find(p => p.id === id) ?? WALLPAPER_PHOTOS.find(p => p.id === id);
 }
 
 // ---------- Validation ----------
@@ -164,7 +179,7 @@ export function sanitizeWallpapers(raw: unknown): Record<ID, WallpaperAsset> {
     const assets: Record<ID, WallpaperAsset> = {};
     if (typeof raw !== 'object' || raw === null) return assets;
     for (const [id, value] of Object.entries(raw as Record<string, unknown>).slice(0, MAX_WALLPAPERS)) {
-        if (!/^[\w-]{1,64}$/.test(id) || typeof value !== 'object' || value === null) continue;
+        if (!/^[\w-]{1,64}$/.test(id) || id === '__proto__' || id === 'constructor' || id === 'prototype' || typeof value !== 'object' || value === null) continue;
         const a = value as Record<string, unknown>;
         // The preview is rendered as an image source, so only an inline raster image is accepted.
         const lqip = typeof a.lqip === 'string' && /^data:image\/(jpeg|webp|png);base64,[\w+/=]+$/.test(a.lqip) && a.lqip.length < 8000 ? a.lqip : '';
@@ -192,6 +207,28 @@ export function sourceKey(source: BackgroundSource): string {
         case 'preset': return `preset:${source.id}`;
         case 'upload': return `upload:${source.assetId}`;
     }
+}
+
+export type PictureMood = 'dark' | 'balanced' | 'bright';
+
+/** A coarse reading of a picture from its average brightness. Computed locally, once, at upload. */
+export function pictureMood(luminance: number): PictureMood {
+    if (luminance < 0.34) return 'dark';
+    if (luminance > 0.6) return 'bright';
+    return 'balanced';
+}
+
+/**
+ * Themes that suit a picture better than the current one, or none when the pairing is fine.
+ * A bright picture under a dark theme has to be darkened so far that it turns flat; a dark
+ * picture under a light theme has to be veiled until it disappears. This is advice only:
+ * the theme is never changed for the user.
+ */
+export function betterThemesFor(luminance: number, scheme: 'dark' | 'light'): readonly string[] {
+    const mood = pictureMood(luminance);
+    if (mood === 'bright' && scheme === 'dark') return ['fjord', 'editorial'];
+    if (mood === 'dark' && scheme === 'light') return ['dusk', 'atelier'];
+    return [];
 }
 
 /**

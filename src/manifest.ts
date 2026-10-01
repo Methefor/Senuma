@@ -26,7 +26,7 @@ export function buildManifest({ grantOptional = false } = {}) {
         name: BRAND.extensionName,
         short_name: BRAND.shortName,
         version: BRAND.manifestVersion,
-        version_name: BRAND.version,
+        version_name: BRAND.displayVersion,
         description: BRAND.description,
         permissions: grantOptional ? [...REQUIRED, ...OPTIONAL] : REQUIRED,
         ...(grantOptional ? {} : { optional_permissions: OPTIONAL }),

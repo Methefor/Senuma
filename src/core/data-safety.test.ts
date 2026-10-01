@@ -268,7 +268,7 @@ describe('backgrounds', () => {
         state = ops.updateMode(state, mode.id, { background: { ...DEFAULT_BACKGROUND, source: { kind: 'preset', id: 'ember' } } });
         const text = exportBackup(state);
         expect(text).not.toContain('lqip');
-        expect(text).not.toContain('a1');
+        expect(text).not.toContain('assetId');
         const restored = importBackup(text)!;
         expect(restored.wallpapers).toEqual({});
         expect(restored.prefs).toMatchObject({ themeId: 'noir', atmosphere: 'subtle' });

@@ -287,6 +287,20 @@ input[type='color'] { width: 34px; height: 28px; padding: 0; border: 1px solid v
     overflow: hidden;
 }
 .app-icon-mono { font: 600 calc(var(--size) * .44)/1 var(--font-ui); color: var(--text-primary); opacity: .85; }
+/* A packaged brand mark: its shape, unmodified, in black or white only. Never theme-tinted,
+   so it stays legible on Noir and Phosphor and inside each brand's usual colour rules. */
+.app-icon-mark {
+    width: 56%;
+    height: 56%;
+    background: var(--mark-ink, #f4f4f5);
+    opacity: .92;
+    /* mask-image is set on the element, so its address resolves against the page. */
+    mask-position: center;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+}
+[data-scheme='light'] .app-icon-mark { --mark-ink: #18181b; }
+@media (forced-colors: active) { .app-icon-mark { background: CanvasText; } }
 .app-icon-emoji { font-size: calc(var(--size) * .56); line-height: 1; }
 .app-icon img {
     position: absolute;

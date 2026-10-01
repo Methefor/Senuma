@@ -10,13 +10,15 @@ export const BRAND = {
     tagline: 'Your web, organized around what you are doing.',
     extensionName: 'NewTabFolders',
     shortName: 'NTF',
-    /** Human-readable prerelease label, shown in About. */
-    version: '2.0.0-alpha.2',
+    /** Machine-readable pre-release version (package.json carries the same value). */
+    version: '2.0.0-rc.1',
+    /** What people see: About, the browser's extension page, the RC package name. */
+    displayVersion: '2.0.0 RC 1',
     /**
      * Numeric manifest version for development builds. It stays below 2.0.0 on purpose:
      * the published version number is decided at release preparation, not here.
      */
-    manifestVersion: '1.99.2',
+    manifestVersion: '1.99.10',
     description: 'Your new tab as a launch surface: Spaces for everything you do online, one search box, and a command center.',
     backupFilePrefix: 'browser-os-backup',
 } as const;

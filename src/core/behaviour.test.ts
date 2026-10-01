@@ -3,7 +3,8 @@ import { CATEGORIES, categorize } from './catalog';
 import { buildResults, defaultResults, groupResults, interpret, matchScore } from './commands';
 import { MAX_DOCK, MAX_RECENTS, MAX_USAGE, emptyState } from './defaults';
 import { context, labels, names, seeded } from './fixtures';
-import { iconCandidates, knownAppIcon } from './icons';
+import { existsSync } from 'node:fs';
+import { iconCandidates, knownAppIcon, LOCAL_MARK_NAMES, localMark } from './icons';
 import * as ops from './ops';
 import { matchProviderName, routeQuery, searchUrl } from './search';
 import { applyProposals, applyStarter, organize, parseUrlList } from './setup';
@@ -377,6 +378,28 @@ describe('icons', () => {
         expect(iconCandidates('https://github.com/', 'none', 'https://my.cdn/icon.png')).toEqual(['https://my.cdn/icon.png']);
         expect(iconCandidates('file:///C:/notes.html', 'service')).toEqual([]);
         expect(iconCandidates('http://localhost:3000/app', 'site')).toEqual(['http://localhost:3000/favicon.ico']);
+    });
+});
+
+describe('packaged brand marks', () => {
+    it('matches a starter app by host or subdomain, and nothing that only looks like it', () => {
+        expect(localMark('https://github.com/vercel')).toBe('github');
+        expect(localMark('https://gist.github.com/')).toBe('github');
+        expect(localMark('https://open.spotify.com/')).toBe('spotify');
+        expect(localMark('https://store.steampowered.com/app/1')).toBe('steam');
+        expect(localMark('https://github.com.evil.example/')).toBeUndefined();
+        expect(localMark('https://notgithub.com/')).toBeUndefined();
+        expect(localMark('not a url')).toBeUndefined();
+    });
+
+    it('leaves apps without a safe mark on the existing fallback', () => {
+        for (const url of ['https://app.slack.com', 'https://teams.microsoft.com', 'https://chatgpt.com', 'https://www.canva.com', 'https://www.linkedin.com', 'https://mail.google.com']) {
+            expect(localMark(url)).toBeUndefined();
+        }
+    });
+
+    it('has a packaged file for every mark it can name', () => {
+        for (const name of LOCAL_MARK_NAMES) expect(existsSync(`src/assets/marks/${name}.svg`), name).toBe(true);
     });
 });
 
