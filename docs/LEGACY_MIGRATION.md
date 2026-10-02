@@ -16,7 +16,7 @@ rehearse` runs the real build under the real extension ID and then updates it in
 | Background: uploaded picture | same field, as a base64 data URL | Decoded once after the upgrade, resized, stored in the local wallpaper library (IndexedDB), applied with the same dim and blur |
 | Background: picture at a web address | same field, as a URL | **Not carried over.** Senuma does not load backgrounds from the web. The theme background is used. |
 | Pro flag, expiry, licence key, instance id | `isPro`, `proExpiresAt`, `licenseKey`, `licenseInstanceId` | Copied as inert history. Nothing reads them, nothing is gated, no request is made. |
-| Cloud sign-in | `ntf_auth` (chrome.storage.local) | Left exactly as it is; read only when the person asks for their cloud copy |
+| Cloud sign-in | `ntf_auth` (chrome.storage.local) | Left exactly as it is; never read |
 | Weather cache, widget layout, link statistics, column and compact settings, search engine | various | Not used. They stay in `ntf_data`, which is never modified. |
 
 `ntf_data` and `ntf_auth` are never written or removed.
@@ -45,38 +45,22 @@ the provider does not recognise, so what reaches Senuma is whatever 1.80 last le
   already equals the cloud copy as of the last time 1.80 ran there. The cloud can only be
   newer if **another device** saved later.
 
-## 4. Cloud migration path (implemented, migration-only)
+## 4. Cloud copy: not migrated (owner decision, 2026-10-02)
 
-Senuma has no sync. One read-only path exists so a newer cloud copy is not stranded:
+There is no meaningful 1.x user base whose cloud data needs migrating, so Senuma 2.0 has no
+cloud import. A one-time read-only import was built for RC 2 and removed before release; it
+was only ever run against a stand-in service. Senuma 2.0 makes no request to the 1.x backend.
 
-1. On upgrade, the device's own `ntf_data` is converted as usual. No network request.
-2. If `ntf_auth` exists, the upgrade notice says so, and Settings → Data shows
-   “Bring your New Tab Folders cloud copy” with the account's address.
-3. Only when the person presses it: the saved refresh token is exchanged for a short-lived
-   token (securetoken.googleapis.com), and the one document is read (firestore.googleapis.com).
-   The token is kept in memory for that request only.
-4. The copy is converted and the person sees what it holds, **when the cloud copy was saved and
-   when this device's 1.x data was saved**, and chooses: merge, replace, or cancel.
-5. A restore point of the current setup is saved **before** a merge and before a replace.
-6. Nothing is ever written, updated or deleted in the cloud. `ntf_auth` is not changed.
+What a former sync user gets: the data on their device, converted locally (section 1). Because
+1.80 pulled on every start, that equals the cloud copy as of the last time 1.80 ran there.
 
-Failure cases: sign-in no longer accepted → a message, nothing changes; no document → “no
-usable cloud copy”; offline → retry message.
-
-No new permission: both Google endpoints answer cross-origin requests from an extension page,
-so Senuma still declares no host permissions and does not use `identity`.
-
-Retirement: once enough time has passed, the button and `src/browser/legacyCloud.ts` can be
-removed in a later release. The Firebase project and its data are the owner's to keep or
-delete; Senuma never deletes them.
-
-**Not tested against the real service.** The rehearsal uses a stand-in for the two Google
-endpoints (correct token and account → the document; anything else → refused). One real check
-with a real signed-in 1.80 profile is needed before release.
+The old Firebase project and its data are untouched and deprecated; changing or deleting them
+needs the owner's separate approval. Senuma's own sync (2.1) is a new design on a new project
+and never reads the old one: CLOUD_SYNC_DESIGN.md.
 
 ## 5. Other limits
 
-- A person signed in on two devices gets two independent Senuma setups; the button lets each
-  device pull the same cloud copy, but they do not stay in step afterwards.
+- A person signed in on two devices gets two independent Senuma setups. A backup file moves a
+  setup between them.
 - A very large uploaded background could fail to store if browser storage is full; the theme
   background is then used and the original stays in `ntf_data`.

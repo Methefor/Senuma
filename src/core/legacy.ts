@@ -1,6 +1,6 @@
 /**
- * What is carried over from New Tab Folders 1.x beyond Spaces and links: the background, and
- * the shape of the cloud copy. Pure; nothing here touches storage or network.
+ * What is carried over from New Tab Folders 1.x beyond Spaces and links: the background.
+ * Pure; nothing here touches storage or network.
  */
 import { BACKGROUND_LIMITS, DEFAULT_BACKGROUND, type Background } from './background';
 import { isDict } from './sanitize';
@@ -33,32 +33,4 @@ export function legacyBackground(raw: unknown): LegacyBackground {
     }
     if (raw.type === 'image') return RASTER_DATA_URL.test(raw.value) ? { kind: 'image', dataUrl: raw.value, dim, blur } : { kind: 'remote' };
     return null;
-}
-
-// ---------- Cloud copy ----------
-
-export interface LegacyCloudCopy {
-    /** The 1.x data object, exactly as 1.x saved it to the cloud. */
-    data: Record<string, unknown>;
-    /** When that copy was last saved, as 1.x recorded it. 0 when unknown. */
-    updatedAt: number;
-}
-
-/**
- * Reads the document 1.x kept per account: `{ fields: { ntf_data: { stringValue }, updatedAt:
- * { integerValue }, version } }`, where `ntf_data` is the whole 1.x data object as JSON.
- */
-export function parseCloudDocument(doc: unknown): LegacyCloudCopy | null {
-    if (!isDict(doc) || !isDict(doc.fields)) return null;
-    const field = doc.fields.ntf_data;
-    if (!isDict(field) || typeof field.stringValue !== 'string') return null;
-    let data: unknown;
-    try {
-        data = JSON.parse(field.stringValue);
-    } catch {
-        return null;
-    }
-    if (!isDict(data) || !Array.isArray(data.folders)) return null;
-    const stamp = isDict(doc.fields.updatedAt) ? Number(doc.fields.updatedAt.integerValue) : Number(data.updatedAt);
-    return { data, updatedAt: Number.isFinite(stamp) ? stamp : 0 };
 }

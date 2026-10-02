@@ -26,17 +26,17 @@ confirm each against the dashboard before changing it.
 | Personally identifiable information | ticked | **unticked** | No account; no name, address or e-mail is collected. |
 | Health information | — | unticked | |
 | Financial and payment information | check | **unticked** | No payments, no licence checks. |
-| Authentication information | ticked | **ticked** | Legacy cloud import only; see below. |
+| Authentication information | ticked | **unticked** | No account, no sign-in, no token is read or sent. |
 | Personal communications | — | unticked | |
 | Location | ticked | **unticked** | Weather is removed; no location is read. |
 | Web history | check | **unticked** | Recently closed pages are read live on the device, only if turned on; never stored or sent. |
 | User activity | check | **unticked** | No analytics. |
 | Website content | ticked | **unticked** | Nothing is read from web pages; no content scripts. |
 
-**Authentication information stays ticked (owner decision, 2026-10-02)** for as long as the
-legacy cloud import ships: for a person who used 1.x cloud sync and presses “Bring your New Tab
-Folders cloud copy”, the sign-in token that 1.80 saved on the device is sent once to Google's
-token service so their own copy can be read. Untick it in the release that removes the button.
+Every data-usage box is unticked for 2.0: no account, no cloud sync, no analytics. (The legacy
+cloud import that briefly justified keeping *Authentication information* was removed before
+release, owner decision 2026-10-02.) When cloud sync ships in 2.1 the declarations change again;
+see CLOUD_SYNC_DESIGN.md §8.
 
 ## Certifications (all three ticked)
 
@@ -47,14 +47,13 @@ token service so their own copy can be read. Untick it in the release that remov
 ## Privacy policy URL
 
 Keep the field. The page it points to must be replaced before submission with the text in
-PRIVACY_POLICY.md (draft; two owner blanks: contact address, retention of 1.x cloud data). It states:
+PRIVACY_POLICY.md (draft; owner blanks: contact address, what happens to 1.x cloud data). It states:
 
 - everything is stored on the device; no analytics, no tracking, no account;
 - custom wallpapers stay on the device and are not in backup files;
 - bookmarks and recently closed pages are read only if the user turns those features on;
 - searches go to the browser's default engine or a provider the user picks;
-- former cloud-sync users: one optional, user-initiated, read-only import of their own copy;
-  nothing is uploaded;
+- Senuma has no cloud sync and never contacts the 1.x sync service;
 - data already held in the 1.x cloud project: how long it is kept and how to ask for deletion
   (owner to decide and state).
 

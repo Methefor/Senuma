@@ -1,4 +1,4 @@
-# Release status — Senuma 2.0.0 (frozen as RC 2, not uploaded)
+# Release status — Senuma 2.0.0 (final package built, not uploaded)
 
 The one status document. Branch `rebuild/browser-os`; nothing pushed, nothing published.
 Last updated 2026-10-02.
@@ -26,13 +26,14 @@ Checks (last run 2026-10-02 on the Senuma build):
 | `npm run check` (types, lint, 104 unit tests, build, budgets) | pass |
 | `npm run test:e2e` | 65 pass |
 | `npm run test:rc` | 33 pass (a several-tabs timing check has failed intermittently in earlier runs; unexplained) |
-| `npm run rehearse` (published 1.80 → Senuma, real ID, two restarts, cloud copy, rollback) | 16 pass |
+| `npm run rehearse` (published 1.80 → Senuma, real ID, two restarts, old sign-in ignored, rollback) | 16 pass |
 | `npm run headed` (visible Google Chrome) | 22 recorded, 0 failed |
 | `npm run headed:update` | recorded, see below |
 | `npm run visual` | 31 captures regenerated; brand-affected ones reviewed |
-| `npm run package` | clean; `release/Senuma-2.0.0-RC-2-1.99.20.zip` |
+| `npm run store:assets` | 8 screenshots, hero and tile regenerated |
+| `npm run package` | clean; `release/Senuma-2.0.0.zip` |
 
-Build: RC 2 — manifest 1.99.20, display “2.0.0 RC 2” (published: 1.80; the release sets all three to 2.0.0), schema 4 (frozen: add fields with defaults only).
+Build: manifest 2.0.0, display 2.0.0, package 2.0.0 (published: 1.80), schema 4 (frozen: add fields with defaults only).
 Startup JS 42.8 kB gzip (budget 44), CSS 9.1 kB (9.5), unpacked 3.53 MB.
 
 ## NOT UPLOADED — migration from the published 1.80 build
@@ -43,10 +44,10 @@ sync, quick bar, weather, eight languages). Details and design: LEGACY_MIGRATION
 | Area | State |
 |---|---|
 | Paid plans | Owner: no known purchases. No entitlement system, no gating, no LemonSqueezy. A stored licence key is kept as inert history. |
-| Cloud copy | One-time, read-only import on request, with dates shown, merge or replace, restore point first. Never writes or deletes remotely. **Tested with a stand-in service only; one check with a real signed-in 1.80 profile is still needed.** |
+| Cloud copy | Not migrated (owner decision: no user base to migrate). No cloud import in 2.0; the 1.x sign-in record is ignored and no request goes to the old backend. Old Firebase project untouched. |
 | Uploaded background | Migrated into the local wallpaper library with its dim and blur. A background at a web address is not carried over. |
 | Quick bar, pinned folders, language, theme, colour and gradient backgrounds | Migrated |
-| Store privacy declarations | The live listing declares personal, authentication, location and website-content data; must be cleared with the update. |
+| Store privacy declarations | The live listing declares personal, authentication, location and website-content data; all must be cleared with the update. Exact values: STORE_PRIVACY_CHANGES.md. |
 | Dropped from 1.80 | Sync itself, weather, clock, quotes, most-visited, six languages |
 
 Rehearsal (published 1.80 → this build, real extension ID): 16 of 16 pass.
@@ -63,8 +64,7 @@ pass is automated and does not judge feel. macOS and Linux are untested.
 
 ## PUBLIC — each needs explicit approval
 
-- Chrome Web Store update (title, description, screenshots, package). Before packaging:
-  set the three versions to `2.0.0` together, and confirm the published version in the
+- Chrome Web Store update (title, description, screenshots, package). Before uploading: confirm the published version in the
   developer dashboard (store page read 1.8.0; repository's 1.x manifest says 1.55; 2.0.0 is
   newer than both) and that the repository's 1.x files are the published build.
 - Staged rollout, to observe Chrome's “Change back to Google?” bubble on real updates.
@@ -97,5 +97,5 @@ busy behind text; with “letters only” icons a Space shows initials, which ca
 
 ## Not in this release
 
-AI features, accounts, cloud sync, paid plans, any backend, wallpaper service, marketplace,
+AI features, accounts, cloud sync (designed for 2.1: CLOUD_SYNC_DESIGN.md), paid plans, any backend, wallpaper service, marketplace,
 community features, widget library, automation.

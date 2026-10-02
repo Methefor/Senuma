@@ -80,7 +80,9 @@ if (problems.length) {
     process.exit(1);
 }
 mkdirSync('release', { recursive: true });
-const zip = resolve('release', `${manifest.name}-${String(manifest.version_name).replace(/\s+/g, '-')}-${manifest.version}.zip`);
+// A release build (display version = manifest version) is named by its version alone.
+const label = manifest.version_name === manifest.version ? manifest.version : `${String(manifest.version_name).replace(/\s+/g, '-')}-${manifest.version}`;
+const zip = resolve('release', `${manifest.name}-${label}.zip`);
 rmSync(zip, { force: true });
 // Windows' bundled bsdtar writes a standard zip with forward-slash paths (Compress-Archive writes backslashes).
 execFileSync(join(process.env.SystemRoot ?? 'C:/Windows', 'System32/tar.exe'), ['-a', '-c', '-f', zip, '-C', resolve(DIST), ...readdirSync(DIST)]);

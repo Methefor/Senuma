@@ -1,4 +1,4 @@
-import { legacyBackground, parseCloudDocument } from './legacy';
+import { legacyBackground } from './legacy';
 import { normalizeUrl } from './url';
 import { BRAND, STORAGE_KEYS } from '../brand';
 import { describe, expect, it } from 'vitest';
@@ -153,17 +153,6 @@ describe('what else comes over from 1.x', () => {
         }
         const state = fromLegacy({ folders: [{ name: 'A', links: [{ url: 'https://a.example' }] }], quickBarLinks: [], background: { type: 'color', value: '#112233', overlay: 20, blur: 0 } })!;
         expect(state.prefs.background.source).toEqual({ kind: 'solid', color: '#112233' });
-    });
-
-    it('reads the cloud document 1.x wrote, and nothing else', () => {
-        const data = { folders: [{ name: 'Cloud', links: [{ url: 'https://c.example' }] }], updatedAt: 5 };
-        const doc = { fields: { ntf_data: { stringValue: JSON.stringify(data) }, updatedAt: { integerValue: '1700000000000' }, version: { stringValue: '1.6' } } };
-        const copy = parseCloudDocument(doc)!;
-        expect(copy.updatedAt).toBe(1700000000000);
-        expect(importBackup(JSON.stringify(copy.data))?.spaceOrder).toHaveLength(1);
-        for (const junk of [null, {}, { fields: {} }, { fields: { ntf_data: { stringValue: '{' } } }, { fields: { ntf_data: { stringValue: '[]' } } }, { fields: { ntf_data: { stringValue: '{"folders":"x"}' } } }]) {
-            expect(parseCloudDocument(junk)).toBeNull();
-        }
     });
 });
 

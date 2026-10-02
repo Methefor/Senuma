@@ -1,6 +1,6 @@
 # Senuma — Privacy Policy (draft for 2.0, not published)
 
-Draft text for the page the store listing links to. Two items in [brackets] are the owner's to
+Draft text for the page the store listing links to. Items in [brackets] are the owner's to
 fill in. Source for every statement: PRIVACY_FACTS.md.
 
 ---
@@ -43,16 +43,10 @@ Senuma asks for these only if you turn the feature on, and you can turn them off
 
 **If you used cloud sync in New Tab Folders 1.x**
 
-Senuma has no cloud sync. If you signed in to sync in version 1.x, Senuma offers a one-time
-import: “Bring your New Tab Folders cloud copy”. Nothing happens unless you press it. When you
-do, the sign-in that version 1.x saved on your device is sent to Google's sign-in service, and
-your own saved copy is read from our Google Firebase database. It is read-only: nothing is
-uploaded, changed or deleted there, and you choose whether to merge it, replace your setup with
-it, or cancel. A restore point is saved first.
-
-Data saved to the cloud by version 1.x (your folders, links and settings, linked to your Google
-account's e-mail address and name) remains stored in that database [retention period, e.g.
-“until <date>, after which it is deleted”]. To have it deleted sooner, write to [contact e-mail].
+Senuma has no cloud sync and does not contact the service that version 1.x used. Your setup on
+this device was converted locally. Data that version 1.x saved to the cloud (your folders, links
+and settings, linked to your Google account's e-mail address and name) [is deleted on <date> /
+remains stored until <date>]. To have it deleted sooner, write to [contact e-mail].
 
 **Removing your data**
 
