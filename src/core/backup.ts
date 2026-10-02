@@ -9,7 +9,14 @@ import { isDict } from './sanitize';
 import { DEFAULT_BACKGROUND, type Background } from './background';
 import type { AppState, Mode, Snapshot } from './types';
 
-const BACKUP_KIND = 'browser-os-backup';
+/** Written into new backup files. */
+export const BACKUP_KIND = 'senuma-backup';
+/**
+ * Kinds written by earlier builds of this product. A file someone exported before the rename
+ * must keep working, so these are read forever. (1.x exports have no kind and are handled below.)
+ */
+const EARLIER_KINDS: readonly string[] = ['browser-os-backup'];
+const isBackupKind = (kind: unknown): boolean => kind === BACKUP_KIND || (typeof kind === 'string' && EARLIER_KINDS.includes(kind));
 
 /**
  * Uploaded images never leave the device inside a backup: a file holds no pixels, so a
@@ -42,7 +49,7 @@ export function importBackup(text: string): AppState | null {
         return null;
     }
     let state: AppState | null;
-    if (isDict(parsed) && parsed.kind === BACKUP_KIND) {
+    if (isDict(parsed) && isBackupKind(parsed.kind)) {
         // The envelope's schema is authoritative for files whose state omits its own.
         const inner = isDict(parsed.state) ? { schema: parsed.schema, ...parsed.state } : null;
         state = upgrade(inner);

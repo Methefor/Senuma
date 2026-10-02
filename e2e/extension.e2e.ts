@@ -262,7 +262,7 @@ async function freshInstall(): Promise<void> {
         await download.saveAs(file);
         exported = readFileSync(file, 'utf8');
         const parsed = JSON.parse(exported);
-        expect(parsed.kind === 'browser-os-backup' && parsed.schema === 4, 'missing kind/schema');
+        expect(parsed.kind === 'senuma-backup' && parsed.schema === 4, 'missing kind/schema');
         expect(parsed.state.recents.length === 0, 'backup contains activity');
         return `${download.suggestedFilename()}, schema ${parsed.schema}, ${parsed.state.spaceOrder.length} Spaces`;
     });

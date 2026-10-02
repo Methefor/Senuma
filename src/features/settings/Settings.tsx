@@ -1,3 +1,4 @@
+import { BrandLockup } from '../../ui/BrandMark';
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import {
@@ -535,7 +536,8 @@ function About({ state }: { state: AppState }) {
     return (
         <>
             <h3>{t('settings.about')}</h3>
-            <p class="about-name">{BRAND.productName} <span>{BRAND.displayVersion}</span></p>
+            <div class="about-name"><BrandLockup size={30} /><span>{BRAND.displayVersion}</span></div>
+            <p class="about-descriptor">{BRAND.descriptor} · {t('brand.tagline')}</p>
             <p class="note">{t('about.body')}</p>
             {state.legacy && (
                 <p class="note">

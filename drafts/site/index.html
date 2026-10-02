@@ -1,0 +1,95 @@
+<!doctype html>
+<!--
+  Senuma landing page — LOCAL DRAFT. Not deployed, not linked from anywhere.
+  No reviews, ratings, user counts or testimonials appear here, on purpose: there are none to show yet.
+  The screenshot comes from drafts/store (run `npm run store:assets`).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Senuma — New Tab Workspace (draft)</title>
+<style>
+  :root { --ink: #14172A; --text: #EEF0F7; --muted: #B9BDCF; --faint: #8B90A6; --accent: #F4BE8A; --line: #232846; }
+  * { box-sizing: border-box; margin: 0; }
+  body { font: 16px/1.55 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif; color: var(--text); background: radial-gradient(120% 70% at 50% 0%, #1a1d3a 0%, #0b0d1a 55%) fixed #0b0d1a; }
+  a { color: inherit; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+  nav { display: flex; align-items: center; gap: 12px; padding: 24px 0; }
+  .word { font: 600 22px/1 "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; letter-spacing: -.02em; }
+  nav .links { margin-left: auto; display: flex; gap: 26px; font-size: 14px; color: var(--muted); }
+  nav .links a { text-decoration: none; }
+  .button { display: inline-block; text-decoration: none; font-weight: 600; padding: 13px 24px; border-radius: 26px; }
+  .button.primary { background: var(--accent); color: var(--ink); }
+  .button.quiet { color: var(--text); box-shadow: inset 0 0 0 1px #3a4066; }
+  header { text-align: center; padding: 70px 0 44px; }
+  .eyebrow { font-size: 12px; letter-spacing: .22em; color: var(--faint); }
+  h1 { font: 600 clamp(40px, 6.4vw, 68px)/1.04 "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; letter-spacing: -.03em; margin-top: 16px; }
+  .lede { font-size: clamp(17px, 2vw, 21px); color: var(--muted); max-width: 640px; margin: 20px auto 0; }
+  .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }
+  .note { font-size: 13px; color: var(--faint); margin-top: 18px; }
+  .shot { display: block; width: 100%; border-radius: 18px; box-shadow: 0 40px 120px #000a; }
+  section { padding: 76px 0 0; }
+  h2 { font: 600 30px/1.2 "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; letter-spacing: -.02em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-top: 26px; }
+  .card { padding: 22px; border-radius: 16px; background: #12152a; box-shadow: inset 0 0 0 1px var(--line); }
+  .card h3 { font-size: 17px; margin-bottom: 6px; }
+  .card p, li { color: var(--muted); font-size: 15px; }
+  ul { padding-left: 18px; margin-top: 18px; display: grid; gap: 8px; }
+  footer { padding: 70px 0 50px; font-size: 13px; color: var(--faint); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <img src="../../src/assets/brand/icon.svg" width="28" height="28" alt="">
+    <span class="word">senuma</span>
+    <div class="links"><a href="#explore">Explore Senuma</a><a href="#privacy">Privacy</a></div>
+    <a class="button primary" href="#" aria-disabled="true">Add to Chrome</a>
+  </nav>
+
+  <header>
+    <p class="eyebrow">SENUMA</p>
+    <h1>Make the browser yours.</h1>
+    <p class="lede">A personal new-tab workspace built around the way you use the web.</p>
+    <div class="cta">
+      <a class="button primary" href="#" aria-disabled="true">Add to Chrome</a>
+      <a class="button quiet" href="#explore">Explore Senuma</a>
+    </div>
+    <p class="note">On your device. No account, no analytics.</p>
+  </header>
+
+  <img class="shot" src="../store/screenshot-1-home.png" alt="Senuma on a new tab: a search box, five Spaces and a dock over a mountain photograph.">
+
+  <section id="explore">
+    <h2>Your place on the web.</h2>
+    <div class="grid">
+      <div class="card"><h3>Spaces</h3><p>Everything you use for one kind of activity, together: work, code, media, whatever your day is made of.</p></div>
+      <div class="card"><h3>Modes</h3><p>Switch Mode and the page changes with you: different Spaces, a different look, a different search.</p></div>
+      <div class="card"><h3>Search and command</h3><p>One box for the web and for your own links. Press Ctrl or ⌘ and K to open anything.</p></div>
+      <div class="card"><h3>Continue</h3><p>Pick up where you left off, from the links you opened here.</p></div>
+      <div class="card"><h3>Your look</h3><p>Six themes, photographs, or your own images. Images you add never leave your device.</p></div>
+    </div>
+  </section>
+
+  <section id="privacy">
+    <h2>What Senuma does with your data: nothing.</h2>
+    <ul>
+      <li>Your Spaces, links and settings are stored in your browser, on your device.</li>
+      <li>No account. No analytics. No tracking. Nothing is sent to us.</li>
+      <li>A search goes to your browser's default search engine, or to the provider you pick for it.</li>
+      <li>Icons come from each site itself by default, so no one else learns which sites you saved.</li>
+      <li>Bookmarks and recently closed pages are read only if you turn those features on.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Coming from New Tab Folders?</h2>
+    <p class="lede" style="margin-left:0">New Tab Folders is now Senuma. Same product, a new name and a completely new experience. Your Spaces, links and settings come with you when the extension updates.</p>
+  </section>
+
+  <footer>Draft for internal review. Not deployed. “Add to Chrome” is inactive. No domain has been registered for this page.</footer>
+</div>
+</body>
+</html>

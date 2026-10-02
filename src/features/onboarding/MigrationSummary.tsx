@@ -1,4 +1,3 @@
-import { BRAND } from '../../brand';
 import type { AppState, LegacyRecord } from '../../core/types';
 import { t } from '../../i18n';
 import { setUi, update } from '../../storage/store';
@@ -9,17 +8,18 @@ function acknowledge(): void {
 }
 
 /**
- * Shown once to people upgrading from New Tab Folders: what became of their setup, in
- * numbers. It sits in a corner and blocks nothing — their page is already usable behind it.
+ * Shown once to people upgrading from New Tab Folders: that the product has a new name, and
+ * what became of their setup, in numbers. It sits in a corner and blocks nothing — their page is already usable behind it.
  */
 export function MigrationSummary({ legacy }: { legacy: LegacyRecord }) {
     const { spaces, links, groups, skipped } = legacy.summary;
     return (
-        <aside class="migration" role="status" aria-label={t('migrate.title', { name: BRAND.extensionName })}>
+        <aside class="migration" role="status" aria-label={t('migrate.title')}>
             <button type="button" class="icon-button is-small migration-close" aria-label={t('close')} title={t('close')} onClick={acknowledge}>
                 <Icon name="x" size={14} />
             </button>
-            <h2>{t('migrate.title', { name: BRAND.extensionName })}</h2>
+            <h2>{t('migrate.title')}</h2>
+            <p class="migration-lede">{t('migrate.body')}</p>
             <ul>
                 <li><Icon name="check" size={14} />{t('migrate.spaces', { n: spaces })}</li>
                 <li><Icon name="check" size={14} />{t('migrate.links', { n: links })}</li>

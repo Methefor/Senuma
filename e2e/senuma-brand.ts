@@ -33,31 +33,31 @@ const PAPER = '#FBF3E8';
 type Mark = (fg: string, bg: string) => string;
 const CONCEPTS: { id: string; label: string; idea: string; letter: boolean; mark: Mark }[] = [
     {
-        id: 'corners', label: 'Framed place', idea: 'personal space · frame', letter: false,
+        id: 'corners', label: 'R0 · round 2 (reference)', idea: 'two brackets and a dot · reads as camera focus', letter: false,
         mark: fg => `<g fill="none" stroke="${fg}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><path d="M32 60V44a12 12 0 0 1 12-12h16"/><path d="M96 68v16a12 12 0 0 1-12 12H68"/></g><circle cx="64" cy="64" r="12" fill="${fg}"/>`,
     },
     {
-        id: 'strata', label: 'Strata', idea: 'layers · an S only by rhythm', letter: false,
-        mark: fg => `<rect x="46" y="28" width="54" height="18" rx="9" fill="${fg}"/><rect x="28" y="55" width="72" height="18" rx="9" fill="${fg}"/><rect x="28" y="82" width="54" height="18" rx="9" fill="${fg}"/>`,
+        id: 'nook', label: 'R1 · Nook', idea: 'one corner you settle into, and you', letter: false,
+        mark: fg => `<path d="M36 30v50a18 18 0 0 0 18 18h44" fill="none" stroke="${fg}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><circle cx="76" cy="54" r="15" fill="${fg}"/>`,
     },
     {
-        id: 'bento', label: 'Connected Spaces', idea: 'Spaces side by side', letter: false,
-        mark: fg => `<rect x="28" y="28" width="32" height="72" rx="10" fill="${fg}"/><rect x="68" y="28" width="32" height="32" rx="10" fill="${fg}"/><circle cx="84" cy="84" r="16" fill="${fg}"/>`,
+        id: 'shelter', label: 'R2 · Shelter', idea: 'a frame open on one side, a place inside', letter: false,
+        mark: fg => `<path d="M98 44v-2a14 14 0 0 0-14-14H44a14 14 0 0 0-14 14v44a14 14 0 0 0 14 14h40a14 14 0 0 0 14-14" fill="none" stroke="${fg}" stroke-width="13" stroke-linecap="round"/><circle cx="64" cy="64" r="14" fill="${fg}"/>`,
     },
     {
-        id: 'channel', label: 'Channel', idea: 'one place, a path through it', letter: true,
-        mark: (fg, bg) => `<rect x="26" y="26" width="76" height="76" rx="20" fill="${fg}"/><path d="M110 50H60a9 9 0 0 0 0 18h8a9 9 0 0 1 0 18H18" fill="none" stroke="${bg}" stroke-width="10"/>`,
+        id: 'ground', label: 'R3 · Ground', idea: 'a place resting inside its frame', letter: false,
+        mark: fg => `<rect x="27" y="27" width="74" height="74" rx="20" fill="none" stroke="${fg}" stroke-width="12"/><path d="M39 89V70a22 22 0 0 1 22 22v-3z" fill="${fg}"/><path d="M33 95V66a29 29 0 0 1 29 29z" fill="${fg}"/>`,
     },
     {
-        id: 'door', label: 'Open door', idea: 'entry', letter: false,
-        mark: fg => `<rect x="34" y="26" width="60" height="76" rx="12" fill="none" stroke="${fg}" stroke-width="10"/><path d="M50 44l26 8v42l-26-8z" fill="${fg}"/>`,
+        id: 'held', label: 'R4 · Held', idea: 'the frame bends around the place', letter: false,
+        mark: fg => `<path d="M30 74V46a16 16 0 0 1 16-16h28" fill="none" stroke="${fg}" stroke-width="14" stroke-linecap="round"/><path d="M98 54v28a16 16 0 0 1-16 16H54" fill="none" stroke="${fg}" stroke-width="14" stroke-linecap="round" opacity=".38"/><circle cx="64" cy="64" r="15" fill="${fg}"/>`,
     },
     {
-        id: 'nested', label: 'Room within', idea: 'environment · portal', letter: false,
-        mark: fg => `<rect x="26" y="26" width="76" height="76" rx="21" fill="none" stroke="${fg}" stroke-width="10"/><rect x="48" y="48" width="32" height="32" rx="10" fill="${fg}"/>`,
+        id: 'seat', label: 'R5 · Seat', idea: 'a solid base and a place on it', letter: false,
+        mark: fg => `<path d="M28 58h18a18 18 0 0 0 36 0h18v26a16 16 0 0 1-16 16H44a16 16 0 0 1-16-16z" fill="${fg}"/><circle cx="64" cy="50" r="15" fill="${fg}"/>`,
     },
 ];
-const CHOSEN = process.env.SENUMA_ICON ?? 'corners';
+const CHOSEN = process.env.SENUMA_ICON ?? 'nook';
 
 const TILE = '<defs><linearGradient id="t" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F8D4AB"/><stop offset="1" stop-color="#EDA571"/></linearGradient></defs><rect width="128" height="128" rx="28" fill="url(#t)"/>';
 const concept = (id: string) => CONCEPTS.find(c => c.id === id)!;
@@ -81,18 +81,18 @@ async function shoot(page: Page, html: string, file: string, width: number): Pro
 async function icons(): Promise<void> {
     const browser = await chromium.launch();
     const page = await browser.newPage({ deviceScaleFactor: 2 });
-    const sizes = [16, 32, 48, 128];
+    const sizes = [16, 24, 32, 48, 128];
     const row = (bg: string, fg: string, inner: string, note: string) => `<div style="display:flex;align-items:flex-end;gap:14px;padding:14px 16px;background:${bg};border-radius:10px;margin-top:8px">${inner}<span style="margin-left:auto;font-size:10.5px;color:${fg};opacity:.65">${note}</span></div>`;
     const sheet = `<section style="padding:34px 40px;background:#F3F1EC;color:#14161F">
-      <h2 style="font:500 12px ${STACK};letter-spacing:.14em;color:#6A6F82;margin-bottom:6px">SENUMA · ICON ROUND 2 · 16 / 32 / 48 / 128 px</h2>
+      <h2 style="font:500 12px ${STACK};letter-spacing:.14em;color:#6A6F82;margin-bottom:6px">SENUMA · FRAMED PLACE, REFINED · 16 / 24 / 32 / 48 / 128 px</h2>
       <p style="font-size:12.5px;color:#6A6F82;margin-bottom:22px">Ink mark on a warm tile, so the icon holds on light and dark toolbars. Each concept also shown as a one-colour mark.</p>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:26px 24px">
       ${CONCEPTS.map(c => `<div>
           <div style="font:600 13.5px ${STACK}">${c.label}${c.id === CHOSEN ? ' · used in the mock-ups' : ''}</div>
           <div style="font-size:11.5px;color:#6A6F82;margin:2px 0 6px">${c.idea}${c.letter ? '' : ' · no letter'}</div>
           ${row('#ffffff', '#14161F', sizes.map(s => `<img src="${icon(c.id)}" width="${s}" height="${s}">`).join(''), 'light toolbar')}
-          ${row('#202124', '#e8eaed', sizes.slice(0, 3).map(s => `<img src="${icon(c.id)}" width="${s}" height="${s}">`).join(''), 'dark toolbar')}
-          ${row('#ffffff', '#14161F', [16, 32, 48].map(s => `<img src="${uri(monoSvg(c.id, '#14161F', '#ffffff'))}" width="${s}" height="${s}">`).join('') + `<span style="width:12px"></span>` + [16, 32, 48].map(s => `<span style="display:inline-flex;background:#202124;border-radius:6px;padding:4px"><img src="${uri(monoSvg(c.id, '#ffffff', '#202124'))}" width="${s}" height="${s}"></span>`).join(''), 'one colour')}
+          ${row('#202124', '#e8eaed', sizes.slice(0, 4).map(s => `<img src="${icon(c.id)}" width="${s}" height="${s}">`).join(''), 'dark toolbar')}
+          ${row('#ffffff', '#14161F', [16, 24, 32, 48].map(s => `<img src="${uri(monoSvg(c.id, '#14161F', '#ffffff'))}" width="${s}" height="${s}">`).join('') + `<span style="width:12px"></span>` + [16, 24, 32, 48].map(s => `<span style="display:inline-flex;background:#202124;border-radius:6px;padding:4px"><img src="${uri(monoSvg(c.id, '#ffffff', '#202124'))}" width="${s}" height="${s}"></span>`).join(''), 'one colour')}
         </div>`).join('')}
       </div></section>`;
     await shoot(page, sheet, '01-icons-round2.png', 1320);

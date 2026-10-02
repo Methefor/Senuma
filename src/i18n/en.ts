@@ -150,7 +150,7 @@ export const en = {
     'data.exportHint': 'Spaces, Modes, dock, search and preferences as one JSON file. Activity is not included.',
     'data.exportAction': 'Export',
     'data.import': 'Import a backup file',
-    'data.importHint': 'You choose whether to merge it in or replace what you have. Also reads New Tab Folders exports.',
+    'data.importHint': 'You choose whether to merge it in or replace what you have. Also reads New Tab Folders exports and earlier backup files.',
     'data.chooseFile': 'Choose file',
     'data.fileUnreadable': 'That file is not a readable backup. Nothing was changed.',
     'data.importTitle': 'Import backup',
@@ -223,8 +223,9 @@ export const en = {
     'keys.results': 'Move through results and open one',
     'keys.close': 'Close the current panel',
     'keys.prefixHint': 'Search shortcuts such as “g”, “y” or “gh” are set under Search.',
-    'about.body': 'A launch surface for everything you do on the web: Spaces for each activity, one search box, and a command center.',
-    'about.migrated': 'Upgraded from New Tab Folders on {date}. The original data is kept untouched.',
+    'about.body': 'Your personal place on the web: Spaces for everything you do online, one search box, and a command center.',
+    'brand.tagline': 'Make the browser yours.',
+    'about.migrated': 'Senuma was called New Tab Folders before version 2. Upgraded on {date}; your original data is kept untouched.',
 
     // Onboarding
     'onboarding.title': 'Set up',
@@ -263,7 +264,8 @@ export const en = {
     'cat.study': 'Study',
 
     // Upgrade from 1.x
-    'migrate.title': 'Your {name} setup has been upgraded',
+    'migrate.title': 'New Tab Folders is now Senuma',
+    'migrate.body': 'Same product, a new name and a completely new experience. Your Spaces, links and settings came with you.',
     'migrate.spaces': '{n} folder → {n} Space|{n} folders → {n} Spaces',
     'migrate.links': '{n} link moved over|{n} links moved over',
     'migrate.groups': '{n} group created from a header|{n} groups created from headers',

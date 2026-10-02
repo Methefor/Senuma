@@ -1,3 +1,4 @@
+import { BRAND, STORAGE_KEYS } from '../brand';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_BACKGROUND, MAX_WALLPAPERS, sanitizeBackground, suggestedDim, type WallpaperAsset } from './background';
 import { addSnapshot, exportBackup, importBackup, mergeBackup, sanitizeSnapshots } from './backup';
@@ -373,7 +374,7 @@ describe('backup files', () => {
         let state = ops.recordRecent(base.state, { url: 'https://github.com/', title: 'GitHub' });
         state = ops.recordUsage(ops.toggleDock(state, { kind: 'space', id: base.spaceId }), 'item:x');
         const text = exportBackup(state);
-        expect(JSON.parse(text)).toMatchObject({ kind: 'browser-os-backup', schema: SCHEMA_VERSION });
+        expect(JSON.parse(text)).toMatchObject({ kind: 'senuma-backup', schema: SCHEMA_VERSION });
         const restored = importBackup(text)!;
         expect(restored.spaces).toEqual(state.spaces);
         expect(restored.items).toEqual(state.items);
@@ -402,6 +403,35 @@ describe('backup files', () => {
             JSON.stringify({ kind: 'browser-os-backup', schema: SCHEMA_VERSION, state: emptyState() }),
         ];
         for (const junk of unusable) expect(importBackup(junk)).toBeNull();
+    });
+
+    it('keeps every backup made before the rename readable', () => {
+        const { state } = seeded();
+        const current = JSON.parse(exportBackup(state));
+        // A file exported by an earlier build of this product.
+        const earlier = JSON.stringify({ ...current, kind: 'browser-os-backup' });
+        const fromEarlier = importBackup(earlier)!;
+        expect(fromEarlier.spaces).toEqual(state.spaces);
+        expect(fromEarlier.items).toEqual(state.items);
+        // An earlier build's file from an older schema, too.
+        const v3 = JSON.parse(earlier);
+        v3.schema = 3;
+        v3.state.schema = 3;
+        delete v3.state.wallpapers;
+        delete v3.state.prefs.background;
+        expect(importBackup(JSON.stringify(v3))?.spaceOrder).toEqual(state.spaceOrder);
+        // A New Tab Folders 1.x export: the whole data object, or just the folders.
+        expect(importBackup(JSON.stringify(LEGACY))?.spaceOrder).toHaveLength(3);
+        expect(importBackup(JSON.stringify(LEGACY.folders))?.spaceOrder).toHaveLength(3);
+        // And a kind nobody ever wrote is still refused.
+        expect(importBackup(JSON.stringify({ ...current, kind: 'someone-elses-backup' }))).toBeNull();
+    });
+
+    it('writes the new name into new files without touching stored data keys', () => {
+        expect(JSON.parse(exportBackup(seeded().state)).kind).toBe('senuma-backup');
+        expect(BRAND.backupFilePrefix).toBe('senuma-backup');
+        // Renaming these would orphan every user's setup.
+        expect(STORAGE_KEYS).toEqual({ state: 'bos.state', snapshots: 'bos.snapshots', newerState: 'bos.state.newer', legacyData: 'ntf_data' });
     });
 
     it('merge adds what is missing and removes nothing', () => {

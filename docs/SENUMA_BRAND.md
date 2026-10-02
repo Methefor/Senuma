@@ -1,7 +1,9 @@
-# Senuma — preferred brand direction (internal, not executed)
+# Senuma — brand record (applied locally; public rename on hold)
 
-Date: 2026-10-02. Status: **HOLD on production rebrand** until a professional opinion on the
-SENUMAC mark (section 1). Nothing has been renamed, registered, reserved or published.
+Date: 2026-10-02. Naming research is closed: Senuma is the brand, Avluna the only fallback.
+The development branch carries the Senuma identity; the public rename is on hold until a
+professional opinion on the SENUMAC mark (section 1). Status lives in RELEASE_STATUS.md.
+Nothing has been published, registered or reserved.
 
 This is preliminary research, not legal advice. Senuma is **not** legally cleared.
 
@@ -80,13 +82,14 @@ everywhere that could be read. Nothing was created or reserved.
 ## 5. Brand system (prototype)
 
 - Wordmark: `senuma`, lowercase, system type stack, weight 600, slightly tight. No custom font.
-- Icon: ink mark on a warm tile (visible on light and dark toolbars). Six concepts in
-  `proto/senuma/01-icons-round2.png`; strongest two: **Framed place** (two corner brackets around
-  a dot: a place of your own inside a frame; no letter) and **Connected Spaces** (three blocks).
+- Icon: **Ground** — a rounded frame with a quarter-round “place” resting in its lower-left
+  corner, ink on a warm tile. Source `src/assets/brand/icon.svg`, one-colour `mark.svg`,
+  PNGs from `npm run icons`. Alternatives kept in `e2e/senuma-brand.ts`: Shelter (open frame
+  with a dot; can read as a C) and Nook (corner and dot; can read as an L).
 - Where the brand appears: onboarding, Settings → About, toolbar, store, website. **Not on Home.**
 - Script: `e2e/senuma-brand.ts`; output in `proto/senuma/` (git-ignored).
 
-## 6. Rename map (plan only — nothing executed)
+## 6. Rename map (sections A–D applied locally on 2026-10-02; E not started)
 
 **A. One-line switches (already centralised)**
 

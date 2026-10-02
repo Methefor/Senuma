@@ -1,6 +1,6 @@
 # Architecture (V2 rebuild)
 
-Internal codename: **Browser OS**. Names and versions live in one file, `src/brand.ts`:
+Product name: **Senuma** (prepared locally; formerly codenamed Browser OS, published as New Tab Folders). Names and versions live in one file, `src/brand.ts`:
 `productName` is what the interface calls itself (a placeholder), `extensionName` is what
 Chrome and the store show (unchanged until a rename is approved).
 

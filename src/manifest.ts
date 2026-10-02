@@ -33,9 +33,9 @@ export function buildManifest({ grantOptional = false } = {}) {
         chrome_url_overrides: { newtab: 'newtab.html' },
         // Needed only so the toolbar button can open a new tab.
         background: { service_worker: 'background.js' },
-        icons: { 16: 'icons/icon16.png', 48: 'icons/icon48.png', 128: 'icons/icon128.png' },
+        icons: { 16: 'icons/icon16.png', 32: 'icons/icon32.png', 48: 'icons/icon48.png', 128: 'icons/icon128.png' },
         action: {
-            default_icon: { 16: 'icons/icon16.png', 48: 'icons/icon48.png' },
+            default_icon: { 16: 'icons/icon16.png', 32: 'icons/icon32.png', 48: 'icons/icon48.png' },
             default_title: BRAND.extensionName,
         },
         // The page loads no remote code and needs no web-accessible resources.

@@ -1,3 +1,4 @@
+import { BrandLockup } from '../../ui/BrandMark';
 import { useState } from 'preact/hooks';
 import { setupNames } from '../../app/actions';
 import { readBookmarks } from '../../browser/bookmarks';
@@ -39,6 +40,7 @@ export function Onboarding({ state }: { state: AppState }) {
     return (
         <Overlay label={t('onboarding.title')} class="overlay-onboarding">
             <div class="onboarding">
+                <BrandLockup tagline />
                 <div class="onboarding-top">
                     <ol class="steps" aria-label={t('onboarding.progress', { n: step + 1, total: STEPS.length })}>
                         {STEPS.map((id, index) => <li key={id} class={index <= step ? 'is-done' : ''} />)}

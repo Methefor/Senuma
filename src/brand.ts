@@ -1,29 +1,35 @@
 /**
  * Single source of truth for naming and versions.
  *
- * `extensionName` is what the browser and the Chrome Web Store show; it is unchanged until a
- * rename is approved. `productName` is what the interface calls itself and is a development
- * placeholder until the final name is chosen.
+ * Senuma is the prepared release identity on this branch. A public rename is on hold until
+ * the open trademark question is answered (docs/RELEASE_STATUS.md); nothing here is published.
  */
 export const BRAND = {
-    productName: 'Browser OS',
-    tagline: 'Your web, organized around what you are doing.',
-    extensionName: 'NewTabFolders',
-    shortName: 'NTF',
+    productName: 'Senuma',
+    /** What the browser and the store show. */
+    extensionName: 'Senuma',
+    shortName: 'Senuma',
+    descriptor: 'New Tab Workspace',
+    tagline: 'Make the browser yours.',
+    /** The name people upgrading from 1.x know the product by. */
+    legacyName: 'New Tab Folders',
     /** Machine-readable pre-release version (package.json carries the same value). */
     version: '2.0.0-rc.1',
     /** What people see: About, the browser's extension page, the RC package name. */
     displayVersion: '2.0.0 RC 1',
     /**
      * Numeric manifest version for development builds. It stays below 2.0.0 on purpose:
-     * the published version number is decided at release preparation, not here.
+     * a release build sets it equal to `version` (a test enforces both cases).
      */
     manifestVersion: '1.99.10',
-    description: 'Your new tab as a launch surface: Spaces for everything you do online, one search box, and a command center.',
-    backupFilePrefix: 'browser-os-backup',
+    description: 'A personal new-tab workspace for your Spaces, searches and online world.',
+    backupFilePrefix: 'senuma-backup',
 } as const;
 
-/** Storage keys. Legacy keys are only ever read, never written or removed. */
+/**
+ * Storage keys. These are technical identifiers, not branding: renaming them would orphan
+ * every user's data, so they keep their original spelling. Legacy keys are only ever read.
+ */
 export const STORAGE_KEYS = {
     state: 'bos.state',
     snapshots: 'bos.snapshots',

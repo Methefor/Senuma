@@ -263,8 +263,15 @@
 }
 .chip-checks button[aria-pressed='true'] { background: var(--accent); border-color: transparent; color: var(--accent-contrast); font-weight: 600; }
 
-.about-name { font: var(--display-weight) 22px/1.2 var(--font-display); margin-bottom: 8px; }
-.about-name span { font: 400 13px var(--font-ui); color: var(--text-tertiary); margin-left: 6px; }
+.about-name { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.about-name > span { font: 400 13px var(--font-ui); color: var(--text-tertiary); }
+.about-descriptor { font-size: 13px; color: var(--text-secondary); margin-bottom: 10px; }
+/* The wordmark keeps one typeface in every theme: it is the brand's, not the theme's. */
+.brand-lockup { display: flex; align-items: center; gap: 12px; }
+.brand-mark { flex: none; display: block; border-radius: 22%; }
+.brand-word { display: block; font: 600 21px/1.05 "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif; letter-spacing: -.02em; color: var(--text-primary); }
+.brand-tagline { display: block; margin-top: 3px; font-size: 12.5px; color: var(--text-secondary); }
+.onboarding > .brand-lockup { margin-bottom: 20px; }
 .settings-body .note + .note { margin-top: 10px; }
 
 /* Theme cards paint a miniature of the page with each theme's real tokens. */

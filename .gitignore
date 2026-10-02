@@ -27,3 +27,6 @@ e2e/_*
 
 # Local brand prototypes
 proto/
+
+# Local store-listing images (regenerate with npm run store:assets)
+drafts/store/*.png

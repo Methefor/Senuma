@@ -1,4 +1,4 @@
-# Privacy facts (RC 1)
+# Privacy facts — Senuma 2.0 (RC 1)
 
 Each line is something the code does, with where to check it. This is the source for the
 in-product Privacy section, the store privacy form and the privacy policy.
@@ -15,6 +15,13 @@ in-product Privacy section, the store privacy form and the privacy policy.
 | 1.x data (`ntf_data`) | `chrome.storage.local` | No. Read once, never changed or deleted. |
 
 `chrome.storage.sync` is not used. There is no server.
+
+There is no hidden history database: Senuma does not read the browser's history. “Continue”
+holds only links opened from the Senuma page itself (30 at most), and recently closed pages are
+read live from the browser, only when that option is on, and never stored.
+
+Storage key names (`bos.*`, `ntf_data`) predate the Senuma name and are kept so that no one's
+data is orphaned by the rename.
 
 ## Network requests the extension makes
 

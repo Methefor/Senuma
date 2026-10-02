@@ -434,6 +434,7 @@ a:hover > .app-icon img, a:focus-visible > .app-icon img, button:hover > .app-ic
 .migration li .icon { color: var(--accent); }
 .migration li.is-muted, .migration li.is-muted .icon, .migration p { color: var(--text-secondary); }
 .migration p { font-size: 12.5px; }
+.migration .migration-lede { font-size: 13px; color: var(--text-primary); }
 .migration-actions { display: flex; gap: 8px; }
 .migration-close { position: absolute; top: 10px; right: 10px; }
 
