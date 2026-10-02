@@ -1,0 +1,111 @@
+{
+  "source": "C:/projects/New Tab Folders/release/legacy/NewTabFolders-1.80-published",
+  "version": "1.80",
+  "extensionId": "oghlifenjhpbebcdeboejbmemelkfobe",
+  "files": [
+    {
+      "path": "assets/bg.webp",
+      "sha256": "53685e45c215bb6a6ba265a4bd223a5b797794ef6285a9c00de565544ab9ae7e"
+    },
+    {
+      "path": "assets/bg2.webp",
+      "sha256": "b2aa7cbae485c8b21a74ac3236084891f9a9f18cc04c4a28ab4bcde928c51de8"
+    },
+    {
+      "path": "assets/icons/icon128.png",
+      "sha256": "bf14b375ff51e2786f138ac51c827c33aa140dc2494f7016f40db022b0cc69a2"
+    },
+    {
+      "path": "assets/icons/icon16.png",
+      "sha256": "8b030326be27593f36698d46debc6b2c2f2a27e5de85a866ae3c65a11c21bc04"
+    },
+    {
+      "path": "assets/icons/icon48.png",
+      "sha256": "de5a49f917c53e78a4eb23414c2dc19ca48d705cbff8b3fe51864327f4476a8d"
+    },
+    {
+      "path": "changelog.html",
+      "sha256": "3741a2d0dd512507a4b3c2eaa24c4edc4e97e878ce026672f7d7c5185f904cbe"
+    },
+    {
+      "path": "css/styles.css",
+      "sha256": "9353bd9a1dff86b747e54c14cda87029e06512ae9b6a8b83fea73edea3040a31"
+    },
+    {
+      "path": "guide.html",
+      "sha256": "227dece376d3a9b5101e9606b71eb186dcd8b5e2c836aa6d9a819e393e7f13a7"
+    },
+    {
+      "path": "index.html",
+      "sha256": "b033985d331b1941bc75f873553227d8c845c07d1efb43b9ff53392442d4fde7"
+    },
+    {
+      "path": "js/app.js",
+      "sha256": "0f1d3f2c8374a3cecc47a0d56fd62abc40bcabc5fc115a07c9a3510f9ea70655"
+    },
+    {
+      "path": "js/background.js",
+      "sha256": "3940c10e817d5dc85914a42af5fb695a6ad3128562824868d789603907aa72ff"
+    },
+    {
+      "path": "js/i18n.js",
+      "sha256": "9e53b924ccffc1e099ed53d03a998bb5c1c82e476505b24637a2b4f4aa82c839"
+    },
+    {
+      "path": "js/info-page.js",
+      "sha256": "a96859d058b605c33e7b6eaacc38eb491031754318afe702109833c31b163073"
+    },
+    {
+      "path": "js/sync.js",
+      "sha256": "c4d038ac7eb48ffafd5280750e4d5b6418378f76190868d6544fbe821b62fc50"
+    },
+    {
+      "path": "manifest.json",
+      "sha256": "bd97d2eed5a0e1e83553d9ab9eebb9bb8c3424b08b1b01393cb28441ae8f1e11"
+    },
+    {
+      "path": "pricing.html",
+      "sha256": "d189db2bbe9a52a2eb2b4de80a1a855fb2ccfcea2454d4efaed6de7ad389746d"
+    },
+    {
+      "path": "_locales/de/messages.json",
+      "sha256": "3a1c693b75108aaf1a1897e7aadeff6082202fd35844168dc0d2a104374fc0fe"
+    },
+    {
+      "path": "_locales/en/messages.json",
+      "sha256": "90db75994c0e8d90e902378255ae2a049a8368f11102196f5b7f5644b7195ee7"
+    },
+    {
+      "path": "_locales/es/messages.json",
+      "sha256": "1985e7759718db525f202a8ae9783dd7bad3c7feb4da14bea24435e2cc0a2480"
+    },
+    {
+      "path": "_locales/fr/messages.json",
+      "sha256": "d47a1e763d3e4eed52e38a01fcfe2276f3d2df56e7259c3c248dd7c48968403b"
+    },
+    {
+      "path": "_locales/ja/messages.json",
+      "sha256": "82eb0693fc1fb415d8d36b1208263b563db2e59112a0deb69c05cb898aeed597"
+    },
+    {
+      "path": "_locales/ko/messages.json",
+      "sha256": "8b4b83c61c4234da53cd28d7e4c77058e9b3eca1e36169a3cc505a65d234ac9e"
+    },
+    {
+      "path": "_locales/pt_BR/messages.json",
+      "sha256": "4b711f6cabcc82ff6d02689db7495174cb37f921cda49801b8178baacec4d794"
+    },
+    {
+      "path": "_locales/tr/messages.json",
+      "sha256": "45cf68d0c9cbde7a04ba0c1d433b850f7214910e4c3c4cddb8b6e2c567314360"
+    },
+    {
+      "path": "_metadata/computed_hashes.json",
+      "sha256": "d0a9b5873bcafb9a71b36823842e232cb566334349bb4822402cb311a315f263"
+    },
+    {
+      "path": "_metadata/verified_contents.json",
+      "sha256": "dfcc5c5e2932e83bb1c2bc073a98b6cb2dc079f3ac652c599a72264223bf7237"
+    }
+  ]
+}

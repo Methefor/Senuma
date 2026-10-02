@@ -8,15 +8,15 @@ Chrome and the store show (unchanged until a rename is approved).
 
 | | Legacy 1.x | V2 rebuild |
 |---|---|---|
-| Status | **Production today** (Chrome Web Store) | Release candidate in development |
+| Status | Archived repository snapshot; published 1.80 is a separate fixture | Release candidate in development |
 | Entry point | `archive/legacy/repository-1.x/index.html` | `newtab.html` → `src/main.tsx` |
 | Code | `archive/legacy/repository-1.x/` | `src/` |
 | Manifest | `archive/legacy/repository-1.x/manifest.json` | generated from `src/manifest.ts` |
-| Build | none — load the repo root unpacked | `npm run build` → load `dist/` unpacked |
+| Build | none — archived reference only | `npm run build` → load `dist/` unpacked |
 | Tests | none | `npm test`, `npm run test:e2e` |
 
 Nothing in `src/` imports from the legacy files, and the legacy files are not linted, built or
-shipped by the V2 build. They stay until the relaunch (see `RELAUNCH_CHECKLIST.md`).
+shipped by the V2 build. They are retained under archive/legacy (see `RELAUNCH_CHECKLIST.md`).
 
 ## Layout
 

@@ -1,6 +1,6 @@
 # Release status — Senuma 2.0.0 (final package built, not uploaded)
 
-The one status document. Branch `rebuild/browser-os`; nothing pushed, nothing published.
+Release status: RC2, nothing pushed or published. Repository reorganization branch: `chore/senuma-product-repository`. Original product baseline: `rebuild/browser-os`. Latest local validation and paths: WORKLOG.md.
 Last updated 2026-10-02.
 
 ## READY
@@ -16,7 +16,7 @@ Last updated 2026-10-02.
 | Privacy | No analytics, no account, no server. Facts: PRIVACY_FACTS.md |
 | Third-party assets | 8 CC0 photographs; 3 brand marks kept after review. ASSET_LICENSES.md |
 | Legacy PRO | History only; nothing gated; no paid plan in this release |
-| Store and site drafts | STORE_LISTING.md, `drafts/store/`, `drafts/site/index.html` (all local) |
+| Store and site drafts | STORE_LISTING.md, `assets/store/`, `drafts/site/index.html` (all local) |
 | Version rule | One source (`src/brand.ts`); a test fails if package, manifest and display versions disagree |
 
 Checks (last run 2026-10-02 on the Senuma build):

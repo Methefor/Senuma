@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-02",
+  "status": "local draft, not published",
+  "generator": [
+    "npm run store:assets",
+    "npm run demo:assets",
+    "scripts/demo-gif.py (Pillow)"
+  ],
+  "files": [
+    {
+      "path": "assets/gifs/senuma-product-tour.gif",
+      "bytes": 9081316,
+      "sha256": "34ce6f1f1f77bdf85d7df532701a985123547644b3001c8e6f92f6710d7c83c0"
+    },
+    {
+      "path": "assets/store/hero-1400x560.png",
+      "bytes": 491250,
+      "sha256": "49029e0bd575b0b66a8247e2d0fc99261e368ff73d9dd47e74fb05dd09214523"
+    },
+    {
+      "path": "assets/store/icon-128.png",
+      "bytes": 4703,
+      "sha256": "16b436e40692b67c1988414a5f320942f20c42dbba835827d4d8f6a2c6f696c3"
+    },
+    {
+      "path": "assets/store/screenshot-1-home.png",
+      "bytes": 770623,
+      "sha256": "8a0da428c21b6a413d8e778e27f72965b19b47ed4957f7d0d735b31b3fa530f2"
+    },
+    {
+      "path": "assets/store/screenshot-2-spaces.png",
+      "bytes": 322681,
+      "sha256": "d96527ba0475fded10da5b4cc775aca18832d55fea12ce08777fe3fe483121c8"
+    },
+    {
+      "path": "assets/store/screenshot-3-modes.png",
+      "bytes": 307762,
+      "sha256": "976b3f2657ef522067e2699ab84306b5df6de902a2435778b9b06cc83dc98162"
+    },
+    {
+      "path": "assets/store/screenshot-4-search.png",
+      "bytes": 724914,
+      "sha256": "1fb3fa1eac8bf89b09b48467dbae8dc09dbdeee0f04d7107a0f9f045ac7dc835"
+    },
+    {
+      "path": "assets/store/screenshot-5-command-center.png",
+      "bytes": 510781,
+      "sha256": "f1dceaa22f2afaf26d96924c72e237069301be3cdd34a04c26bf2fe6f2c425fa"
+    },
+    {
+      "path": "assets/store/screenshot-6-personalization.png",
+      "bytes": 706230,
+      "sha256": "e60b54dec2d4de3e72a97780413beafd765331280a9171280b5f88f4868ecf2f"
+    },
+    {
+      "path": "assets/store/screenshot-7-themes.png",
+      "bytes": 986294,
+      "sha256": "a38169d7f127e1fa03c1f6a447ac98959e98df29ab770c87476a960d01857301"
+    },
+    {
+      "path": "assets/store/screenshot-8-privacy.png",
+      "bytes": 430361,
+      "sha256": "563461ac3494541efb017b8e4c4236114d60f425bb417869731bb12222bb1523"
+    },
+    {
+      "path": "assets/store/tile-440x280.png",
+      "bytes": 37095,
+      "sha256": "4002f85429236c392eceac40237b7f2ece90676dbc348a3fa64335fe4ac08d97"
+    },
+    {
+      "path": "assets/video/senuma-product-tour-1790964287144.webm",
+      "bytes": 2651417,
+      "sha256": "e4b011b018e8ce29e02566fb04fc6b58ad7de6faad8512a210ee0fb7980c437c"
+    },
+    {
+      "path": "assets/video/senuma-product-tour.webm",
+      "bytes": 2209943,
+      "sha256": "a53c454ae12f447203de263e7174abb9dc6eef3a39c64e4835e5b50328d62ce6"
+    }
+  ]
+}

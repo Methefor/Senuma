@@ -47,7 +47,7 @@ The live listing is untouched. Publishing any of this needs explicit approval an
 
 Data collected: none. Remote code: none. Details: PRIVACY_FACTS.md.
 
-## Assets (generated locally by `npm run store:assets` into `drafts/store/`)
+## Assets (generated locally by `npm run store:assets` into `assets/store/`)
 
 | File | Use |
 |---|---|
