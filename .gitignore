@@ -40,3 +40,11 @@ dist-sync/
 
 # Local project identifiers for development builds
 .env.*.local
+
+# Local generated Senuma media
+assets/store/
+assets/gifs/*.gif
+assets/video/*.webm
+assets/video/*.mp4
+archive/legacy/generated-media/*.webm
+assets/gifs/frames/

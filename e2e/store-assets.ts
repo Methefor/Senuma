@@ -3,7 +3,7 @@
  *
  *   npm run store:assets
  *
- * Output (drafts/store/, images git-ignored): icon-128.png, eight captioned 1280×800
+ * Output (assets/store/, images git-ignored): icon-128.png, eight captioned 1280×800
  * screenshots, a 1400×560 hero and a 440×280 small tile. Copy lives in docs/STORE_LISTING.md.
  */
 import { copyFileSync, mkdirSync, readFileSync } from 'node:fs';
@@ -18,7 +18,7 @@ import type { AppState } from '../src/core/types';
 import { en } from '../src/i18n/en';
 import { DIST, launch, newProfile, openNewTab, removeProfile, writeStorage } from './harness';
 
-const OUT = resolve('drafts/store');
+const OUT = resolve('assets/store');
 const RAW = join(OUT, 'raw');
 mkdirSync(RAW, { recursive: true });
 const SIZE = { width: 1280, height: 800 };
@@ -145,3 +145,5 @@ await canvas.screenshot({ path: join(OUT, 'tile-440x280.png') });
 console.log('hero-1400x560.png, tile-440x280.png, icon-128.png');
 await tools.close();
 process.exit(0);
+
+

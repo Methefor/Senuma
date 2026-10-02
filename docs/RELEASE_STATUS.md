@@ -1,7 +1,7 @@
 # Release status — Senuma 2.0.0 (final package built, not uploaded)
 
-The one status document. Branch `rebuild/browser-os`; nothing pushed, nothing published.
-Last updated 2026-10-02.
+Senuma 2.0 final package is built and not uploaded. Senuma 2.1 development continues locally on `chore/senuma-professional-repository`, based on `senuma-2.1`; its sync path is connected only to the local emulator with mock sign-in. Latest repository work and validation: WORKLOG.md.
+Last updated 2026-10-03.
 
 ## READY
 
@@ -16,7 +16,7 @@ Last updated 2026-10-02.
 | Privacy | No analytics, no account, no server. Facts: PRIVACY_FACTS.md |
 | Third-party assets | 8 CC0 photographs; 3 brand marks kept after review. ASSET_LICENSES.md |
 | Legacy PRO | History only; nothing gated; no paid plan in this release |
-| Store and site drafts | STORE_LISTING.md, `drafts/store/`, `drafts/site/index.html` (all local) |
+| Store and site drafts | STORE_LISTING.md, `assets/store/`, `drafts/site/index.html` (all local) |
 | Version rule | One source (`src/brand.ts`); a test fails if package, manifest and display versions disagree |
 
 Checks (last run 2026-10-02 on the Senuma build):

@@ -43,8 +43,8 @@ function install(version: 'legacy' | 'v2'): { version: string; permissions: stri
         cpSync(LIVE, extension, { recursive: true });
         rmSync(join(extension, '_metadata'), { recursive: true, force: true });
     } else if (version === 'legacy') {
-        for (const entry of ['index.html', 'js', 'css', 'assets/icons', 'changelog.html', 'guide.html']) cpSync(entry, join(extension, entry), { recursive: true });
-        writeFileSync(join(extension, 'manifest.json'), JSON.stringify({ ...JSON.parse(readFileSync('manifest.json', 'utf8')), key }, null, 2));
+        for (const entry of ['index.html', 'js', 'css', 'assets/icons', 'changelog.html', 'guide.html']) cpSync(join('archive/legacy/repository-1.x', entry), join(extension, entry), { recursive: true });
+        writeFileSync(join(extension, 'manifest.json'), JSON.stringify({ ...JSON.parse(readFileSync('archive/legacy/repository-1.x/manifest.json', 'utf8')), key }, null, 2));
     } else {
         cpSync(DIST, extension, { recursive: true });
         writeFileSync(join(extension, 'manifest.json'), JSON.stringify({ ...JSON.parse(readFileSync(join(DIST, 'manifest.json'), 'utf8')), key }, null, 2));
@@ -352,3 +352,6 @@ note('Scope', 'what this rehearsal cannot show',
 console.log(`\nfixture: ${realFolders} real folders, ${validLinks} valid links, files in ${readdirSync(extension).length} top-level entries`);
 removeProfile(root);
 process.exit(report() ? 1 : 0);
+
+
+

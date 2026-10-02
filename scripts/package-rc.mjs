@@ -2,8 +2,9 @@
 // Nothing is uploaded or published; the zip stays in release/ (git-ignored).
 //
 //   npm run package
+import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
@@ -82,8 +83,11 @@ if (problems.length) {
 mkdirSync('release', { recursive: true });
 // A release build (display version = manifest version) is named by its version alone.
 const label = manifest.version_name === manifest.version ? manifest.version : `${String(manifest.version_name).replace(/\s+/g, '-')}-${manifest.version}`;
-const zip = resolve('release', `${manifest.name}-${label}.zip`);
-rmSync(zip, { force: true });
+const fingerprint = createHash('sha256');
+for (const file of [...files].sort((a, b) => a.path.localeCompare(b.path))) fingerprint.update(file.path).update(readFileSync(file.full));
+const suffix = fingerprint.digest('hex').slice(0, 12);
+const zip = resolve('release', `${manifest.name}-${label}-${suffix}.zip`);
+if (existsSync(zip)) throw new Error(`Package already exists; preserved without overwrite: ${zip}`);
 // Windows' bundled bsdtar writes a standard zip with forward-slash paths (Compress-Archive writes backslashes).
 execFileSync(join(process.env.SystemRoot ?? 'C:/Windows', 'System32/tar.exe'), ['-a', '-c', '-f', zip, '-C', resolve(DIST), ...readdirSync(DIST)]);
 const listed = execFileSync(join(process.env.SystemRoot ?? 'C:/Windows', 'System32/tar.exe'), ['-t', '-f', zip], { encoding: 'utf8' }).split(/\r?\n/).filter(Boolean);

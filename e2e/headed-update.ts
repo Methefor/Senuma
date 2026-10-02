@@ -26,9 +26,9 @@ const id = [...createHash('sha256').update(der).digest('hex').slice(0, 32)].map(
 function install(dir: string, version: 'legacy' | 'v2'): string {
     rmSync(dir, { recursive: true, force: true });
     mkdirSync(dir, { recursive: true });
-    if (version === 'legacy') for (const entry of ['index.html', 'js', 'css', 'assets/icons', 'changelog.html', 'guide.html']) cpSync(entry, join(dir, entry), { recursive: true });
+    if (version === 'legacy') for (const entry of ['index.html', 'js', 'css', 'assets/icons', 'changelog.html', 'guide.html']) cpSync(join('archive/legacy/repository-1.x', entry), join(dir, entry), { recursive: true });
     else cpSync(DIST, dir, { recursive: true });
-    const manifest = { ...JSON.parse(readFileSync(version === 'legacy' ? 'manifest.json' : join(DIST, 'manifest.json'), 'utf8')), key };
+    const manifest = { ...JSON.parse(readFileSync(version === 'legacy' ? 'archive/legacy/repository-1.x/manifest.json' : join(DIST, 'manifest.json'), 'utf8')), key };
     writeFileSync(join(dir, 'manifest.json'), JSON.stringify(manifest, null, 2));
     return `${manifest.version} (new tab page: ${manifest.chrome_url_overrides.newtab})`;
 }
@@ -120,3 +120,6 @@ await scenario('User had never answered the bubble in 1.x', false);
 note('Scope', 'what this does and does not show',
     'Chrome keys the bubble to the extension that controls the new tab page. This run updates an unpacked extension in place; a Chrome Web Store update is delivered differently and must be observed in a staged rollout.');
 process.exit(report() ? 1 : 0);
+
+
+

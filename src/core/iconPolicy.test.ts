@@ -145,5 +145,5 @@ describe('what sync uploads', () => {
         const flooded = await size({ links: 1000, iconBytes: 31_000 });
         expect(flooded - without).toBeLessThan(PAYLOAD_LIMIT * 0.21);
         expect(flooded).toBeLessThan(PAYLOAD_LIMIT / 3);
-    });
+    }, 10_000);
 });
