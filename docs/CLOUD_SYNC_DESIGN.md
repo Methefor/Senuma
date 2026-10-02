@@ -1,20 +1,26 @@
-# Senuma cloud sync — design proposal
+# Senuma cloud sync — design (for Senuma 2.1)
 
-Status: **proposal, nothing implemented.** No backend exists, no Firebase project was created or
-changed, nothing was published. Decided 2026-10-02: the 1.80 Firebase system is not a Senuma
-requirement; Senuma's sync is designed from first principles.
+Status: **design approved; phase 1 (pure core) written and tested; nothing connected.** No
+backend exists, no Firebase project was created or changed, nothing was published, and none of
+this code is in the Senuma 2.0 package. Decided 2026-10-02: the 1.80 Firebase system is not a
+Senuma requirement; Senuma's sync is designed from first principles.
 
 Items marked **[verify]** are facts to confirm in a prototype before they are relied on.
 
-## 0. Decisions needed from the owner
+## 0. Decisions (approved by the owner, 2026-10-02)
 
-| # | Decision | Recommendation |
-|---|---|---|
-| D1 | Does sync ship in 2.0 or later? | **Later (2.1).** 2.0 is a finished release candidate; sync is new surface, a new permission and new store declarations. |
-| D2 | What happens to the legacy cloud import already in RC 2? | **Remove it from 2.0.** With no users to migrate it is dead code that costs a store declaration (“Authentication information”). Removal is a code change, so the regression suite runs again. |
-| D3 | New Firebase project, or reuse `newtabfolders`? | **New project.** Clean rules, clean keys, and the old one can later be deleted whole. |
-| D4 | Can the recovery key be shown again on a device that is already syncing? | **Yes** (see 3.3). |
-| D5 | Database region (permanent once chosen) | An EU multi-region, unless there is a reason otherwise. |
+| # | Decision |
+|---|---|
+| D1 | Sync ships in **2.1**, not 2.0. |
+| D2 | The legacy cloud import is **removed** from 2.0 (done). |
+| D3 | A **new Firebase project**; `newtabfolders` is not reused. |
+| D4 | The recovery key **may be shown again** on a device that is already syncing, after explicit confirmation. |
+| D5 | Firestore in an **EU multi-region**. |
+
+Constraints added with the approval: plaintext metadata in Firestore kept to the minimum; no
+human-readable device names in plaintext; payload growth validated against the 512 kB limit and
+a chunking strategy documented before implementation (section 5); local-first and offline at
+all times; no analytics; no payments; no production Firebase changes yet.
 
 ## 1. Proposed architecture
 
@@ -86,17 +92,18 @@ database, not against the code that performs it. Copy must not claim more than t
 ### 3.2 Payload
 `plaintext = gzip(JSON(syncable state))` → AES-256-GCM, fresh random 96-bit nonce per write.
 Additional authenticated data binds each ciphertext to `uid | document path | keyId |
-revision | schemaVersion`, so the server cannot move a blob between accounts, documents or
-revisions. Client timestamps and the writing device's label live inside the ciphertext.
+revision`, so the server cannot move a blob between accounts, documents or revisions, or present
+an old copy as a newer one. The schema version, the writing device's id and its clock live
+inside the ciphertext.
 
-Still visible: sizes (optionally padded to 1 kB steps), timing, revision count.
+Still visible: sizes (padded to 1 kB steps), timing, revision count.
 
 ### 3.3 Lifecycle
 | Event | Behaviour |
 |---|---|
 | Turn sync on, first device | Generate WK and recovery key. Show the recovery key once with copy / save as file / print, and require confirmation (re-enter the check group) **before** anything is uploaded. |
 | New device | Sign in → wrapped key found → ask for the recovery key → unwrap → store non-extractable. Then first-sync choice (4.4). |
-| Show recovery key again (D4) | Recommended: keep the recovery key in local extension storage on synced devices so it can be shown again. It adds no exposure that matters — that device already holds the plaintext — and lost keys are the main way people lose access. Alternative: never store it; “new recovery key” then means rotation. |
+| Show recovery key again (D4, approved) | The recovery key is kept in local extension storage on synced devices and can be shown again **after an explicit confirmation step** (“Anyone who sees this key and can sign in to your Google account can read your synced data. Show it?”). That device already holds the plaintext, so this adds no exposure that matters, and lost keys are the main way people lose access. |
 | Sign out | Delete session tokens, WK and stored recovery key from this device; remove its device entry. **Local Spaces, links and settings are not touched.** Cloud copy stays. |
 | Pause | Stops network activity. Keys and session stay. |
 | Lost recovery key, a synced device still exists | Nothing is lost: that device shows the key (D4) or rotates to a new one. |
@@ -115,12 +122,17 @@ that it would be fake. Later phase.
 | Spaces, groups, links (title, address, icon choice) | Links opened from the page (“Continue”) and command-centre ranking |
 | Modes, dock | Recently closed pages, current tabs (never stored at all) |
 | Search providers and shortcuts | Anything typed in search |
-| Theme, packaged wallpaper choice, dim/blur, layout preferences, language | Restore points, the 1.x record, onboarding state |
-| | Per-device switches tied to a permission (recently closed pages on/off), icon-service choice |
+| Theme, background choice, dim/blur, layout preferences, language | Restore points, the 1.x record, onboarding state, which Mode is active |
+| | Per-device switches: recently closed pages on/off (permission-bound), icon-service choice (changes what the browser requests), motion |
 | | Session tokens, keys, device id |
 
-Implemented as an explicit allow-list projection of `AppState`, with a unit test that fails when
-a new field is added without being classified.
+Implemented in `src/sync/scope.ts` as an explicit classification of every `AppState` and `Prefs`
+field; adding a field without classifying it is a compile error.
+
+A background that is an uploaded picture syncs **only as a reference** (a random asset id): no
+pixels, preview, file name or size. A device that does not have the picture shows the theme
+backdrop and must not rewrite the setting (requirement for phase 4: the state sanitizer must
+tolerate a reference to a picture this device lacks, or two devices would overwrite each other).
 
 **Custom wallpapers: not synced in v1.** Images are megabytes; a Firestore document holds 1 MiB;
 Cloud Storage for Firebase needs a billing account on new projects **[verify]**. Other devices
@@ -179,21 +191,88 @@ dialog RC 2 already has for imports. Restore point first in every case.
 ## 5. Firestore schema (new project, nothing shared with legacy)
 
 ```
-vaults/{uid}/keys/{keyId}          v, salt (bytes), wrapped (bytes), createdAt, createdBy
-vaults/{uid}/workspace/current     format, schemaVersion, keyId, revision, deviceId,
-                                   updatedAt (server time), nonce (bytes), payload (bytes)
-vaults/{uid}/history/{revision}    same fields as current; last 5 kept, pruned by the client
-vaults/{uid}/devices/{deviceId}    keyId, createdAt, lastSyncAt, lastRevision,
-                                   nonce (bytes), label (bytes, encrypted name)
+vaults/{uid}/keys/{keyId}          v, salt (bytes), wrapped (bytes: nonce + wrapped key)
+vaults/{uid}/workspace/current     format, keyId, revision, updatedAt (server time), nonce (bytes), payload (bytes)
+vaults/{uid}/history/{revision}    same six fields; last 5 kept, pruned by the client
+vaults/{uid}/devices/{deviceId}    keyId, nonce (bytes), payload (bytes)
 ```
 
-- No plaintext user content anywhere. No e-mail in Firestore (it lives in Firebase Auth only).
-- Typical payload: a few kB compressed. Limit 512 kB per document by rule.
-- Indexes: none beyond the automatic ones (every read is by path; history is listed by id).
-- Free-tier budget (20 000 writes, 50 000 reads per day): a write costs about 3 document
-  writes (current + history + device); pushes are debounced and rule-limited; reads are throttled
-  to one every few minutes per device. Comfortable for hundreds of active users; beyond that the
-  quota, not billing, is the ceiling.
+### 5.1 What is readable on the server — the whole list
+
+| Field | Why the server needs it |
+|---|---|
+| `uid` (path) | Ownership rule. Assigned by Firebase Auth. |
+| `keyId`, `deviceId` | Random ids made on the device (80 and 128 random bits). `keyId` lets a device find the right wrapped key before it can decrypt anything. Nothing about the person or machine is in them. |
+| `format` | Envelope version, so a client knows whether it can parse the document at all. |
+| `revision` | Ordering rule: accepted only as previous + 1. |
+| `updatedAt` | Server time, for the write-rate rule. Shown to the person; decides nothing. |
+| `nonce`, `payload`, `salt`, `wrapped` | Random bytes and ciphertext. |
+| document sizes | Unavoidable; padded to 1 kB steps. |
+
+Moved **inside the ciphertext** compared with the first draft: schema version, writing device
+id, device clock, and everything about a device (its name, when it was added, when it last
+synced, its last revision). The server therefore cannot refuse a schema downgrade; clients do
+(a copy written by a newer Senuma is neither applied nor overwritten). There is no device name,
+e-mail address, user agent, app version or content-derived value in Firestore. The e-mail
+address exists only in Firebase Auth.
+
+No custom indexes: every read is by path; history is listed by document id.
+
+### 5.2 Payload growth (measured, `src/sync/budget.test.ts`)
+
+Encrypted size of the whole workspace document (gzip, padded, AES-GCM):
+
+| Workspace | Encrypted size | Share of 512 kB |
+|---|---|---|
+| 25 links | 3 kB | 0.6 % |
+| 100 links | 6 kB | 1.2 % |
+| 500 links | 24 kB | 4.7 % |
+| 1 000 links | 46 kB | 9 % |
+| 5 000 links | 223 kB | 44 % |
+| 10 000 links | 444 kB | 87 % |
+| 15 000 links | 665 kB | **over — refused** |
+| 1 000 links, each address 200 characters longer | 206 kB | 40 % |
+| 300 links, each with a 2 kB picture stored as its icon | 475 kB | 93 % |
+| 100 links, each with an 8 kB picture stored as its icon | 613 kB | **over — refused** |
+
+- Ordinary links cost about **45 bytes each**. The limit is reached near 11 500 links.
+- **The real risk is pictures stored inside links.** A link's icon may be a `data:` image, and
+  the state model puts no limit on its size (nor on title or address length). Such data does not
+  compress. A few hundred of them fill the limit.
+- Behaviour at the limit (implemented in the core): the document is **refused whole, never
+  truncated**; local data is unaffected; the engine reports “near the limit” from 75 %.
+- Sealing 10 000 links takes about 0.1 s, so encrypting on every change is affordable.
+- Free-tier budget (20 000 writes, 50 000 reads per day): a sync writes about 3 documents
+  (current, history, device); pushes are debounced and rule-limited; reads are throttled to one
+  every few minutes per device.
+
+### 5.3 Chunking strategy (documented now, built only if needed)
+
+Not needed for 2.1 at the sizes above; format 1 stays a single document. If real workspaces
+approach the limit, format 2 is:
+
+1. Encrypt exactly as now — **one** ciphertext, one nonce, one authentication tag over the
+   whole workspace. Chunking is storage layout, not cryptography; no chunk is separately
+   decryptable or separately forgeable.
+2. Cut the ciphertext into slices of at most 512 kB: `vaults/{uid}/workspace/chunks/{revision}-{n}`,
+   each holding only `bytes`.
+3. `workspace/current` becomes a manifest: `format: 2, keyId, revision, updatedAt, nonce,
+   chunks: n, bytes: total`. The authenticated context gains `chunks` and `bytes`, so slices
+   cannot be dropped, reordered or mixed across revisions without the whole failing to open.
+4. Slices and manifest are written in **one atomic commit**, manifest precondition as today
+   (revision + 1). The same commit deletes the previous revision's slices. A reader therefore
+   never sees a half-written revision. **[verify]** request-size ceiling of one commit
+   (documented as about 10 MiB), which bounds format 2 at roughly 16 slices ≈ 8 MB.
+5. Rules: slices are create/delete-only, owner-only, size-checked, and their id must carry the
+   manifest's next revision.
+6. History keeps manifests only; older slices are deleted with their revision (history of large
+   workspaces is then shorter — stated in the UI).
+7. Format 1 clients see `format: 2` and stop with “update Senuma to sync” (already implemented
+   in the revision model as `format-newer`).
+
+Before chunking, the cheaper measures are: (a) cap the size of a `data:` icon accepted into a
+link at save time (a product decision for all users, not only sync), and (b) warn at 75 %.
+Recommendation: do (a) and (b) in 2.1 and keep chunking in reserve.
 
 ## 6. Security Rules strategy
 
@@ -209,10 +288,10 @@ service cloud.firestore {
           && request.auth.token.firebase.sign_in_provider == 'google.com';
     }
     function envelope(d) {
-      return d.keys().hasOnly(['format','schemaVersion','keyId','revision','deviceId','updatedAt','nonce','payload'])
-          && d.format == 1 && d.schemaVersion is int && d.revision is int
-          && d.keyId is string && d.keyId.size() <= 40
-          && d.deviceId.matches('^[A-Za-z0-9_-]{16,40}$')
+      return d.keys().hasOnly(['format','keyId','revision','updatedAt','nonce','payload'])
+          && d.keys().hasAll(['format','keyId','revision','updatedAt','nonce','payload'])
+          && d.format == 1 && d.revision is int
+          && d.keyId.matches('^[a-z0-9]{8,40}$')
           && d.updatedAt == request.time
           && d.nonce is bytes && d.nonce.size() == 12
           && d.payload is bytes && d.payload.size() <= 512 * 1024;
@@ -222,23 +301,25 @@ service cloud.firestore {
       allow create: if owner(uid) && envelope(request.resource.data) && request.resource.data.revision == 1;
       allow update: if owner(uid) && envelope(request.resource.data)
                     && request.resource.data.revision == resource.data.revision + 1
-                    && request.resource.data.schemaVersion >= resource.data.schemaVersion
                     && request.time > resource.data.updatedAt + duration.value(2, 's');
       allow delete: if owner(uid);
     }
     // keys: get/list/create/delete by owner, never update; size-checked.
     // history: get/list/create/delete by owner, never update; same envelope check.
-    // devices: get/list/create/update/delete by owner; size-checked.
+    // devices: get/list/create/update/delete by owner; only keyId, nonce, payload; size-checked.
     match /{document=**} { allow read, write: if false; }
   }
 }
 ```
 
+The same write rule exists as a pure function (`writeAllowed` in `src/sync/revision.ts`) with
+tests; the emulator suite must agree with it case by case.
+
 **Emulator tests** (local Firestore emulator + rules unit-testing library; development
 dependency only, nothing deployed, no billing):
 signed-out denied everywhere · another account denied on every path · non-Google sign-in denied ·
-create only at revision 1 · update only at +1 · skipped or repeated revision denied · schema
-downgrade denied · extra field denied · oversized payload denied · wrong nonce length denied ·
+create only at revision 1 · update only at +1 · skipped or repeated revision denied · extra or
+missing field denied · readable key id denied · oversized payload denied · wrong nonce length denied ·
 client-chosen timestamp denied · two writes inside the rate window denied · key and history
 documents immutable · owner can delete everything · undeclared paths denied.
 
@@ -318,7 +399,7 @@ Senuma sync never reads, links to or migrates from the old project.
 | Phase | Content | Exit test |
 |---|---|---|
 | 0 | Owner decisions D1–D5; owner creates the new Firebase project (free plan) and OAuth client | — |
-| 1 | Pure core, no network: syncable projection, 3-way merge, conflict model, envelope encryption, key wrap | Unit tests incl. known-answer vectors and merge properties |
+| 1 — **done** | Pure core, no network: `src/sync/` scope, merge, revision, crypto | 76 unit tests: fixed vector, merge properties over 600 random edit runs, threat-model tests, payload budget |
 | 2 | Security Rules + emulator test suite | All rule tests pass locally |
 | 3 | Sign-in (optional `identity`), REST client, against the emulator | Sign in/out; session refresh |
 | 4 | Engine in the service worker, state machine, restore points, history | Two browser profiles against the emulator: edit, offline edit, concurrent edit, conflict |
@@ -328,6 +409,35 @@ Senuma sync never reads, links to or migrates from the old project.
 | later | Device-to-device approval; wallpaper sync | — |
 
 Startup bundle stays as it is: all of this loads on demand.
+
+## 10a. Phase 1 as built (`src/sync/`, not imported by the product)
+
+| File | What it is |
+|---|---|
+| `scope.ts` | What is uploaded and what stays local, field by field; `toSyncable` / `applySyncable` |
+| `merge.ts` | Three-way merge with reported conflicts and per-conflict resolutions |
+| `revision.ts` | The envelope, the next-step decision (`plan`), checks on a decrypted copy, the write rule |
+| `crypto.ts` | Recovery key, key wrapping, sealing and opening documents, size limit |
+| `fixtures.ts` | Repeatable test workspaces of any size |
+
+Verified: the Senuma 2.0 build output is byte-identical with and without this folder.
+
+Tested behaviour, in the tests' own words: a change on one side is taken exactly; changes that
+do not collide are both kept; the same link renamed differently, an edit against a deletion, a
+link moved to two places and two different reorderings are reported as conflicts and decided by
+nobody; a Space deleted on one side while the other added to it is one question; a first sync
+is never combined automatically; a copy older than one already seen, a vanished copy, an
+unknown key or a newer format stops sync; stored bytes contain no address, title, Space name or
+device label; one changed bit, another account, another document path, another key id or
+another revision makes a document unreadable; a mistyped recovery key is caught before use.
+
+Found while building, to settle before phase 4:
+- Icons stored as `data:` images are unbounded (5.2).
+- The state sanitizer's handling of a background that references a picture this device lacks (3.5).
+- The first-sync choice should reuse the existing idempotent merge (duplicates by address
+  skipped), since two devices with no common past have different ids for the same links.
+- Settling one conflict can raise another (keeping a Space brings its own questions); the
+  conflict screen must loop until none remain. The core supports this.
 
 ## 11. Risks and trade-offs
 
