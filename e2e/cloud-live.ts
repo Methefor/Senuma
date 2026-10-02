@@ -45,9 +45,10 @@ for (const name of readdirSync(original)) if (name !== 'LOCK') cpSync(join(origi
 // Senuma under the published extension ID, so it opens the copied 1.x storage.
 // The published build's files (code only) supply the store key; any profile that has it installed will do.
 const builds = [join(userData, profileName), join(chromeData, 'Profile 1'), join(chromeData, 'Default')].map(p => join(p, 'Extensions', ID)).find(p => existsSync(p));
-const live = builds ? join(builds, readdirSync(builds).sort().at(-1)!) : null;
+const saved = 'release/legacy/NewTabFolders-1.80-published';
+const live = builds ? join(builds, readdirSync(builds).sort().at(-1)!) : existsSync(saved) ? saved : null;
 const key = live ? (JSON.parse(readFileSync(join(live, 'manifest.json'), 'utf8')).key as string | undefined) : undefined;
-if (!key) throw new Error('The published build (with its key) was not found in that profile.');
+if (!key) throw new Error('The published build (with its key) was not found in that profile or in release/legacy.');
 const extension = join(root, 'extension');
 cpSync(DIST, extension, { recursive: true });
 const manifest = JSON.parse(readFileSync(join(DIST, 'manifest.json'), 'utf8')) as { version: string; permissions: string[]; host_permissions?: string[] };

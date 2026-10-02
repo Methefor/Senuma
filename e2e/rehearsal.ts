@@ -27,7 +27,7 @@ mkdirSync(profile);
  * (pass its folder in NTF_LIVE_BUILD to override). It carries the store key, so the rehearsal
  * runs under the real extension ID. Without it, the 1.x files in the repository root are used.
  */
-const LIVE_CANDIDATES = [process.env.NTF_LIVE_BUILD, ...['Profile 1', 'Default'].map(p => join(process.env.LOCALAPPDATA ?? '', 'Google/Chrome/User Data', p, 'Extensions/oghlifenjhpbebcdeboejbmemelkfobe'))]
+const LIVE_CANDIDATES = [process.env.NTF_LIVE_BUILD, 'release/legacy/NewTabFolders-1.80-published', ...['Profile 1', 'Default'].map(p => join(process.env.LOCALAPPDATA ?? '', 'Google/Chrome/User Data', p, 'Extensions/oghlifenjhpbebcdeboejbmemelkfobe'))]
     .filter((p): p is string => !!p && existsSync(p))
     .map(p => (existsSync(join(p, 'manifest.json')) ? p : join(p, readdirSync(p).sort().at(-1)!)));
 const LIVE = LIVE_CANDIDATES[0];
