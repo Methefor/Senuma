@@ -61,7 +61,7 @@ async function boot(): Promise<void> {
         saveState(app.get()).catch(() => toast(t('error.save')));
     }
     // The size limits changed something in a setup saved before them: say what, once.
-    if (resolved.report) void import('./app/limitsNotice').then(module => toast(module.limitsNotice(resolved.report!)));
+    if (resolved.report) void import('./app/limitsNotice').then(module => toast(module.limitsNotice(resolved.report!, true)));
     // Only on the upgrade itself: bring a picture 1.x stored over to the wallpaper library.
     if (source === 'legacy') void import('./app/legacyBackground').then(module => module.migrateLegacyPicture());
 

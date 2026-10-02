@@ -4,7 +4,8 @@ import { importBackup, mergeBackup } from './backupImport';
 import { exportBackup } from './backup';
 import { emptyState } from './defaults';
 import { seeded } from './fixtures';
-import { ICON_CAP, ICON_TOTAL, capIcons, embeddedTotal, settleIcons } from './iconPolicy';
+import { ICON_CAP, ICON_TOTAL, capIcons, embeddedTotal } from './iconPolicy';
+import { settleIcons } from './iconSettle';
 import { fromLegacy } from './legacyConvert';
 import { LIMITS, bounded, findings, newReport } from './limits';
 import * as ops from './ops';
@@ -137,7 +138,16 @@ describe('stored and imported data', () => {
         const { raw, a, b, c, d, space } = oversized();
         const report = newReport();
         const state = sanitize(raw, { report });
-        expect(report).toEqual({ linksSkipped: 1, titlesReplaced: 1, namesReplaced: 3, iconsReencoded: 0, iconsDropped: 1 });
+        expect(report).toMatchObject({ linksSkipped: 1, titlesReplaced: 1, namesReplaced: 3, iconsReencoded: 0, iconsDropped: 1 });
+        // Every text value that was not kept is in the report exactly as it was, so it can be given back.
+        expect(report.originals).toEqual(expect.arrayContaining([
+            { kind: 'title', of: normalizeUrl(raw.items[a]!.url), original: raw.items[a]!.title },
+            { kind: 'link', of: raw.items[b]!.title, original: raw.items[b]!.url },
+            { kind: 'name', of: 'space', original: raw.spaces[space]!.name },
+            { kind: 'name', of: 'note', original: raw.spaces[space]!.note },
+            { kind: 'name', of: 'group', original: raw.spaces[space]!.groups[1]!.name },
+        ]));
+        expect(report.originals).toHaveLength(5);
         expect(state.items[b]).toBeUndefined(); // the link with the overlong address is left out, not shortened
         expect(state.items[a]!.title).toBe(titleFromUrl(raw.items[a]!.url));
         expect(state.items[a]!.url).toBe(normalizeUrl(raw.items[a]!.url));
@@ -223,8 +233,17 @@ describe('stored and imported data', () => {
         const incoming = sanitize(workspace({ links: 6, spaces: 1, iconBytes: 30_000 }, 2));
         expect(embeddedTotal(current.items)).toBeGreaterThan(ICON_TOTAL * 0.8);
         const merged = mergeBackup(current, incoming).state;
-        expect(Object.keys(merged.items)).toHaveLength(12);
+        const result = mergeBackup(current, incoming);
+        expect(Object.keys(merged.items)).toHaveLength(12); // no link is ever dropped for this reason
+        expect(result.links).toBe(6);
         expect(embeddedTotal(merged.items)).toBeLessThanOrEqual(ICON_TOTAL);
+        // The count is exact: incoming links that had an icon and now show their site's icon.
+        const hadIcon = new Set(Object.values(incoming.items).filter(item => item.icon).map(item => item.url));
+        const lostIcon = Object.values(result.state.items).filter(item => hadIcon.has(item.url) && !item.icon);
+        expect(hadIcon.size).toBe(4);
+        expect(result.iconsDropped).toBe(lostIcon.length);
+        expect(result.iconsDropped).toBe(4);
+        expect(mergeBackup(sanitize(workspace({ links: 3, spaces: 1 }, 5)), sanitize(workspace({ links: 3, spaces: 1 }, 6))).iconsDropped).toBe(0);
         expect(capIcons(merged).dropped).toEqual([]);
     });
 });

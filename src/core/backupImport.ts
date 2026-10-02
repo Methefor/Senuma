@@ -43,10 +43,12 @@ export function importBackup(text: string, options: ValidationOptions = {}): App
  * matches an existing one receives the links it does not already have; other Spaces are
  * appended. Modes, dock and preferences of the current setup are kept.
  */
-export function mergeBackup(current: AppState, incoming: AppState): { state: AppState; spaces: number; links: number } {
+export function mergeBackup(current: AppState, incoming: AppState): { state: AppState; spaces: number; links: number; iconsDropped: number } {
     let state = current;
     let spaces = 0;
     let links = 0;
+    // Links that arrived with an icon and were added without it, because the icon limits were reached. The link itself is always added.
+    let iconsDropped = 0;
     // Two Spaces can share a name. The first one receives new links, and a link already in any
     // Space of that name counts as present, so merging the same setup twice adds nothing.
     const key = (name: string) => name.trim().toLowerCase();
@@ -80,6 +82,7 @@ export function mergeBackup(current: AppState, incoming: AppState): { state: App
                 state = added.state;
                 existing.add(item.url);
                 links++;
+                if (item.icon && !state.items[added.id]!.icon) iconsDropped++;
             }
         }
         // A newly created Space starts with an untitled group; drop it if it stayed empty.
@@ -89,6 +92,6 @@ export function mergeBackup(current: AppState, incoming: AppState): { state: App
             state = { ...state, spaces: { ...state.spaces, [targetId]: { ...space, groups: space.groups.slice(1) } } };
         }
     }
-    return { state, spaces, links };
+    return { state, spaces, links, iconsDropped };
 }
 

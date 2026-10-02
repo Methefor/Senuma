@@ -29,6 +29,21 @@ export function bounded(value: unknown, max: number): string | null {
 /** Text that was given but is over its limit. */
 export const tooLong = (value: unknown, max: number): boolean => typeof value === 'string' && value.trim().length > max;
 
+/** A value the limits did not keep, exactly as it was, so that it can be given back. */
+export interface Original {
+    /** `link`: a link left out (its address). `title`: a link's title. `name`: a name or label. */
+    kind: 'link' | 'title' | 'name';
+    /** What it belonged to: the link's title or address, or which kind of name it was. */
+    of: string;
+    original: string;
+}
+
+/** Originals set aside by one pass, as stored. */
+export interface OriginalsRecord {
+    v: 1;
+    batches: { at: number; originals: Original[] }[];
+}
+
 /** What validation changed or left out, for telling the person. */
 export interface ValidationReport {
     /** Links left out: no usable address, or an address over the limit. */
@@ -41,9 +56,11 @@ export interface ValidationReport {
     iconsReencoded: number;
     /** Icons over the limits that could not be made to fit; those links show their site's icon. */
     iconsDropped: number;
+    /** Every text value that was replaced or left out, as it was. */
+    originals: Original[];
 }
 
-export const newReport = (): ValidationReport => ({ linksSkipped: 0, titlesReplaced: 0, namesReplaced: 0, iconsReencoded: 0, iconsDropped: 0 });
+export const newReport = (): ValidationReport => ({ linksSkipped: 0, titlesReplaced: 0, namesReplaced: 0, iconsReencoded: 0, iconsDropped: 0, originals: [] });
 
 export const findings = (report: ValidationReport): number => report.linksSkipped + report.titlesReplaced + report.namesReplaced + report.iconsReencoded + report.iconsDropped;
 

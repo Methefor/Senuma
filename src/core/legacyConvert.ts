@@ -52,7 +52,10 @@ export function fromLegacy(raw: unknown, options: ValidationOptions = {}): AppSt
             summary.skipped++;
             continue;
         }
-        if (report && tooLong(folder.name, LIMITS.name)) report.namesReplaced++;
+        if (report && tooLong(folder.name, LIMITS.name)) {
+            report.namesReplaced++;
+            report.originals.push({ kind: 'name', of: 'space', original: folder.name as string });
+        }
         const groups: SpaceGroup[] = [{ id: newId(), name: '', itemIds: [] }];
         const votes = new Map<string, number>();
         for (const link of Array.isArray(folder.links) ? folder.links : []) {
@@ -63,7 +66,10 @@ export function fromLegacy(raw: unknown, options: ValidationOptions = {}): AppSt
             // Over the limit: not kept in part. A link gets its site's name, a header becomes an untitled section.
             const most = link.type === 'header' ? LIMITS.name : LIMITS.title;
             const long = tooLong(link.title, most);
-            if (long && report) report[link.type === 'header' ? 'namesReplaced' : 'titlesReplaced']++;
+            if (long && report) {
+                report[link.type === 'header' ? 'namesReplaced' : 'titlesReplaced']++;
+                report.originals.push({ kind: link.type === 'header' ? 'name' : 'title', of: link.type === 'header' ? 'group' : String(link.url ?? ''), original: link.title as string });
+            }
             const title = bounded(link.title, most) ?? '';
             // Legacy "headers" were pseudo-links that split a folder into sections.
             if (link.type === 'header') {

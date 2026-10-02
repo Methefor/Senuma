@@ -33,8 +33,8 @@ export const STORAGE_KEYS = {
     /** A state written by a newer release, kept untouched if an older build has to take over. */
     newerState: 'bos.state.newer',
     legacyData: 'ntf_data',
-    /** The stored setup exactly as it was before size limits changed it, kept once so nothing is lost by the upgrade. */
-    beforeLimits: 'bos.state.before-limits',
+    /** Text values the size limits replaced or left out, exactly as they were, until the person removes the record. */
+    limitsOriginals: 'bos.limits.originals',
     /** What this device remembers that is not part of the setup and is never uploaded. */
     device: 'bos.device',
 } as const;

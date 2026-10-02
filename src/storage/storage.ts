@@ -8,7 +8,7 @@ import { inExtension } from '../browser/result';
 import { sanitizeSnapshots } from '../core/backup';
 import { capIcons } from '../core/iconPolicy';
 import { emptyState } from '../core/defaults';
-import { findings, newReport, type ValidationReport } from '../core/limits';
+import { findings, newReport, type Original, type ValidationReport } from '../core/limits';
 import { upgrade, type Resolved } from '../core/migrate';
 import { sanitize } from '../core/sanitize';
 import { SCHEMA_VERSION, type AppState, type Snapshot } from '../core/types';
@@ -23,6 +23,12 @@ export function readCachedState(): AppState | null {
  * this build can, and the original is set aside before this build writes over it.
  */
 let newerOriginal: unknown;
+
+/**
+ * Text the size limits replaced in the stored setup, not yet written to the record of originals.
+ * While this is set, the stored setup still holds the only copy of those values.
+ */
+let pendingOriginals: Original[] | undefined;
 
 export async function loadState(): Promise<Resolved> {
     const stored = await kv.get([STORAGE_KEYS.state, STORAGE_KEYS.legacyData]);
@@ -40,20 +46,20 @@ export async function loadState(): Promise<Resolved> {
         // Only an install that still has 1.x data pays for the converter.
         resolved = (await import('../core/legacyConvert')).resolveState(raw, legacy, options);
     }
-    return withinLimits(resolved, report, raw);
+    return withinLimits(resolved, report);
 }
 
 /**
  * The one-time pass over a setup saved before the size limits existed (and the guard for any
  * later one that breaks them). Once a setup is within the limits this does nothing, so it needs
- * no marker. What it changes is reported, and the stored original is set aside first.
+ * no marker. What it changes is reported, and every text value it replaces or leaves out is
+ * written to a record of originals BEFORE the changed setup may be saved (see saveState).
  */
-async function withinLimits(resolved: Resolved, report: ValidationReport, original: unknown): Promise<Resolved> {
+async function withinLimits(resolved: Resolved, report: ValidationReport): Promise<Resolved> {
     let { state } = resolved;
     if (capIcons(state).dropped.length > 0) state = await (await import('../app/icons')).settleSetup(state, report);
     if (findings(report) === 0) return { ...resolved, state };
-    // Kept once, untouched, in case something the limits removed is wanted back. Best effort: a full store must not stop the page.
-    if (original !== undefined) await kv.set({ [STORAGE_KEYS.beforeLimits]: original }).catch(() => undefined);
+    if (report.originals.length) pendingOriginals = [...(pendingOriginals ?? []), ...report.originals];
     // Newer than every copy made before the pass, so this is the one that is shown and saved.
     return { ...resolved, state: { ...state, updatedAt: Date.now() }, report };
 }
@@ -66,6 +72,11 @@ export async function saveState(state: AppState): Promise<void> {
         // If the copy cannot be kept, the newer data must not be overwritten: fail the save.
         await kv.set({ [STORAGE_KEYS.newerState]: newerOriginal });
         newerOriginal = undefined;
+    }
+    if (pendingOriginals) {
+        // The same rule: if the originals cannot be kept, the setup that no longer has them is not written.
+        await (await import('./originals')).keepOriginals(pendingOriginals);
+        pendingOriginals = undefined;
     }
     if (inExtension) writeLocal(STORAGE_KEYS.state, state);
     await kv.set({ [STORAGE_KEYS.state]: state });

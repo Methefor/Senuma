@@ -164,11 +164,15 @@ export function commandLabels(): CommandLabels {
     };
 }
 
-export function downloadBackup(): void {
-    const blob = new Blob([exportBackup(app.get())], { type: 'application/json' });
+/** Hands the person a file made in the page. Nothing is uploaded. */
+export function downloadText(text: string, name: string): void {
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${BRAND.backupFilePrefix}-${new Date().toISOString().slice(0, 10)}.json`;
+    link.href = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    link.download = name;
     link.click();
     URL.revokeObjectURL(link.href);
+}
+
+export function downloadBackup(): void {
+    downloadText(exportBackup(app.get()), `${BRAND.backupFilePrefix}-${new Date().toISOString().slice(0, 10)}.json`);
 }

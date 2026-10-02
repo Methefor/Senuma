@@ -2,7 +2,7 @@ import { BrandLockup } from '../../ui/BrandMark';
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import {
-    SETTINGS_SECTIONS, deleteSnapshot, downloadBackup, ensureSnapshots, providerLabel, removeSpaceWithUndo, replaceSetup, type SettingsSection,
+    SETTINGS_SECTIONS, deleteSnapshot, downloadBackup, downloadText, ensureSnapshots, providerLabel, removeSpaceWithUndo, replaceSetup, type SettingsSection,
 } from '../../app/actions';
 import { settleSetup } from '../../app/icons';
 import { limitsNotice } from '../../app/limitsNotice';
@@ -11,7 +11,7 @@ import { readBookmarks } from '../../browser/bookmarks';
 import { releaseClosedTabsAccess, requestClosedTabsAccess } from '../../browser/sessions';
 import { importBackup, mergeBackup } from '../../core/backupImport';
 import { emptyState, newId } from '../../core/defaults';
-import { LIMITS, findings, newReport } from '../../core/limits';
+import { LIMITS, findings, newReport, type OriginalsRecord } from '../../core/limits';
 import {
     addMode, captureMode, isValidTemplate, parseAliases, removeMode, removeProvider, restoreMode, setActiveMode, setModeDock, setPrefs, shiftSpace,
     updateMode, updateModeDock, upsertProvider,
@@ -22,6 +22,7 @@ import { themeById } from '../../core/themes';
 import type { AppState, IconSource, Language, Mode, Prefs } from '../../core/types';
 import { t, type MessageKey } from '../../i18n';
 import { MODIFIER_KEY } from '../command/Launcher';
+import { clearOriginals, countOriginals, loadOriginals } from '../../storage/originals';
 import { app, openMenuBelow, setUi, snapshots, toast, update, useStore } from '../../storage/store';
 import { Icon, SPACE_GLYPHS } from '../../ui/Icon';
 import { Overlay } from '../../ui/Overlay';
@@ -343,6 +344,28 @@ function Backups() {
     );
 }
 
+/** Text the size limits replaced or left out, kept exactly as it was until the person removes it. Shown only when there is any. */
+function Originals() {
+    const [record, setRecord] = useState<OriginalsRecord | null>(null);
+    useEffect(() => {
+        void loadOriginals().then(setRecord).catch(() => undefined);
+    }, []);
+    if (!record?.batches.length) return null;
+    const counts = { titles: countOriginals(record, 'title'), names: countOriginals(record, 'name'), links: countOriginals(record, 'link') };
+    return (
+        <Row label={t('limits.kept')} hint={t('limits.keptHint', counts)}>
+            <button type="button" class="button" onClick={() => downloadText(JSON.stringify(record, null, 2), 'senuma-original-values.json')}>{t('limits.download')}</button>
+            <button type="button" class="button"
+                onClick={async () => {
+                    await clearOriginals().catch(() => toast(t('error.save')));
+                    setRecord(await loadOriginals());
+                }}>
+                {t('limits.remove')}
+            </button>
+        </Row>
+    );
+}
+
 function Data({ state }: { state: AppState }) {
     const fileRef = useRef<HTMLInputElement>(null);
     const [proposals, setProposals] = useState<Proposal[] | null>(null);
@@ -382,7 +405,7 @@ function Data({ state }: { state: AppState }) {
                         onClick={async () => {
                             // A restore point first, so a merge can be undone like a replace.
                             const merged = mergeBackup(app.get(), incoming);
-                            if (await replaceSetup(merged.state, 'import')) toast(t('data.merged', { spaces: merged.spaces, links: merged.links }));
+                            if (await replaceSetup(merged.state, 'import')) toast([t('data.merged', { spaces: merged.spaces, links: merged.links }), ...(merged.iconsDropped ? [t('limits.iconsDropped', { n: merged.iconsDropped })] : [])].join(' '));
                             setIncoming(null);
                         }}>
                         <Icon name="plus" size={18} />
@@ -428,6 +451,7 @@ function Data({ state }: { state: AppState }) {
                         event.currentTarget.value = '';
                     }} />
             </Row>
+            <Originals />
             <h3>{t('data.snapshots')}</h3>
             <p class="note">{t('data.snapshotsHint')}</p>
             <Backups />

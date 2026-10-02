@@ -3,7 +3,8 @@
  * data, and loading a setup from before the limits. The service worker never does this.
  * The encoder is loaded only when a picture actually has to be made smaller.
  */
-import { ICON_TOTAL, capIcons, embeddedTotal, iconFits, isEmbedded, settleIcon, settleIcons } from '../core/iconPolicy';
+import { ICON_TOTAL, capIcons, embeddedTotal, iconFits, isEmbedded } from '../core/iconPolicy';
+import { settleIcon, settleIcons } from '../core/iconSettle';
 import type { ValidationReport } from '../core/limits';
 import type { AppState, ID } from '../core/types';
 

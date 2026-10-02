@@ -70,9 +70,20 @@ await check('Existing setup', 'the first open after the limits arrive brings it 
     return `${(picture.length / 1024).toFixed(0)} KB picture → ${(icon.length / 1024).toFixed(1)} KB WebP; said: “${said.slice(0, 230)}”`;
 });
 
-await check('Existing setup', 'the setup as it was is kept once, untouched', async () => {
-    const kept = await readStorage<AppState>(session, 'bos.state.before-limits');
-    expect(!!kept && kept.items[withPicture!]!.icon === picture && kept.items[withLongTitle!]!.title === longTitle, 'the original was not set aside intact');
+await check('Existing setup', 'the replaced title is kept exactly as it was, and Settings offers it back with a count', async () => {
+    const record = await readStorage<{ batches: { originals: { kind: string; of: string; original: string }[] }[] }>(session, 'bos.limits.originals');
+    const originals = record?.batches.flatMap(batch => batch.originals) ?? [];
+    expect(originals.length === 1 && originals[0]!.kind === 'title' && originals[0]!.original === longTitle, `record: ${JSON.stringify(originals).slice(0, 200)}`);
+    await page.locator('.topbar button').last().click();
+    await page.locator('.settings-nav button', { hasText: 'Data' }).click();
+    const row = page.locator('.row', { hasText: 'Original values kept' });
+    await row.waitFor({ timeout: 5000 });
+    const said = (await row.innerText()).replace(/\s+/g, ' ');
+    expect(/1 titles, 0 names, 0 links/.test(said), `row: ${said}`);
+    const [download] = await Promise.all([page.waitForEvent('download'), row.locator('.button').first().click()]);
+    expect(download.suggestedFilename() === 'senuma-original-values.json', download.suggestedFilename());
+    await page.keyboard.press('Escape');
+    return said.slice(0, 200);
 });
 
 await check('Existing setup', 'the pass happens once: reopening changes nothing and says nothing', async () => {
@@ -113,7 +124,7 @@ await check('Saving a link', 'something that cannot be made to fit is not stored
     await page.locator('.overlay-form input').nth(0).fill('broken-icon.example');
     await page.locator('.overlay-form input').nth(2).fill(notAPicture);
     await page.locator('.overlay-form button[type=submit]').click();
-    await page.locator('.toast', { hasText: 'small enough' }).waitFor({ timeout: 8000 });
+    await page.locator('.toast', { hasText: 'too large for an icon' }).waitFor({ timeout: 8000 });
     const item = await waitForState(session, (s: AppState) => Object.values(s.items).find(entry => entry.url.includes('broken-icon.example')));
     expect(!('icon' in item), 'an icon was stored');
 });
@@ -141,7 +152,7 @@ await check('Import', 'a backup that breaks the limits is brought within them be
     const toast = page.locator('.toast', { hasText: 'size limits' });
     await toast.waitFor({ timeout: 10_000 });
     const said = (await toast.innerText()).replace(/\s+/g, ' ');
-    expect(/too long: 1./.test(said) && /made smaller: 1./.test(said), `notice: ${said}`);
+    expect(/too long\): 1\./.test(said) && /made smaller: 1\./.test(said) && !/Settings/.test(said), `notice: ${said}`);
     await page.locator('.choice').nth(1).click(); // replace
     const state = await waitForState(session, (s: AppState) => (s.items[first!] ? s : null));
     expect(!state.items[second!], 'the link with the overlong address was imported');

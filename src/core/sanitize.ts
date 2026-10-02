@@ -26,8 +26,11 @@ const isId = (v: unknown): v is ID => typeof v === 'string' && /^[\w-]{1,64}$/.t
 /** Short internal tokens (a glyph, a theme or template id). Anything longer is not one. */
 const token = (v: unknown, fallback = ''): string => (typeof v === 'string' && v.length <= 64 ? v : fallback);
 /** A name within its limit, or the default; a name over the limit is counted, never shortened. */
-function named(value: unknown, max: number, report?: ValidationReport): string {
-    if (report && tooLong(value, max)) report.namesReplaced++;
+function named(value: unknown, max: number, of: string, report?: ValidationReport): string {
+    if (report && tooLong(value, max)) {
+        report.namesReplaced++;
+        report.originals.push({ kind: 'name', of, original: value as string });
+    }
     return bounded(value, max) ?? '';
 }
 
@@ -38,10 +41,17 @@ function sanitizeItems(raw: unknown, { report, keepIcons }: ValidationOptions): 
         if (!isId(id) || !isDict(value)) continue;
         const url = normalizeUrl(value.url);
         if (!url) {
-            if (report && str(value.url).trim()) report.linksSkipped++;
+            if (report && str(value.url).trim()) {
+                report.linksSkipped++;
+                report.originals.push({ kind: 'link', of: bounded(value.title, LIMITS.title) ?? '', original: str(value.url) });
+                if (tooLong(value.title, LIMITS.title)) report.originals.push({ kind: 'title', of: '', original: str(value.title) });
+            }
             continue;
         }
-        if (report && tooLong(value.title, LIMITS.title)) report.titlesReplaced++;
+        if (report && tooLong(value.title, LIMITS.title)) {
+            report.titlesReplaced++;
+            report.originals.push({ kind: 'title', of: url, original: str(value.title) });
+        }
         // No title: the address stands in when it is short enough to be one, else the site's name.
         const title = bounded(value.title, LIMITS.title) || (url.length <= LIMITS.title ? url : titleFromUrl(url));
         const item: Item = { id, title: tooLong(value.title, LIMITS.title) ? titleFromUrl(url) : title, url, createdAt: num(value.createdAt, 0) };
@@ -71,18 +81,17 @@ function sanitizeSpaces(raw: unknown, items: Record<ID, Item>, report?: Validati
             });
             const groupId = isId(g.id) && !groupIds.has(g.id) ? g.id : newId();
             groupIds.add(groupId);
-            if (report && tooLong(g.name, LIMITS.name)) report.namesReplaced++;
-            return [{ id: groupId, name: tooLong(g.name, LIMITS.name) ? '' : str(g.name), itemIds }];
+            return [{ id: groupId, name: tooLong(g.name, LIMITS.name) ? named(g.name, LIMITS.name, 'group', report) : str(g.name), itemIds }];
         });
         const space: Space = {
             id,
-            name: named(value.name, LIMITS.name, report) || 'Untitled',
+            name: named(value.name, LIMITS.name, 'space', report) || 'Untitled',
             glyph: token(value.glyph, 'folder') || 'folder',
             accent: /^#[\da-f]{6}$/i.test(str(value.accent)) ? str(value.accent) : '#7C9CF0',
             groups: groups.length ? groups : [{ id: newId(), name: '', itemIds: [] }],
             createdAt: num(value.createdAt, 0),
         };
-        const note = named(value.note, LIMITS.label, report);
+        const note = named(value.note, LIMITS.label, 'note', report);
         if (note) space.note = note;
         if (token(value.templateId)) space.templateId = token(value.templateId);
         spaces[id] = space;
@@ -122,7 +131,7 @@ function sanitizeProviders(raw: unknown, report?: ValidationReport): SearchProvi
         if (providers.some(b => b.id === id)) continue;
         const urlTemplate = str(p.urlTemplate).trim();
         if (!isValidTemplate(urlTemplate)) continue;
-        providers.push({ id, name: named(p.name, LIMITS.label, report) || id, urlTemplate, aliases: aliasesOf(p, []) });
+        providers.push({ id, name: named(p.name, LIMITS.label, 'search provider', report) || id, urlTemplate, aliases: aliasesOf(p, []) });
     }
     return providers;
 }
@@ -173,7 +182,7 @@ export function sanitize(raw: unknown, options: ValidationOptions = {}): AppStat
             if (!isId(id) || !isDict(value)) continue;
             const mode: Mode = {
                 id,
-                name: named(value.name, LIMITS.name, report) || 'Mode',
+                name: named(value.name, LIMITS.name, 'mode', report) || 'Mode',
                 glyph: token(value.glyph, 'layers') || 'layers',
                 spaceIds: [...new Set(arr(value.spaceIds).filter((x): x is ID => typeof x === 'string' && Object.hasOwn(spaces, x)))],
             };
