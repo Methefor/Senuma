@@ -93,7 +93,15 @@ folders.push({ id: 'f1', name: 'AI Tools', color: 'blue', links: [link('dup', 'C
 folders.push({ id: 'f-empty', name: '', links: [] });
 
 (folders[1] as { pinned?: boolean }).pinned = true;
-const LEGACY_DATA = { licenseKey: 'TEST-KEY-0000', quickBarLinks: [{ id: 'q1', title: 'GitHub', url: 'https://github.com', icon: '' }, { id: 'q2', title: 'Spotify', url: 'https://open.spotify.com', icon: '' }], updatedAt: 1, folders, isPro: true, proExpiresAt: Date.now() + 200 * 86_400_000, theme: 'light', tutorialCompleted: true, sidebarCollapsed: true, tabsSortOrder: 'recent', language: 'TR' };
+// A real (tiny) picture, stored the way 1.8 stores an uploaded background.
+const PICTURE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+/** What the mocked cloud holds for this account: everything on this device plus one folder from "another device". */
+const CLOUD_EXTRA = { id: 'cloud1', name: 'Diğer cihazdan', color: 'green', links: [{ id: 'c1', title: 'Cloud one', url: 'https://cloud-one.example.com' }, { id: 'c2', title: 'Cloud two', url: 'https://cloud-two.example.com' }] };
+const AUTH = { uid: 'testuid123456', refreshToken: 'test-refresh-token', idToken: 'old', expiresAt: 0, email: 'person@example.com', displayName: 'Person', photoUrl: '' };
+let cloudLinks = 0;
+// No licence instance id: with one, 1.8 itself asks the payment provider about the key on every
+// start and wipes a key the provider does not know, which is what happens to a made-up key.
+const LEGACY_DATA = { background: { type: 'image', value: PICTURE, id: '', overlay: 30, blur: 2 }, licenseKey: 'TEST-KEY-0000', quickBarLinks: [{ id: 'q1', title: 'GitHub', url: 'https://github.com', icon: '' }, { id: 'q2', title: 'Spotify', url: 'https://open.spotify.com', icon: '' }], updatedAt: 1, folders, isPro: true, proExpiresAt: Date.now() + 200 * 86_400_000, theme: 'light', tutorialCompleted: true, sidebarCollapsed: true, tabsSortOrder: 'recent', language: 'TR' };
 const validLinks = Object.values(sites).flat().length + 3; // + the two colliding-id links and the duplicate folder's link
 const realFolders = Object.keys(sites).length;
 
@@ -132,6 +140,7 @@ let v2Stamp = 0;
 {
     const installed = install('v2');
     let session = await launch(extension, profile);
+    await session.worker.evaluate(auth => chrome.storage.local.set({ ntf_auth: auth }), AUTH);
     await check('Update', 'same ID, same profile: the browser treats it as an update', async () => {
         expect(session.extensionId === expectedId, `ID changed to ${session.extensionId}`);
         const manifest = await session.worker.evaluate(() => chrome.runtime.getManifest()) as { version: string; version_name?: string };
@@ -181,6 +190,28 @@ let v2Stamp = 0;
         const emoji = Object.values(state.items).filter(item => item.icon && !/^https?:/.test(item.icon)).length;
         const iconUrls = Object.values(state.items).filter(item => item.icon && /^https?:/.test(item.icon)).length;
         return `theme ${state.prefs.themeId}, language tr, icons “service” (as in 1.x), PRO recorded; ${emoji} emoji icons kept, ${iconUrls} stored icon addresses`;
+    });
+
+    await check('Migration', 'the paid-plan record is kept exactly; the stored picture becomes a wallpaper', async () => {
+        let state = (await storage<{ 'bos.state': AppState }>(session, ['bos.state']))['bos.state'];
+        for (let i = 0; i < 40 && state.prefs.background.source.kind !== 'upload'; i++) {
+            await page.waitForTimeout(250);
+            state = (await storage<{ 'bos.state': AppState }>(session, ['bos.state']))['bos.state'];
+        }
+        expect(state.legacy?.isPro === true && state.legacy.licenseKey === 'TEST-KEY-0000' && state.legacy.proExpiresAt === LEGACY_DATA.proExpiresAt, `legacy record: ${JSON.stringify(state.legacy)}`);
+        expect(state.prefs.background.source.kind === 'upload', `background is ${JSON.stringify(state.prefs.background.source)}`);
+        expect(Object.keys(state.wallpapers).length === 1 && state.prefs.background.dim === 0.3 && state.prefs.background.blur === 2, 'wallpaper library or adjustments wrong');
+        const stored = await page.evaluate(() => new Promise<number>(resolve => {
+            const open = indexedDB.open('bos-assets');
+            open.onsuccess = () => {
+                const count = open.result.transaction('wallpapers').objectStore('wallpapers').count();
+                count.onsuccess = () => resolve(count.result);
+            };
+            open.onerror = () => resolve(-1);
+        }));
+        expect(stored >= 1, `IndexedDB holds ${stored} wallpaper records`);
+        expect(/bulut|cloud/i.test(await page.locator('.migration').innerText()), 'the upgrade notice does not mention the cloud copy');
+        return `licence key and expiry kept; picture stored locally (${stored} records), dim 0.3, blur 2; notice mentions the cloud copy`;
     });
 
     await check('Legacy data', 'the 1.x data is byte-for-byte what it was', async () => {
@@ -241,6 +272,9 @@ let v2Stamp = 0;
         expect(state.legacy?.migratedAt === migratedAt, 'migration ran again');
         expect(Object.keys(state.items).length === validLinks, 'links changed');
         expect((await again.locator('.migration').count()) === 0, 'the notice came back');
+        expect(state.prefs.background.source.kind === 'upload' && Object.keys(state.wallpapers).length === 1, 'the migrated wallpaper was lost');
+        await again.waitForSelector('.backdrop-photo.is-ready', { timeout: 6000 });
+        expect(state.legacy?.licenseKey === 'TEST-KEY-0000', 'the licence record was lost');
         const stored = await storage<{ ntf_data: unknown }>(session, ['ntf_data']);
         expect(JSON.stringify(stored.ntf_data) === legacySnapshot, 'ntf_data changed');
         await again.close();
@@ -252,6 +286,49 @@ let v2Stamp = 0;
         const sizes = Object.entries(everything).map(([name, value]) => `${name} ${(JSON.stringify(value).length / 1024).toFixed(1)} kB`);
         expect('ntf_data' in everything && 'bos.state' in everything, 'a generation is missing');
         return sizes.join(' · ');
+    });
+    await check('Cloud copy', 'read once on request, never written; merge keeps everything and saves a restore point', async () => {
+        const calls: string[] = [];
+        await session.context.route(/securetoken\.googleapis\.com|firestore\.googleapis\.com|identitytoolkit\.googleapis\.com/, async route => {
+            const request = route.request();
+            calls.push(`${request.method()} ${new URL(request.url()).hostname}`);
+            if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' } });
+            if (request.url().includes('securetoken')) {
+                const sent = request.postDataJSON() as { refresh_token?: string };
+                return route.fulfill({ status: sent.refresh_token === AUTH.refreshToken ? 200 : 400, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ id_token: 'fresh-token', refresh_token: 'rotated', expires_in: '3600' }) });
+            }
+            const authorised = request.headers().authorization === 'Bearer fresh-token' && request.url().endsWith(`/users/${AUTH.uid}`);
+            const data = { ...LEGACY_DATA, folders: [...folders, CLOUD_EXTRA], updatedAt: 1_800_000_000_000 };
+            return route.fulfill({ status: authorised && request.method() === 'GET' ? 200 : 403, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' },
+                body: JSON.stringify({ fields: { ntf_data: { stringValue: JSON.stringify(data) }, updatedAt: { integerValue: '1800000000000' }, version: { stringValue: '1.6' } } }) });
+        });
+        const before = (await storage<{ 'bos.state': AppState; 'bos.snapshots'?: unknown[] }>(session, ['bos.state', 'bos.snapshots']));
+        const tab = await session.context.newPage();
+        await tab.goto('chrome://newtab/');
+        await tab.waitForSelector('.home');
+        await tab.locator('.topbar button').last().click();
+        await tab.locator('.settings-nav button').nth(4).click();
+        const row = tab.locator('.row', { hasText: 'person@example.com' });
+        await row.waitFor({ timeout: 5000 });
+        expect(calls.length === 0, `requests were made before the person asked: ${calls.join(', ')}`);
+        await row.locator('.button').click();
+        await tab.locator('.choice').first().waitFor({ timeout: 8000 });
+        const compare = (await tab.locator('.settings-body .note').allInnerTexts()).join(' / ');
+        await tab.locator('.choice').first().click();
+        await tab.waitForTimeout(900);
+        const after = (await storage<{ 'bos.state': AppState; 'bos.snapshots'?: unknown[]; ntf_auth: typeof AUTH; ntf_data: unknown }>(session, ['bos.state', 'bos.snapshots', 'ntf_auth', 'ntf_data']));
+        const names = Object.values(after['bos.state'].spaces).map(space => space.name);
+        cloudLinks = Object.keys(after['bos.state'].items).length - Object.keys(before['bos.state'].items).length;
+        expect(names.includes('Diğer cihazdan') && cloudLinks === 2, `after merge: ${names.join(', ')}; ${cloudLinks} new links`);
+        expect(names.includes('V2 ile eklendi') && names.includes('İkinci düzenleme'), 'edits made in Senuma were lost in the merge');
+        expect((after['bos.snapshots']?.length ?? 0) === (before['bos.snapshots']?.length ?? 0) + 1, 'no restore point was saved before the merge');
+        const sorted = (value: object) => JSON.stringify(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)));
+        expect(sorted(after.ntf_auth) === sorted(AUTH), 'the 1.x sign-in record was changed');
+        expect(JSON.stringify(after.ntf_data) === legacySnapshot, 'ntf_data changed');
+        const writes = calls.filter(call => /^(PATCH|PUT|DELETE)/.test(call) || /identitytoolkit/.test(call));
+        expect(writes.length === 0, `writes to the cloud: ${writes.join(', ')}`);
+        await tab.close();
+        return `requests: ${calls.join(', ')}; shown: “${compare.replace(/\s+/g, ' ').slice(0, 170)}”; 1 Space and 2 links added, restore point saved, sign-in record and 1.x data untouched`;
     });
     await session.context.close();
 }
@@ -285,7 +362,7 @@ let v2Stamp = 0;
         const state = (await storage<{ 'bos.state': AppState }>(session, ['bos.state']))['bos.state'];
         expect(state.legacy?.migratedAt === migratedAt, 'converted again');
         expect(Object.values(state.spaces).some(space => space.name === 'V2 ile eklendi'), 'V2 edits were lost');
-        expect(Object.keys(state.items).length === validLinks, 'links changed');
+        expect(Object.keys(state.items).length === validLinks + cloudLinks, 'links changed');
         await page.close();
         return 'V2 state from before the rollback is used as it was';
     });

@@ -289,6 +289,8 @@ async function freshInstall(): Promise<void> {
         await page.locator('.choice', { hasText: 'Merge into my setup' }).click();
         const after = await waitForState(session, s => Object.keys(s.items).length === Object.keys(before.items).length + 1 && s);
         expect(after.spaceOrder.length === before.spaceOrder.length, 'merge created duplicate Spaces');
+        const points = await readStorage<any[]>(session, 'bos.snapshots');
+        expect(points?.length === 1 && points[0].state.spaceOrder.length === before.spaceOrder.length, 'no restore point was saved before the merge');
     });
 
     await check('Import', 'replace saves a restore point first, then replaces', async () => {
@@ -303,7 +305,7 @@ async function freshInstall(): Promise<void> {
         await page.locator('.choice', { hasText: 'Replace my setup' }).click();
         await waitForState(session, s => s.spaceOrder.length === 1);
         const snapshots = await readStorage<any[]>(session, 'bos.snapshots');
-        expect(snapshots?.length === 1 && snapshots[0].reason === 'import', 'no restore point saved');
+        expect(snapshots?.length === 2 && snapshots[0].reason === 'import', 'no restore point saved');
         expect(snapshots[0].state.spaceOrder.length === before.spaceOrder.length, 'restore point does not hold the previous setup');
     });
 
@@ -312,7 +314,7 @@ async function freshInstall(): Promise<void> {
         const state = await waitForState(session, s => s.spaceOrder.length === 6 && s);
         expect(Object.values<any>(state.spaces).some(sp => sp.name === 'Travel'), 'restored setup is missing a Space');
         const snapshots = await readStorage<any[]>(session, 'bos.snapshots');
-        expect(snapshots?.length === 2, 'restoring did not snapshot the state it replaced');
+        expect(snapshots?.length === 3, 'restoring did not snapshot the state it replaced');
         await page.keyboard.press('Escape');
     });
 
@@ -416,7 +418,7 @@ async function freshInstall(): Promise<void> {
         expect(JSON.stringify(after.spaces) === JSON.stringify(before.spaces), 'Spaces differ after restart');
         expect(after.prefs.themeId === before.prefs.themeId && after.activeModeId === before.activeModeId, 'theme or Mode differ after restart');
         expect((await plateNames(page)).length === 6, 'Home does not show the Spaces after restart');
-        expect((await readStorage<any[]>(session, 'bos.snapshots'))?.length === 2, 'restore points lost');
+        expect((await readStorage<any[]>(session, 'bos.snapshots'))?.length === 3, 'restore points lost');
         return `${after.spaceOrder.length} Spaces, theme ${after.prefs.themeId}, restore points intact`;
     });
 

@@ -196,6 +196,7 @@ export function sanitize(raw: unknown): AppState {
             isPro: raw.legacy.isPro === true,
             proExpiresAt: typeof raw.legacy.proExpiresAt === 'number' ? raw.legacy.proExpiresAt : null,
             ...(typeof raw.legacy.licenseKey === 'string' && raw.legacy.licenseKey ? { licenseKey: raw.legacy.licenseKey.slice(0, 200) } : {}),
+            ...(typeof raw.legacy.licenseInstanceId === 'string' && raw.legacy.licenseInstanceId ? { licenseInstanceId: raw.legacy.licenseInstanceId.slice(0, 200) } : {}),
             migratedAt: num(raw.legacy.migratedAt, 0),
             summary: { spaces: num(summary.spaces, 0), links: num(summary.links, 0), groups: num(summary.groups, 0), skipped: num(summary.skipped, 0) },
             acknowledged: raw.legacy.acknowledged !== false,

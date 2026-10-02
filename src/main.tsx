@@ -60,6 +60,8 @@ async function boot(): Promise<void> {
     if (source === 'legacy' || app.get().updatedAt > state.updatedAt) {
         saveState(app.get()).catch(() => toast(t('error.save')));
     }
+    // Only on the upgrade itself: bring a picture 1.x stored over to the wallpaper library.
+    if (source === 'legacy') void import('./app/legacyBackground').then(module => module.migrateLegacyPicture());
 
     onExternalChange(incoming => {
         if (incoming.updatedAt > app.get().updatedAt) hydrate(incoming);

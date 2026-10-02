@@ -6,8 +6,9 @@ import {
 } from '../../app/actions';
 import { BRAND } from '../../brand';
 import { readBookmarks } from '../../browser/bookmarks';
+import { fetchLegacyCloud, legacyCloudSession, type LegacyCloudSession } from '../../browser/legacyCloud';
 import { releaseClosedTabsAccess, requestClosedTabsAccess } from '../../browser/sessions';
-import { importBackup, mergeBackup } from '../../core/backup';
+import { importBackup, mergeBackup } from '../../core/backupImport';
 import { emptyState, newId } from '../../core/defaults';
 import {
     addMode, captureMode, isValidTemplate, parseAliases, removeMode, removeProvider, restoreMode, setActiveMode, setModeDock, setPrefs, shiftSpace,
@@ -345,6 +346,24 @@ function Data({ state }: { state: AppState }) {
     const [proposals, setProposals] = useState<Proposal[] | null>(null);
     const [incoming, setIncoming] = useState<AppState | null>(null);
     const [pasted, setPasted] = useState('');
+    const [cloud, setCloud] = useState<LegacyCloudSession | null>(null);
+    const [cloudAt, setCloudAt] = useState<number | null>(null);
+    const [busy, setBusy] = useState(false);
+    useEffect(() => {
+        void legacyCloudSession().then(setCloud);
+    }, []);
+    const when = (time: number) => (time ? new Date(time).toLocaleString(state.prefs.language) : t('cloud.unknownDate'));
+
+    const fromCloud = async () => {
+        setBusy(true);
+        const result = await fetchLegacyCloud();
+        setBusy(false);
+        if (!result.ok) return toast(t(`cloud.${result.reason}` as MessageKey));
+        const imported = result.value && importBackup(JSON.stringify(result.value.data));
+        if (!result.value || !imported) return toast(t('cloud.empty'));
+        setCloudAt(result.value.updatedAt);
+        setIncoming(imported);
+    };
 
     const read = async (file: File | undefined) => {
         if (!file) return;
@@ -370,17 +389,15 @@ function Data({ state }: { state: AppState }) {
             <>
                 <h3>{t('data.importTitle')}</h3>
                 <p class="note">{t('data.importFound', { spaces: incoming.spaceOrder.length, links })}</p>
+                {cloudAt !== null && cloud && <p class="note">{t('cloud.compare', { cloud: when(cloudAt), local: when(cloud.localUpdatedAt) })}</p>}
                 <div class="choice-row">
                     <button type="button" class="choice"
-                        onClick={() => {
-                            let result = { spaces: 0, links: 0 };
-                            update(s => {
-                                const merged = mergeBackup(s, incoming);
-                                result = merged;
-                                return merged.state;
-                            });
-                            toast(t('data.merged', result));
+                        onClick={async () => {
+                            // A restore point first, so a merge can be undone like a replace.
+                            const merged = mergeBackup(app.get(), incoming);
+                            if (await replaceSetup(merged.state, 'import')) toast(t('data.merged', { spaces: merged.spaces, links: merged.links }));
                             setIncoming(null);
+                            setCloudAt(null);
                         }}>
                         <Icon name="plus" size={18} />
                         <strong>{t('data.merge')}</strong>
@@ -429,6 +446,11 @@ function Data({ state }: { state: AppState }) {
             <p class="note">{t('data.snapshotsHint')}</p>
             <Backups />
             <h3>{t('import.title')}</h3>
+            {cloud && (
+                <Row label={t('cloud.title')} hint={t('cloud.hint', { account: cloud.email || t('cloud.account') })}>
+                    <button type="button" class="button" disabled={busy} onClick={() => void fromCloud()}>{busy ? t('cloud.checking') : t('cloud.action')}</button>
+                </Row>
+            )}
             <Row label={t('import.bookmarks')} hint={t('import.bookmarksHint')}>
                 <button type="button" class="button" onClick={() => void fromBookmarks()}>{t('import.action')}</button>
             </Row>

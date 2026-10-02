@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'preact/hooks';
 import type { AppState, LegacyRecord } from '../../core/types';
 import { t } from '../../i18n';
 import { setUi, update } from '../../storage/store';
@@ -13,6 +14,11 @@ function acknowledge(): void {
  */
 export function MigrationSummary({ legacy }: { legacy: LegacyRecord }) {
     const { spaces, links, groups, skipped } = legacy.summary;
+    const [synced, setSynced] = useState(false);
+    useEffect(() => {
+        // Loaded on demand: only people upgrading from 1.x ever need it.
+        void import('../../browser/legacyCloud').then(module => module.legacyCloudSession()).then(session => setSynced(!!session));
+    }, []);
     return (
         <aside class="migration" role="status" aria-label={t('migrate.title')}>
             <button type="button" class="icon-button is-small migration-close" aria-label={t('close')} title={t('close')} onClick={acknowledge}>
@@ -27,6 +33,7 @@ export function MigrationSummary({ legacy }: { legacy: LegacyRecord }) {
                 {skipped > 0 && <li class="is-muted"><Icon name="info" size={14} />{t('migrate.skipped', { n: skipped })}</li>}
             </ul>
             <p>{t('migrate.safe')}</p>
+            {synced && <p>{t('migrate.cloud')}</p>}
             <div class="migration-actions">
                 <button type="button" class="button is-primary"
                     onClick={() => {

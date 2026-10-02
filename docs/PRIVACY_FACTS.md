@@ -33,6 +33,7 @@ data is orphaned by the rename.
 | Google's icon service (`google.com/s2/favicons`) | **Only** if the user chose “icon service” (off for new users; kept on for 1.x users, who already had it) | Google sees the site names of saved links. |
 | The default search engine | The user submits a search (`chrome.search.query`) | Whatever engine the browser is set to. |
 | A named provider (YouTube, GitHub…) | The user picks it or types its shortcut | That provider. |
+| Google sign-in token service and Firestore (the 1.x sync backend) | **Only** when a person who used 1.x cloud sync presses “Check cloud copy” | Google and the developer's Firebase project receive the saved 1.x sign-in token and return that account's own 1.x copy. Read-only; nothing is uploaded. |
 
 No analytics, no error reporting, no remote configuration, no remote code, no fonts or
 wallpapers fetched from a third party.
@@ -54,8 +55,9 @@ No host permissions, no content scripts, nothing runs on web pages.
 - **Analytics: none in this release.** Nothing is measured. If that ever changes it needs its
   own decision, opt-in consent, a policy update and a store disclosure.
 - **Accounts, sync, payments:** not present.
-- The 1.x PRO flag is copied into the new state as history only. It is not sent anywhere,
-  nothing reads it and nothing is unlocked by it.
+- The 1.x PRO flag and any licence key are copied into the new state as inert history. They are
+  not sent anywhere, nothing reads them and nothing is unlocked by them.
+- The 1.x sign-in record (`ntf_auth`) is left untouched and used only for the cloud-copy read above.
 
 ## For the store privacy form
 

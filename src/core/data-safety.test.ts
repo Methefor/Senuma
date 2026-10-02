@@ -1,11 +1,14 @@
+import { legacyBackground, parseCloudDocument } from './legacy';
 import { normalizeUrl } from './url';
 import { BRAND, STORAGE_KEYS } from '../brand';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_BACKGROUND, MAX_WALLPAPERS, sanitizeBackground, suggestedDim, type WallpaperAsset } from './background';
-import { addSnapshot, exportBackup, importBackup, mergeBackup, sanitizeSnapshots } from './backup';
+import { addSnapshot, exportBackup, sanitizeSnapshots } from './backup';
+import { importBackup, mergeBackup } from './backupImport';
 import { MAX_SNAPSHOTS, emptyState } from './defaults';
 import { LEGACY, seeded } from './fixtures';
-import { fromLegacy, resolveState, upgrade } from './migrate';
+import { fromLegacy, resolveState } from './legacyConvert';
+import { upgrade } from './migrate';
 import * as ops from './ops';
 import { sanitize } from './sanitize';
 import { SCHEMA_VERSION, type AppState } from './types';
@@ -129,6 +132,38 @@ describe('migration from the published 1.8 build', () => {
         expect(sanitize(JSON.parse(JSON.stringify(state))).legacy?.licenseKey).toBe('ABCD-1234');
         expect(fromLegacy({ ...live(), language: 'de' })!.prefs.language).toBe('en');
         expect(fromLegacy({ ...live(), language: undefined })!.prefs.language).toBe('en');
+    });
+});
+
+describe('what else comes over from 1.x', () => {
+    it('keeps a 1.x licence key as inert history: stored, never interpreted', () => {
+        const state = fromLegacy({ folders: [{ name: 'A', links: [{ url: 'https://a.example' }] }], quickBarLinks: [], isPro: true, proExpiresAt: 5, licenseKey: 'ABCD', licenseInstanceId: 'inst-1' })!;
+        expect(state.legacy).toMatchObject({ isPro: true, proExpiresAt: 5, licenseKey: 'ABCD', licenseInstanceId: 'inst-1' });
+        expect(sanitize(JSON.parse(JSON.stringify(state))).legacy).toMatchObject({ isPro: true, proExpiresAt: 5, licenseKey: 'ABCD', licenseInstanceId: 'inst-1' });
+    });
+
+    it('carries a colour or gradient background, defers a stored picture, and declines a web picture', () => {
+        expect(legacyBackground({ type: 'color', value: '#112233', overlay: 40, blur: 4 })).toEqual({ kind: 'ready', background: { ...DEFAULT_BACKGROUND, source: { kind: 'solid', color: '#112233' }, dim: 0.4, blur: 4 } });
+        const gradient = legacyBackground({ type: 'gradient', value: 'linear-gradient(135deg,#0f0c29 0%,#302b63 50%,#24243e 100%)', overlay: 0, blur: 0 });
+        expect(gradient).toMatchObject({ kind: 'ready', background: { source: { kind: 'gradient', from: '#0f0c29', to: '#24243e', angle: 135 } } });
+        expect(legacyBackground({ type: 'image', value: 'data:image/png;base64,AAAA', overlay: 200, blur: 99 })).toMatchObject({ kind: 'image', dim: 0.9, blur: 40 });
+        expect(legacyBackground({ type: 'image', value: 'https://example.com/a.jpg' })).toEqual({ kind: 'remote' });
+        for (const junk of [null, 'x', { type: 'none', value: '' }, { type: 'image', value: 'data:image/svg+xml;base64,AAAA' }, { type: 'color', value: 'red; background:url(x)' }, { type: 'gradient', value: 'url(javascript:1)' }]) {
+            expect(legacyBackground(junk)?.kind === 'ready' || legacyBackground(junk)?.kind === 'image').toBe(false);
+        }
+        const state = fromLegacy({ folders: [{ name: 'A', links: [{ url: 'https://a.example' }] }], quickBarLinks: [], background: { type: 'color', value: '#112233', overlay: 20, blur: 0 } })!;
+        expect(state.prefs.background.source).toEqual({ kind: 'solid', color: '#112233' });
+    });
+
+    it('reads the cloud document 1.x wrote, and nothing else', () => {
+        const data = { folders: [{ name: 'Cloud', links: [{ url: 'https://c.example' }] }], updatedAt: 5 };
+        const doc = { fields: { ntf_data: { stringValue: JSON.stringify(data) }, updatedAt: { integerValue: '1700000000000' }, version: { stringValue: '1.6' } } };
+        const copy = parseCloudDocument(doc)!;
+        expect(copy.updatedAt).toBe(1700000000000);
+        expect(importBackup(JSON.stringify(copy.data))?.spaceOrder).toHaveLength(1);
+        for (const junk of [null, {}, { fields: {} }, { fields: { ntf_data: { stringValue: '{' } } }, { fields: { ntf_data: { stringValue: '[]' } } }, { fields: { ntf_data: { stringValue: '{"folders":"x"}' } } }]) {
+            expect(parseCloudDocument(junk)).toBeNull();
+        }
     });
 });
 
@@ -466,6 +501,18 @@ describe('backup files', () => {
         expect(BRAND.backupFilePrefix).toBe('senuma-backup');
         // Renaming these would orphan every user's setup.
         expect(STORAGE_KEYS).toEqual({ state: 'bos.state', snapshots: 'bos.snapshots', newerState: 'bos.state.newer', legacyData: 'ntf_data' });
+    });
+
+    it('merging the same setup again adds nothing, even with two Spaces of one name', () => {
+        let state = ops.addSpace(emptyState(), { name: 'Twin' }).state;
+        const first = state.spaceOrder[0]!;
+        for (const url of ['https://a.example', 'https://b.example', 'https://c.example']) state = ops.addItem(state, first, null, { url }).state;
+        const second = ops.addSpace(state, { name: 'Twin' });
+        state = ops.addItem(second.state, second.id, null, { url: 'https://d.example' }).state;
+        const copy = importBackup(exportBackup(state))!;
+        const merged = mergeBackup(state, copy);
+        expect({ spaces: merged.spaces, links: merged.links }).toEqual({ spaces: 0, links: 0 });
+        expect(Object.keys(merged.state.items)).toHaveLength(4);
     });
 
     it('merge adds what is missing and removes nothing', () => {

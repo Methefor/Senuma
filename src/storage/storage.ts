@@ -6,7 +6,9 @@ import { STORAGE_KEYS } from '../brand';
 import { kv, readLocal, writeLocal } from '../browser/kv';
 import { inExtension } from '../browser/result';
 import { sanitizeSnapshots } from '../core/backup';
-import { resolveState, upgrade, type Resolved } from '../core/migrate';
+import { emptyState } from '../core/defaults';
+import { upgrade, type Resolved } from '../core/migrate';
+import { sanitize } from '../core/sanitize';
 import { SCHEMA_VERSION, type AppState, type Snapshot } from '../core/types';
 
 /** Synchronous best-effort read used for the first paint. */
@@ -24,7 +26,12 @@ export async function loadState(): Promise<Resolved> {
     const stored = await kv.get([STORAGE_KEYS.state, STORAGE_KEYS.legacyData]);
     const raw = stored[STORAGE_KEYS.state] as { schema?: unknown } | undefined;
     if (raw && typeof raw.schema === 'number' && raw.schema > SCHEMA_VERSION) newerOriginal = raw;
-    return resolveState(raw, stored[STORAGE_KEYS.legacyData]);
+    // A state of the current model wins, always (see legacyConvert.ts on why 1.x data is never a fallback).
+    if (typeof raw === 'object' && raw !== null && !Array.isArray(raw)) return { state: upgrade(raw) ?? sanitize(raw), source: 'stored' };
+    const legacy = stored[STORAGE_KEYS.legacyData];
+    if (legacy === undefined || legacy === null) return { state: emptyState(), source: 'fresh' };
+    // Only an install that still has 1.x data pays for the converter.
+    return (await import('../core/legacyConvert')).resolveState(raw, legacy);
 }
 
 /** Rejects when the write fails (for example when the storage quota is exhausted). */

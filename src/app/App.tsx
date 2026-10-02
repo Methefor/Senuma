@@ -5,7 +5,6 @@ import { visibleSpaces } from '../core/ops';
 import { Backdrop } from '../features/background/Backdrop';
 import { CommandPalette } from '../features/command/Launcher';
 import { Home } from '../features/home/Home';
-import { MigrationSummary } from '../features/onboarding/MigrationSummary';
 import { ensureLanguage, setLanguage } from '../i18n';
 import { app, setUi, ui, useStore } from '../storage/store';
 import { ContextMenu, Toasts } from '../ui/Layers';
@@ -94,6 +93,8 @@ export function App() {
         [look.themeId, look.atmosphere, look.motion, sourceKey(look.background.source), state.prefs.language],
     );
 
+    // Only people upgrading from 1.x ever see this, once.
+    const MigrationSummary = useLazy(!!state.legacy && !state.legacy.acknowledged, () => import('../features/onboarding/MigrationSummary').then(module => module.MigrationSummary));
     const Settings = useLazy(view.settings !== null, loadSettings);
     const Onboarding = useLazy(!state.onboarded, loadOnboarding);
     const Customize = useLazy(view.customize, loadCustomize);
@@ -116,7 +117,7 @@ export function App() {
             {view.editor && Editor && <Editor state={state} target={view.editor} />}
             {view.palette && <CommandPalette />}
             {!state.onboarded && Onboarding && <Onboarding state={state} />}
-            {showSummary && <MigrationSummary legacy={state.legacy!} />}
+            {showSummary && MigrationSummary && <MigrationSummary legacy={state.legacy!} />}
             <ContextMenu />
             <Toasts />
         </>
