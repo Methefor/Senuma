@@ -41,11 +41,21 @@ describe('payload growth', () => {
         expect(await sealedSize({ links: 1000, longAddresses: 200 })).toBeLessThan(PAYLOAD_LIMIT / 2);
     });
 
-    it('pictures stored inside links are the real risk: 300 links with 2 kB icons nearly fill the limit, 100 with 8 kB exceed it', async () => {
-        const icons = await sealedSize({ links: 300, iconBytes: 2048 });
-        expect(icons).toBeGreaterThan(PAYLOAD_LIMIT * 0.75);
-        expect(icons).toBeLessThan(PAYLOAD_LIMIT);
-        await expect(sealedSize({ links: 100, iconBytes: 8192 })).rejects.toBeInstanceOf(SyncSizeError);
+    it('pictures stored inside links cannot fill the document: the icon limits hold them to about a fifth of it', { timeout: 30_000 }, async () => {
+        // Before the limits these were 475 kB and a refusal.
+        expect(await sealedSize({ links: 300, iconBytes: 2048 })).toBeLessThan(PAYLOAD_LIMIT / 4);
+        expect(await sealedSize({ links: 100, iconBytes: 8192 })).toBeLessThan(PAYLOAD_LIMIT / 4);
+        // The worst a workspace can do with icons: every link carrying one at the 32 KB cap.
+        expect(await sealedSize({ links: 200, iconBytes: 32 * kB })).toBeLessThan(PAYLOAD_LIMIT / 4);
+        expect(await sealedSize({ links: 1000, iconBytes: 32 * kB, iconShare: 0.1 })).toBeLessThan(PAYLOAD_LIMIT / 3);
+        expect(await sealedSize({ links: 5000, iconBytes: 32 * kB, iconShare: 0.02 })).toBeLessThan(PAYLOAD_LIMIT * 0.65);
+        // Ten thousand links AND a full allowance of icons is past the limit: refused whole, as any oversized workspace is.
+        await expect(sealedSize({ links: 10_000, iconBytes: 32 * kB, iconShare: 0.01 })).rejects.toBeInstanceOf(SyncSizeError);
+    });
+
+    it('a realistic workspace with ordinary icons is small: one link in ten with its own 3 kB picture', async () => {
+        expect(await sealedSize({ links: 300, iconBytes: 3000, iconShare: 0.1 })).toBeLessThan(96 * kB);
+        expect(await sealedSize({ links: 1000, iconBytes: 3000, iconShare: 0.1 })).toBeLessThan(160 * kB);
     });
 
     it('an oversized workspace is refused whole, with its size, never cut short', async () => {

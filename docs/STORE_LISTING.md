@@ -11,6 +11,7 @@ The live listing is untouched. Publishing any of this needs explicit approval an
 | Short description (132 max) | Make your browser yours with Spaces, Modes, universal search, cinematic themes and a personal new-tab workspace. (112) |
 | Tagline | Make the browser yours. |
 | Category | Productivity |
+| Support / privacy contact | rumeliskelesi+senuma@gmail.com (temporary, until a Senuma domain exists) |
 
 **Long description**
 

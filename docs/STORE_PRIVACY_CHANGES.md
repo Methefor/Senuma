@@ -47,7 +47,8 @@ see CLOUD_SYNC_DESIGN.md §8.
 ## Privacy policy URL
 
 Keep the field. The page it points to must be replaced before submission with the text in
-PRIVACY_POLICY.md (draft; owner blanks: contact address, what happens to 1.x cloud data). It states:
+PRIVACY_POLICY.md (draft; contact address rumeliskelesi+senuma@gmail.com is temporary until a Senuma
+domain exists; owner blank: what happens to 1.x cloud data). It states:
 
 - everything is stored on the device; no analytics, no tracking, no account;
 - custom wallpapers stay on the device and are not in backup files;

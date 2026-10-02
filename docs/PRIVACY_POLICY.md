@@ -1,7 +1,7 @@
 # Senuma — Privacy Policy (draft for 2.0, not published)
 
 Draft text for the page the store listing links to. Items in [brackets] are the owner's to
-fill in. Source for every statement: PRIVACY_FACTS.md.
+fill in. The contact address is temporary, until a Senuma domain exists. Source for every statement: PRIVACY_FACTS.md.
 
 ---
 
@@ -46,7 +46,7 @@ Senuma asks for these only if you turn the feature on, and you can turn them off
 Senuma has no cloud sync and does not contact the service that version 1.x used. Your setup on
 this device was converted locally. Data that version 1.x saved to the cloud (your folders, links
 and settings, linked to your Google account's e-mail address and name) [is deleted on <date> /
-remains stored until <date>]. To have it deleted sooner, write to [contact e-mail].
+remains stored until <date>]. To have it deleted sooner, write to rumeliskelesi+senuma@gmail.com.
 
 **Removing your data**
 
@@ -60,4 +60,4 @@ first, and it will be opt-in.
 
 **Contact**
 
-[contact e-mail]
+rumeliskelesi+senuma@gmail.com

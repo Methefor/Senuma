@@ -130,9 +130,21 @@ Implemented in `src/sync/scope.ts` as an explicit classification of every `AppSt
 field; adding a field without classifying it is a compile error.
 
 A background that is an uploaded picture syncs **only as a reference** (a random asset id): no
-pixels, preview, file name or size. A device that does not have the picture shows the theme
-backdrop and must not rewrite the setting (requirement for phase 4: the state sanitizer must
-tolerate a reference to a picture this device lacks, or two devices would overwrite each other).
+pixels, preview, file name or size.
+
+**A reference to a picture this device does not have is a valid state** (`src/sync/wallpaper.ts`):
+
+| Situation | What the device does |
+|---|---|
+| Picture is here | Applied and shown like any background. |
+| Picture is not here | The reference is *held* beside the setup, exactly as received, and is what this device reports as the synced value. The setup itself gets the theme's backdrop, so rendering and validation never see a reference they cannot follow (the 2.0 validator needs no change). `assetMissingLocally` is exposed for the interface; nothing is blocked. |
+| Nothing else changed | The device has nothing to send. It cannot overwrite the device that has the picture, however often they sync. |
+| The person picks a background here | By default it is this device's own (`deviceChoice`); the synced reference is untouched. “Use on all devices” makes it an ordinary synced change. |
+| The person changes it on a device that has the picture | An ordinary synced change; other devices follow, and any device choice made for the old picture ends. |
+| The picture arrives later | The device starts using it and the flag clears. A device choice made meanwhile stays until the person goes back to the synced background. |
+| Merge between a device with and one without the picture | Both report the same reference: no change, no conflict. |
+
+The same holds for a Mode's own background.
 
 **Custom wallpapers: not synced in v1.** Images are megabytes; a Firestore document holds 1 MiB;
 Cloud Storage for Firebase needs a billing account on new projects **[verify]**. Other devices
@@ -220,31 +232,58 @@ No custom indexes: every read is by path; history is listed by document id.
 
 ### 5.2 Payload growth (measured, `src/sync/budget.test.ts`)
 
-Encrypted size of the whole workspace document (gzip, padded, AES-GCM):
+Encrypted size of the whole workspace document (gzip, padded, AES-GCM), with the icon limits of
+5.2.1 in force:
 
 | Workspace | Encrypted size | Share of 512 kB |
 |---|---|---|
-| 25 links | 3 kB | 0.6 % |
-| 100 links | 6 kB | 1.2 % |
-| 500 links | 24 kB | 4.7 % |
-| 1 000 links | 46 kB | 9 % |
-| 5 000 links | 223 kB | 44 % |
-| 10 000 links | 444 kB | 87 % |
-| 15 000 links | 665 kB | **over — refused** |
-| 1 000 links, each address 200 characters longer | 206 kB | 40 % |
-| 300 links, each with a 2 kB picture stored as its icon | 475 kB | 93 % |
-| 100 links, each with an 8 kB picture stored as its icon | 613 kB | **over — refused** |
+| 1 000 links, no embedded icons | 46 kB | 9 % |
+| 10 000 links, no embedded icons | 444 kB | 87 % |
+| 15 000 links, no embedded icons | 665 kB | **over — refused whole** |
+| 300 links, 1 in 10 with its own 3 kB icon (realistic) | 76 kB | 15 % |
+| 1 000 links, 1 in 10 with its own 3 kB icon (realistic) | 150 kB | 29 % |
+| 300 links, every one with a 2 kB icon | 115 kB | 22 % (was 475 kB) |
+| 100 links, every one with an 8 kB icon | 104 kB | 20 % (was refused) |
+| 200 links, every one with a 32 KB icon — the worst icons can do | 110 kB | 21 % |
+| 5 000 links and a full allowance of icons | 329 kB | 64 % |
+| 10 000 links and a full allowance of icons | 548 kB | **over — refused whole** |
 
-- Ordinary links cost about **45 bytes each**. The limit is reached near 11 500 links.
-- **The real risk is pictures stored inside links.** A link's icon may be a `data:` image, and
-  the state model puts no limit on its size (nor on title or address length). Such data does not
-  compress. A few hundred of them fill the limit.
-- Behaviour at the limit (implemented in the core): the document is **refused whole, never
-  truncated**; local data is unaffected; the engine reports “near the limit” from 75 %.
-- Sealing 10 000 links takes about 0.1 s, so encrypting on every change is affordable.
+- Ordinary links cost about **45 bytes each**. Without embedded icons the limit is reached near
+  11 500 links; with a full icon allowance, near 9 300.
+- The 512 kB limit is a hard refusal: the document is **never truncated**; local data is
+  unaffected; the engine reports “near the limit” from 75 %.
+- Sealing 10 000 links takes about 0.1 s.
 - Free-tier budget (20 000 writes, 50 000 reads per day): a sync writes about 3 documents
-  (current, history, device); pushes are debounced and rule-limited; reads are throttled to one
-  every few minutes per device.
+  (current, history, device); pushes are debounced and rule-limited; reads are throttled.
+
+#### 5.2.1 Embedded icon limits (`src/sync/icons.ts`, `iconEncode.ts`)
+
+A link's icon may be an image embedded as a `data:` URL; such data barely compresses.
+
+| Rule | Value |
+|---|---|
+| One embedded icon | at most **32 KB** as stored |
+| All embedded icons in a workspace | at most **128 KB** together (≈ 97 kB encrypted, a fifth of the document limit) |
+| An emoji or image address | at most 2 048 characters |
+| Over a limit, picture can be decoded | Re-encoded: longest edge 128 px (icons are shown at 64 px at most), WebP; smaller sizes only if needed. Measured in a real browser engine: a 1.8 MB picture → 3.1 kB, mean difference at icon size under 1 of 255. |
+| Still over, or cannot be decoded | The icon is removed and the link shows its site's own icon, like any link without a stored icon |
+| Never | An icon is never cut short. It is kept whole, replaced by a complete smaller image, or removed. |
+| Who keeps their icon when the total is exceeded | Older links first, so adding a link never takes an icon from an earlier one |
+
+Three entry points: `settleIcon` (a link is saved), `settleIcons` (data coming in: import,
+backup, a setup from before the policy), and `capIcons`, which sync applies to every copy it
+uploads without needing to decode pictures — so the limits hold for uploaded data whatever the
+local setup contains.
+
+**Not yet wired into the product.** Senuma 2.0 is frozen and saves icons without a limit. In
+2.1 `settleIcon` goes into the add/edit-link path and `settleIcons` into import, backup restore
+and a one-time pass over existing setups. Until then only the upload guard exists, and it only
+matters once sync exists.
+
+The 128 KB total is the tighter of the two limits in practice: it is about 43 icons of 3 kB.
+In the realistic 1 000-link case above, 92 links had their own icon and 43 kept it in the
+synced copy. Raising the total to 256 KB would allow about 85 and let icons reach two fifths of
+the document. Owner's call before phase 4.
 
 ### 5.3 Chunking strategy (documented now, built only if needed)
 
@@ -270,9 +309,8 @@ approach the limit, format 2 is:
 7. Format 1 clients see `format: 2` and stop with “update Senuma to sync” (already implemented
    in the revision model as `format-newer`).
 
-Before chunking, the cheaper measures are: (a) cap the size of a `data:` icon accepted into a
-link at save time (a product decision for all users, not only sync), and (b) warn at 75 %.
-Recommendation: do (a) and (b) in 2.1 and keep chunking in reserve.
+Chunking is the future escape hatch, not the first solution (owner decision). The first
+solution is the icon limits of 5.2.1 and the warning at 75 %.
 
 ## 6. Security Rules strategy
 
@@ -399,7 +437,7 @@ Senuma sync never reads, links to or migrates from the old project.
 | Phase | Content | Exit test |
 |---|---|---|
 | 0 | Owner decisions D1–D5; owner creates the new Firebase project (free plan) and OAuth client | — |
-| 1 — **done** | Pure core, no network: `src/sync/` scope, merge, revision, crypto | 76 unit tests: fixed vector, merge properties over 600 random edit runs, threat-model tests, payload budget |
+| 1 — **done** | Pure core, no network: `src/sync/` scope, merge, revision, crypto, icon limits, missing-wallpaper model | 108 unit tests: fixed vector, merge properties over 600 random edit runs, threat-model tests, payload budget, icon policy over 300 random mixes; re-encoder checked in a browser engine (`e2e/sync-icons.ts`) |
 | 2 | Security Rules + emulator test suite | All rule tests pass locally |
 | 3 | Sign-in (optional `identity`), REST client, against the emulator | Sign in/out; session refresh |
 | 4 | Engine in the service worker, state machine, restore points, history | Two browser profiles against the emulator: edit, offline edit, concurrent edit, conflict |
@@ -418,6 +456,8 @@ Startup bundle stays as it is: all of this loads on demand.
 | `merge.ts` | Three-way merge with reported conflicts and per-conflict resolutions |
 | `revision.ts` | The envelope, the next-step decision (`plan`), checks on a decrypted copy, the write rule |
 | `crypto.ts` | Recovery key, key wrapping, sealing and opening documents, size limit |
+| `icons.ts`, `iconEncode.ts` | Embedded icon limits; the in-browser re-encoder |
+| `wallpaper.ts` | Backgrounds that reference a picture this device lacks |
 | `fixtures.ts` | Repeatable test workspaces of any size |
 
 Verified: the Senuma 2.0 build output is byte-identical with and without this folder.
@@ -432,8 +472,9 @@ device label; one changed bit, another account, another document path, another k
 another revision makes a document unreadable; a mistyped recovery key is caught before use.
 
 Found while building, to settle before phase 4:
-- Icons stored as `data:` images are unbounded (5.2).
-- The state sanitizer's handling of a background that references a picture this device lacks (3.5).
+- Wiring the icon limits into the product's save and import paths (5.2.1), and the value of the 128 KB total.
+- Titles and addresses have no length limit in the state model; a limit belongs beside the icon limits.
+- Where the per-device *held backgrounds* record is stored (it must survive restarts and is never uploaded).
 - The first-sync choice should reuse the existing idempotent merge (duplicates by address
   skipped), since two devices with no common past have different ids for the same links.
 - Settling one conflict can raise another (keeping a Space brings its own questions); the

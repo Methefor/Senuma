@@ -21,14 +21,16 @@ const TLDS = ['com', 'io', 'app', 'dev', 'org', 'net', 'co', 'com.tr'];
 export interface WorkspaceShape {
     links: number;
     spaces?: number;
-    /** Bytes of (incompressible) data-URL icon on every link; 0 for none. */
+    /** Characters of (incompressible) embedded icon; 0 for none. */
     iconBytes?: number;
+    /** Share of links that carry such an icon. 1 when not given. */
+    iconShare?: number;
     /** Extra characters of path on every address, as deep links and query strings have. */
     longAddresses?: number;
 }
 
 /** A setup shaped like a real one: named Spaces, two groups each, links with mixed titles and addresses. */
-export function workspace({ links, spaces = Math.max(1, Math.ceil(links / 25)), iconBytes = 0, longAddresses = 0 }: WorkspaceShape, seed = 1): AppState {
+export function workspace({ links, spaces = Math.max(1, Math.ceil(links / 25)), iconBytes = 0, iconShare = 1, longAddresses = 0 }: WorkspaceShape, seed = 1): AppState {
     const next = seededRandom(seed);
     const pick = <T>(list: readonly T[]): T => list[Math.floor(next() * list.length)]!;
     const hex = (length: number) => Array.from({ length }, () => Math.floor(next() * 16).toString(16)).join('');
@@ -52,7 +54,7 @@ export function workspace({ links, spaces = Math.max(1, Math.ceil(links / 25)), 
             title: `${pick(WORDS)} ${pick(WORDS)}${next() < 0.3 ? ` — ${pick(WORDS)}` : ''}`.replace(/^./, c => c.toUpperCase()),
             url: `https://${host}${path}${longAddresses ? `?ref=${noise(longAddresses)}` : ''}`,
             createdAt: 1_700_000_000_000 + Math.floor(next() * 50_000_000_000),
-            ...(iconBytes ? { icon: `data:image/png;base64,${noise(iconBytes)}` } : next() < 0.15 ? { icon: pick(['📁', '⭐', '🔥', '💼', '🎧']) } : {}),
+            ...(iconBytes && next() < iconShare ? { icon: `data:image/webp;base64,${noise(Math.max(0, iconBytes - 23))}` } : next() < 0.15 ? { icon: pick(['📁', '⭐', '🔥', '💼', '🎧']) } : {}),
         };
         state.items[item.id] = item;
         created[i % spaces]!.groups[i % 2]!.itemIds.push(item.id);
