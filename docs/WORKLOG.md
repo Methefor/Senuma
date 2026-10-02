@@ -8,7 +8,7 @@ The former uncommitted root `manifest.json` version change was committed separat
 
 ### Validation on the integrated 2.1 branch
 
-- `npm run check`: typecheck, lint, 284 unit tests, build and all bundle budgets passed. One expensive icon-policy property test initially exceeded Vitest's generic five-second limit by 49 ms; the test itself passed immediately when isolated. Its explicit timeout is now 10 seconds, and the complete suite passed.
+- `npm run check`: typecheck, lint, 292 unit tests, build and all bundle budgets passed after the final merge. Phase 4 contributed eight Google Auth tests. One expensive icon-policy property test initially exceeded Vitest's generic five-second limit by 49 ms before Phase 4 was merged; the final merged test retains Phase 4's explicit 30-second timeout and passes.
 - `npm run test:e2e`: second clean run passed 65/65. The first run had one transient failure while opening a second tab immediately after a Mode change; cross-tab propagation and restart persistence passed in that same run.
 - `npm run test:rc`: 33/33 passed.
 - `npm run rehearse`: 16/16 passed using the saved published 1.80 fixture and real extension ID `oghlifenjhpbebcdeboejbmemelkfobe`.
@@ -17,6 +17,7 @@ The former uncommitted root `manifest.json` version change was committed separat
 - `npm run test:sync:e2e`: 20/20 passed with mock sign-in and the local emulator.
 - `npm run package`: all package inspections passed; local package `Senuma-2.1.0-dev-1-2.0.90-f4099db04068.zip` created. Nothing was uploaded.
 - Store assets and demo media were regenerated from the 2.1 build. The current set contains eight screenshots, hero, tile, icon, one canonical WebM and one 76-frame GIF; 14 files are recorded in `assets/media-manifest.json`.
+- Repository integration: `senuma-2.1` received the professional structure through merge commit `96091c3`. Phase 4 and the repository branch had independently recorded the same Phase 3 documentation, so a real merge was required. The only merge conflict was `.gitignore`; local project identifiers, Firebase emulator output and generated-media rules were all retained. Commit `531b973` removed the duplicated timeout argument created by combining two independent flaky-test fixes. Both local branches now point to that commit.
 
 ### Remaining gates
 
