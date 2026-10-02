@@ -26,24 +26,17 @@ confirm each against the dashboard before changing it.
 | Personally identifiable information | ticked | **unticked** | No account; no name, address or e-mail is collected. |
 | Health information | — | unticked | |
 | Financial and payment information | check | **unticked** | No payments, no licence checks. |
-| Authentication information | ticked | **see decision below** | |
+| Authentication information | ticked | **ticked** | Legacy cloud import only; see below. |
 | Personal communications | — | unticked | |
 | Location | ticked | **unticked** | Weather is removed; no location is read. |
 | Web history | check | **unticked** | Recently closed pages are read live on the device, only if turned on; never stored or sent. |
 | User activity | check | **unticked** | No analytics. |
 | Website content | ticked | **unticked** | Nothing is read from web pages; no content scripts. |
 
-**One owner decision — Authentication information.** Senuma itself creates no account and
-collects no credentials. But for a person who used 1.x cloud sync and presses “Bring your New
-Tab Folders cloud copy”, the sign-in token that 1.80 saved on the device is sent once to
-Google's token service so their own copy can be read from the developer's Firebase project.
-
-- Conservative (recommended while the import button ships): leave **Authentication
-  information** ticked and say in the policy that it applies only to that one optional,
-  user-initiated, read-only import by former sync users.
-- Alternative: untick it, on the reading that nothing new is collected. Riskier with a reviewer.
-
-Untick it for good in the release that removes the import button.
+**Authentication information stays ticked (owner decision, 2026-10-02)** for as long as the
+legacy cloud import ships: for a person who used 1.x cloud sync and presses “Bring your New Tab
+Folders cloud copy”, the sign-in token that 1.80 saved on the device is sent once to Google's
+token service so their own copy can be read. Untick it in the release that removes the button.
 
 ## Certifications (all three ticked)
 
@@ -53,8 +46,8 @@ Untick it for good in the release that removes the import button.
 
 ## Privacy policy URL
 
-Keep the field, but the page it points to must be rewritten before submission: the 1.x policy
-describes cloud sync, accounts, payments and weather. The new text must state:
+Keep the field. The page it points to must be replaced before submission with the text in
+PRIVACY_POLICY.md (draft; two owner blanks: contact address, retention of 1.x cloud data). It states:
 
 - everything is stored on the device; no analytics, no tracking, no account;
 - custom wallpapers stay on the device and are not in backup files;
