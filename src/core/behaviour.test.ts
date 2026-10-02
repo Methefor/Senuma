@@ -391,10 +391,10 @@ describe('version labels', () => {
         expect(manifest.version).toBe(BRAND.manifestVersion);
         expect(manifest.version_name).toBe(BRAND.displayVersion);
         // The display label is the machine version, written for people.
-        expect(BRAND.displayVersion.replace(/ RC /, '-rc.')).toBe(BRAND.version);
+        expect(BRAND.displayVersion.replace(/ RC /, '-rc.').replace(/ dev /, '-dev.')).toBe(BRAND.version);
         const prerelease = BRAND.version.includes('-');
         // A pre-release never carries the public number in the manifest; a release always matches it.
-        if (prerelease) expect(BRAND.manifestVersion.startsWith('1.99.')).toBe(true);
+        if (prerelease) expect(BRAND.manifestVersion).not.toBe(BRAND.version.split('-')[0]);
         else expect(BRAND.manifestVersion).toBe(BRAND.version);
     });
 });

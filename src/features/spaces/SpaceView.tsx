@@ -1,6 +1,7 @@
 import { useRef, useState } from 'preact/hooks';
 import { remember, removeGroupWithUndo } from '../../app/actions';
 import { CATEGORIES, type Category } from '../../core/catalog';
+import { LIMITS } from '../../core/limits';
 import { addGroup, addItem, isDocked, itemsOf, moveItem, renameGroup, shiftGroup } from '../../core/ops';
 import { fillFromCategory } from '../../core/setup';
 import type { AppState, ID, Item, Space, SpaceGroup } from '../../core/types';
@@ -78,7 +79,7 @@ function Group({ state, space, group, index, filter }: { state: AppState; space:
             }}>
             {!(single && !group.name) && (
                 <header class="group-head">
-                    <input class="group-name" value={group.name} placeholder={t('group.untitled')} aria-label={t('group.name')}
+                    <input class="group-name" value={group.name} placeholder={t('group.untitled')} aria-label={t('group.name')} maxLength={LIMITS.name}
                         onChange={event => update(s => renameGroup(s, space.id, group.id, event.currentTarget.value))}
                         onKeyDown={event => event.key === 'Enter' && event.currentTarget.blur()} />
                     {!single && (

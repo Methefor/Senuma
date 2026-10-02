@@ -1,6 +1,7 @@
 /** Reading backup files and merging them into a setup. Loaded with Settings, not at startup. */
 import { BACKUP_KIND } from './backup';
 import { fromLegacy } from './legacyConvert';
+import type { ValidationOptions } from './limits';
 import { upgrade } from './migrate';
 import { addGroup, addItem, addSpace, itemsOf } from './ops';
 import { isDict } from './sanitize';
@@ -17,7 +18,7 @@ const isBackupKind = (kind: unknown): boolean => kind === BACKUP_KIND || (typeof
  * Reads a backup from this product (any schema version) or an export from New Tab
  * Folders 1.x. Everything is re-validated; null means the file holds nothing usable.
  */
-export function importBackup(text: string): AppState | null {
+export function importBackup(text: string, options: ValidationOptions = {}): AppState | null {
     let parsed: unknown;
     try {
         parsed = JSON.parse(text);
@@ -28,9 +29,9 @@ export function importBackup(text: string): AppState | null {
     if (isDict(parsed) && isBackupKind(parsed.kind)) {
         // The envelope's schema is authoritative for files whose state omits its own.
         const inner = isDict(parsed.state) ? { schema: parsed.schema, ...parsed.state } : null;
-        state = upgrade(inner);
+        state = upgrade(inner, options);
     } else {
-        state = fromLegacy(parsed);
+        state = fromLegacy(parsed, options);
         if (state?.legacy) state.legacy.acknowledged = true;
     }
     if (!state || state.spaceOrder.length === 0) return null;

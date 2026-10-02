@@ -1,17 +1,15 @@
 /**
- * The icon re-encoder (src/sync/iconEncode.ts) in a real browser engine: it needs canvas and
+ * The icon re-encoder (src/browser/iconEncode.ts) in a real browser engine: it needs canvas and
  * image decoding, which the unit tests cannot provide.
  *
- *   npx vite-node e2e/sync-icons.ts
- *
- * Senuma 2.1 work; the 2.0 product does not load this code.
+ *   npx vite-node e2e/icons.ts
  */
 import { build } from 'esbuild';
 import { chromium } from 'playwright';
-import { ICON_CAP } from '../src/sync/icons';
+import { ICON_CAP } from '../src/core/iconPolicy';
 import { check, expect, report } from './harness';
 
-const bundle = await build({ entryPoints: ['src/sync/iconEncode.ts'], bundle: true, format: 'iife', globalName: 'iconEncode', write: false, target: 'chrome120' });
+const bundle = await build({ entryPoints: ['src/browser/iconEncode.ts'], bundle: true, format: 'iife', globalName: 'iconEncode', write: false, target: 'chrome120' });
 const browser = await chromium.launch();
 const page = await browser.newPage();
 await page.setContent('<!doctype html><title>icons</title>');

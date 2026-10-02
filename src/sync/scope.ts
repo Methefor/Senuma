@@ -12,7 +12,7 @@
  * Backgrounds that name a picture this device lacks are handled one level up, in wallpaper.ts;
  * the engine uses `projectWithAssets` / `applyWithAssets`, which keep this invariant too.
  */
-import { capIcons } from './icons';
+import { capIcons } from '../core/iconPolicy';
 import { SCHEMA_VERSION, type AppState, type DockEntry, type ID, type Item, type Mode, type Prefs, type SearchProvider, type Space } from '../core/types';
 
 type Scope = 'synced' | 'local';
@@ -89,7 +89,7 @@ export function toSyncable(state: AppState): SyncDoc {
         schema: state.schema,
         spaces: state.spaces,
         spaceOrder: state.spaceOrder,
-        // Whatever a setup holds, what is uploaded stays inside the icon limits (icons.ts).
+        // Whatever a setup holds, what is uploaded stays inside the icon limits (core/iconPolicy.ts).
         items: capIcons({ items: state.items }).value.items,
         modes: state.modes,
         modeOrder: state.modeOrder,

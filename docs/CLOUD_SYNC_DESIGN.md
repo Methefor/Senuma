@@ -1,8 +1,8 @@
 # Senuma cloud sync — design (for Senuma 2.1)
 
-Status: **design approved; phase 1 (pure core) written and tested; nothing connected.** No
-backend exists, no Firebase project was created or changed, nothing was published, and none of
-this code is in the Senuma 2.0 package. Decided 2026-10-02: the 1.80 Firebase system is not a
+Status: **design approved; PHASE 1 COMPLETE (2026-10-03); nothing connected.** No backend
+exists, no Firebase project was created or changed, nothing was published. Work is on the local
+branch `senuma-2.1`; the Senuma 2.0 branch (`rebuild/browser-os`) and its package are unchanged. Decided 2026-10-02: the 1.80 Firebase system is not a
 Senuma requirement; Senuma's sync is designed from first principles.
 
 Items marked **[verify]** are facts to confirm in a prototype before they are relied on.
@@ -137,7 +137,7 @@ pixels, preview, file name or size.
 | Situation | What the device does |
 |---|---|
 | Picture is here | Applied and shown like any background. |
-| Picture is not here | The reference is *held* beside the setup, exactly as received, and is what this device reports as the synced value. The setup itself gets the theme's backdrop, so rendering and validation never see a reference they cannot follow (the 2.0 validator needs no change). `assetMissingLocally` is exposed for the interface; nothing is blocked. |
+| Picture is not here | The reference is *held* in the device-local record (below), exactly as received, and is what this device reports as the synced value. The setup itself gets the theme's backdrop, so rendering and validation never see a reference they cannot follow (the 2.0 validator needs no change). `assetMissingLocally` is exposed for the interface; nothing is blocked. |
 | Nothing else changed | The device has nothing to send. It cannot overwrite the device that has the picture, however often they sync. |
 | The person picks a background here | By default it is this device's own (`deviceChoice`); the synced reference is untouched. “Use on all devices” makes it an ordinary synced change. |
 | The person changes it on a device that has the picture | An ordinary synced change; other devices follow, and any device choice made for the old picture ends. |
@@ -145,6 +145,29 @@ pixels, preview, file name or size.
 | Merge between a device with and one without the picture | Both report the same reference: no change, no conflict. |
 
 The same holds for a Mode's own background.
+
+**Device-local storage.** Both records live under their own storage key, `bos.device`, beside
+the setup and never inside it (`src/storage/deviceLocal.ts`):
+
+```
+deviceLocal.heldSyncedBackgrounds   place → the synced background this device cannot show
+deviceLocal.backgroundOverrides     place → the background chosen on this device meanwhile
+```
+
+(`place` is `default` or `mode:<id>`.) Tested: it survives a restart; it is validated on
+load (a held entry keeps its reference although the picture is absent; an override must be
+showable here and exists only beside a held entry); it appears in no synced copy, backup file or
+restore point; it creates no conflict; a background change made on another device supersedes
+both records. There is no backend for it: it is one key in the browser's local storage.
+
+**Interface copy (for phase 5; factual):**
+- Missing, no choice made: “The background chosen on another device is a picture that is not on
+  this device. This device is showing the theme's backdrop instead. Nothing was changed on your
+  other devices.”
+- Missing, choice made here: “This device is using its own background. Your other devices keep
+  theirs.” · actions: “Use on all devices”, “Go back to the synced background”.
+- Picture present again, choice made here: “This device is using its own background.” · action:
+  “Use the synced background”.
 
 **Custom wallpapers: not synced in v1.** Images are megabytes; a Firestore document holds 1 MiB;
 Cloud Storage for Firebase needs a billing account on new projects **[verify]**. Other devices
@@ -270,20 +293,46 @@ A link's icon may be an image embedded as a `data:` URL; such data barely compre
 | Never | An icon is never cut short. It is kept whole, replaced by a complete smaller image, or removed. |
 | Who keeps their icon when the total is exceeded | Older links first, so adding a link never takes an icon from an earlier one |
 
-Three entry points: `settleIcon` (a link is saved), `settleIcons` (data coming in: import,
-backup, a setup from before the policy), and `capIcons`, which sync applies to every copy it
-uploads without needing to decode pictures — so the limits hold for uploaded data whatever the
-local setup contains.
+**Both limits are final (owner, 2026-10-03): 32 KB per icon, 128 KB together.** Embedded icons
+are an enhancement, not core workspace data; the site's own icon carries most links. In the
+realistic 1 000-link case above, 92 links had their own 3 kB icon and 43 kept it.
 
-**Not yet wired into the product.** Senuma 2.0 is frozen and saves icons without a limit. In
-2.1 `settleIcon` goes into the add/edit-link path and `settleIcons` into import, backup restore
-and a one-time pass over existing setups. Until then only the upload guard exists, and it only
-matters once sync exists.
+**Where the policy runs in 2.1** (policy: `src/core/iconPolicy.ts`; re-encoder:
+`src/browser/iconEncode.ts`; page-side helpers: `src/app/icons.ts`):
 
-The 128 KB total is the tighter of the two limits in practice: it is about 43 icons of 3 kB.
-In the realistic 1 000-link case above, 92 links had their own icon and 43 kept it in the
-synced copy. Raising the total to 256 KB would allow about 85 and let icons reach two fifths of
-the document. Owner's call before phase 4.
+| Path | What happens |
+|---|---|
+| Add link, edit link (the editor) | `prepareIcon` in the page: fits → kept; over → re-encoded; cannot fit → saved without a stored icon and the person is told |
+| Any other code that adds or edits a link | `ops.addItem` / `updateItem` refuse an icon over the limits (add: link saved without it; edit: the old icon stays) |
+| Import of a backup or a 1.x export | Read with oversized icons left in place, then `settleSetup` re-encodes in the page before anything is offered; the result is reported |
+| Merging an import into the current setup | Goes through `addItem`, so the 128 KB total holds across both |
+| Stored state on every load, other tabs' saves, restore points | `sanitize` enforces the limits (drops what is over) |
+| First load of a setup saved before the limits | One-time pass in `loadState`: re-encode in the page, report in a notice, keep the stored original once under `bos.state.before-limits`. It needs no marker: a setup within the limits is left alone, so it runs once by construction |
+| Preparing the synced copy | `toSyncable` applies `capIcons` to whatever it is given |
+
+Pictures are decoded and re-encoded **only in a page**, never in the service worker; no
+permission and no offscreen document were added for it. Where no page is involved the rule is
+the plain one: over the limit is not stored.
+
+#### 5.2.2 Text and address limits (`src/core/limits.ts`)
+
+| Value | Limit |
+|---|---|
+| Link title | 256 characters |
+| Address (and a search provider's address template) | 4 096 characters |
+| Space, group and Mode names | 128 characters |
+| Small labels: a Space's note, a search provider's name | 128 characters |
+
+- An address over the limit is **refused whole**; it is never shortened into a different
+  address. Typing: the field stops at the limit. Import and stored data: that link is skipped
+  and counted.
+- A title or name over the limit is **not kept in part**. Typing: the field stops at the limit;
+  an edit that still arrives over the limit is refused and the old value stays. Import and
+  stored data: the default takes its place (the site's name for a link, “Untitled” for a Space,
+  an untitled section for a group, “Mode”) and it is counted.
+- The only change ever made to text that is kept is trimming whitespace at its ends.
+- Everything counted is shown to the person in one notice (links left out, titles replaced,
+  names replaced, icons made smaller, icons dropped).
 
 ### 5.3 Chunking strategy (documented now, built only if needed)
 
@@ -437,7 +486,7 @@ Senuma sync never reads, links to or migrates from the old project.
 | Phase | Content | Exit test |
 |---|---|---|
 | 0 | Owner decisions D1–D5; owner creates the new Firebase project (free plan) and OAuth client | — |
-| 1 — **done** | Pure core, no network: `src/sync/` scope, merge, revision, crypto, icon limits, missing-wallpaper model | 108 unit tests: fixed vector, merge properties over 600 random edit runs, threat-model tests, payload budget, icon policy over 300 random mixes; re-encoder checked in a browser engine (`e2e/sync-icons.ts`) |
+| 1 — **COMPLETE** | Pure sync core (`src/sync/`: scope, merge, revision, crypto, missing-wallpaper model) plus the product-side limits it depends on (icon policy, text and address limits, device-local record) | 231 unit tests in all; merge properties over 600 random edit runs; threat-model tests; payload budget; icon and text limits over 300 random mixes each; browser checks `e2e/icons.ts` (6) and `e2e/limits.e2e.ts` (8) |
 | 2 | Security Rules + emulator test suite | All rule tests pass locally |
 | 3 | Sign-in (optional `identity`), REST client, against the emulator | Sign in/out; session refresh |
 | 4 | Engine in the service worker, state machine, restore points, history | Two browser profiles against the emulator: edit, offline edit, concurrent edit, conflict |
@@ -456,11 +505,12 @@ Startup bundle stays as it is: all of this loads on demand.
 | `merge.ts` | Three-way merge with reported conflicts and per-conflict resolutions |
 | `revision.ts` | The envelope, the next-step decision (`plan`), checks on a decrypted copy, the write rule |
 | `crypto.ts` | Recovery key, key wrapping, sealing and opening documents, size limit |
-| `icons.ts`, `iconEncode.ts` | Embedded icon limits; the in-browser re-encoder |
-| `wallpaper.ts` | Backgrounds that reference a picture this device lacks |
+| `wallpaper.ts` | Backgrounds that reference a picture this device lacks; the device-local record |
+| (product) `core/iconPolicy.ts`, `core/limits.ts`, `browser/iconEncode.ts`, `app/icons.ts`, `storage/deviceLocal.ts` | The limits and the device-local store, used by the 2.1 product |
 | `fixtures.ts` | Repeatable test workspaces of any size |
 
-Verified: the Senuma 2.0 build output is byte-identical with and without this folder.
+Verified at phase exit: the Senuma 2.0 branch builds to the same bytes as the 2.0.0 package.
+The sync folder itself is still not imported by the product (2.1 imports only the limits).
 
 Tested behaviour, in the tests' own words: a change on one side is taken exactly; changes that
 do not collide are both kept; the same link renamed differently, an edit against a deletion, a
@@ -471,10 +521,10 @@ unknown key or a newer format stops sync; stored bytes contain no address, title
 device label; one changed bit, another account, another document path, another key id or
 another revision makes a document unreadable; a mistyped recovery key is caught before use.
 
-Found while building, to settle before phase 4:
-- Wiring the icon limits into the product's save and import paths (5.2.1), and the value of the 128 KB total.
-- Titles and addresses have no length limit in the state model; a limit belongs beside the icon limits.
-- Where the per-device *held backgrounds* record is stored (it must survive restarts and is never uploaded).
+Settled at phase exit: icon limits wired into save, import and load (5.2.1); text and address
+limits (5.2.2); device-local storage for held backgrounds (3.5).
+
+Still to settle before phase 4:
 - The first-sync choice should reuse the existing idempotent merge (duplicates by address
   skipped), since two devices with no common past have different ids for the same links.
 - Settling one conflict can raise another (keeping a Space brings its own questions); the

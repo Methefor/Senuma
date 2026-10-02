@@ -14,11 +14,11 @@ export const BRAND = {
     /** The name people upgrading from 1.x know the product by. */
     legacyName: 'New Tab Folders',
     /** Machine-readable pre-release version (package.json carries the same value). */
-    version: '2.0.0',
+    version: '2.1.0-dev.1',
     /** What people see: About, the browser's extension page, the RC package name. */
-    displayVersion: '2.0.0',
+    displayVersion: '2.1.0 dev 1',
     /** The manifest version. A release sets it equal to `version`; a pre-release uses 1.99.x (a test enforces both). */
-    manifestVersion: '2.0.0',
+    manifestVersion: '2.0.90',
     description: 'Make your browser yours with Spaces, Modes, universal search, cinematic themes and a personal new-tab workspace.',
     backupFilePrefix: 'senuma-backup',
 } as const;
@@ -33,4 +33,8 @@ export const STORAGE_KEYS = {
     /** A state written by a newer release, kept untouched if an older build has to take over. */
     newerState: 'bos.state.newer',
     legacyData: 'ntf_data',
+    /** The stored setup exactly as it was before size limits changed it, kept once so nothing is lost by the upgrade. */
+    beforeLimits: 'bos.state.before-limits',
+    /** What this device remembers that is not part of the setup and is never uploaded. */
+    device: 'bos.device',
 } as const;

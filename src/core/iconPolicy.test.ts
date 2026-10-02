@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { Item } from '../core/types';
-import { PAYLOAD_LIMIT, createVaultKey, newRecoverySecret, seal } from './crypto';
-import { seededRandom, workspace } from './fixtures';
-import { ICON_CAP, ICON_REFERENCE_MAX, ICON_TOTAL, capIcons, embeddedTotal, iconFits, isEmbedded, settleIcon, settleIcons, type Reencode } from './icons';
-import { toSyncable } from './scope';
+import { PAYLOAD_LIMIT, createVaultKey, newRecoverySecret, seal } from '../sync/crypto';
+import { seededRandom, workspace } from '../sync/fixtures';
+import { toSyncable } from '../sync/scope';
+import { ICON_CAP, ICON_REFERENCE_MAX, ICON_TOTAL, capIcons, embeddedTotal, iconFits, isEmbedded, settleIcon, settleIcons, type Reencode } from './iconPolicy';
+import type { Item } from './types';
 
 const embedded = (length: number, fill = 'A') => `data:image/png;base64,${fill.repeat(Math.max(0, length - 22))}`;
 /** Stands in for the browser's re-encoder: a complete, different, smaller image of the size asked for. */

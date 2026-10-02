@@ -57,9 +57,11 @@ async function boot(): Promise<void> {
 
     // A converted legacy setup exists only in memory until now; the mirror may also be ahead
     // of the store if the last tab closed mid-write. Either way, make the store current.
-    if (source === 'legacy' || app.get().updatedAt > state.updatedAt) {
+    if (source === 'legacy' || resolved.report || app.get().updatedAt > state.updatedAt) {
         saveState(app.get()).catch(() => toast(t('error.save')));
     }
+    // The size limits changed something in a setup saved before them: say what, once.
+    if (resolved.report) void import('./app/limitsNotice').then(module => toast(module.limitsNotice(resolved.report!)));
     // Only on the upgrade itself: bring a picture 1.x stored over to the wallpaper library.
     if (source === 'legacy') void import('./app/legacyBackground').then(module => module.migrateLegacyPicture());
 

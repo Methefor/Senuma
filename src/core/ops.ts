@@ -2,7 +2,12 @@
 import { ACCENTS, DEFAULT_PROVIDER_ID, MAX_DOCK, MAX_RECENTS, MAX_USAGE, newId } from './defaults';
 import { DEFAULT_BACKGROUND, MAX_WALLPAPERS, type Background, type WallpaperAsset } from './background';
 import type { AppState, DockEntry, ID, Item, Mode, Prefs, SearchProvider, Space, SpaceGroup } from './types';
+import { ICON_TOTAL, embeddedTotal, iconFits, isEmbedded } from './iconPolicy';
+import { LIMITS, bounded } from './limits';
 import { normalizeUrl, titleFromUrl } from './url';
+
+/** Room left for one more embedded icon, not counting the icon it would replace. */
+const iconRoom = (s: AppState, replacing?: string): number => ICON_TOTAL - embeddedTotal(s.items) + (replacing && isEmbedded(replacing) ? replacing.length : 0);
 
 export interface ItemDraft {
     title?: string;
@@ -77,12 +82,12 @@ export function addSpace(
     const id = newId();
     const space: Space = {
         id,
-        name: init.name.trim() || 'Untitled',
+        name: bounded(init.name, LIMITS.name) || 'Untitled',
         glyph: init.glyph ?? 'folder',
         accent: init.accent ?? ACCENTS[s.spaceOrder.length % ACCENTS.length]!,
         groups: [{ id: newId(), name: '', itemIds: [] }],
         createdAt: Date.now(),
-        ...(init.note?.trim() ? { note: init.note.trim() } : {}),
+        ...(bounded(init.note, LIMITS.label) ? { note: bounded(init.note, LIMITS.label)! } : {}),
         ...(init.templateId ? { templateId: init.templateId } : {}),
     };
     const mode = activeMode(s);
@@ -100,11 +105,11 @@ export function addSpace(
 
 export function updateSpace(s: AppState, id: ID, patch: Partial<Pick<Space, 'name' | 'glyph' | 'accent' | 'note'>>): AppState {
     return withSpace(s, id, space => {
-        const next: Space = { ...space, ...patch, name: patch.name?.trim() || space.name };
-        if (patch.note !== undefined) {
-            if (patch.note.trim()) next.note = patch.note.trim();
-            else delete next.note;
-        }
+        // A name or note over its limit is refused: the one already there stays.
+        const next: Space = { ...space, ...patch, name: bounded(patch.name, LIMITS.name) || space.name };
+        delete next.note;
+        const note = patch.note === undefined ? space.note : bounded(patch.note, LIMITS.label) ?? space.note;
+        if (note) next.note = note;
         return next;
     });
 }
@@ -181,12 +186,14 @@ export function shiftSpace(s: AppState, id: ID, delta: -1 | 1, scope: 'visible' 
 export function addGroup(s: AppState, spaceId: ID, name: string): AppState {
     return withSpace(s, spaceId, space => ({
         ...space,
-        groups: [...space.groups, { id: newId(), name: name.trim(), itemIds: [] }],
+        groups: [...space.groups, { id: newId(), name: bounded(name, LIMITS.name) ?? '', itemIds: [] }],
     }));
 }
 
 export function renameGroup(s: AppState, spaceId: ID, groupId: ID, name: string): AppState {
-    return withSpace(s, spaceId, space => mapGroups(space, g => (g.id === groupId ? { ...g, name: name.trim() } : g)));
+    const next = bounded(name, LIMITS.name);
+    if (next === null) return s;
+    return withSpace(s, spaceId, space => mapGroups(space, g => (g.id === groupId ? { ...g, name: next } : g)));
 }
 
 export function shiftGroup(s: AppState, spaceId: ID, groupId: ID, delta: -1 | 1): AppState {
@@ -224,10 +231,12 @@ export function addItem(s: AppState, spaceId: ID, groupId: ID | null, draft: Ite
     const target = space.groups.find(g => g.id === groupId) ?? space.groups[0]!;
     const item: Item = {
         id: newId(),
-        title: draft.title?.trim() || titleFromUrl(url),
+        // A title over the limit is not kept in part; the link gets its site's name, as if none was given.
+        title: bounded(draft.title, LIMITS.title) || titleFromUrl(url),
         url,
         createdAt: Date.now(),
-        ...(draft.icon?.trim() ? { icon: draft.icon.trim() } : {}),
+        // An icon over the limits is not stored; the link then shows its site's icon. (Pages re-encode first: app/icons.ts.)
+        ...(draft.icon?.trim() && iconFits(draft.icon.trim(), iconRoom(s)) ? { icon: draft.icon.trim() } : {}),
     };
     const state = withSpace({ ...s, items: { ...s.items, [item.id]: item } }, spaceId, sp =>
         mapGroups(sp, g => (g.id === target.id ? { ...g, itemIds: [...g.itemIds, item.id] } : g)),
@@ -244,10 +253,15 @@ export function updateItem(s: AppState, id: ID, patch: Partial<ItemDraft>): AppS
         if (!url) return s;
         next.url = url;
     }
-    if (patch.title !== undefined) next.title = patch.title.trim() || titleFromUrl(next.url);
+    if (patch.title !== undefined) {
+        const title = bounded(patch.title, LIMITS.title);
+        // Over the limit: refused, the title already there stays.
+        if (title !== null) next.title = title || titleFromUrl(next.url);
+    }
     if (patch.icon !== undefined) {
-        if (patch.icon.trim()) next.icon = patch.icon.trim();
-        else delete next.icon;
+        const icon = patch.icon.trim();
+        if (!icon) delete next.icon;
+        else if (iconFits(icon, iconRoom(s, item.icon))) next.icon = icon;
     }
     return { ...s, items: { ...s.items, [id]: next } };
 }
@@ -461,7 +475,7 @@ export function addMode(s: AppState, init: Omit<Mode, 'id'>): { state: AppState;
     const id = newId();
     return {
         id,
-        state: { ...s, modes: { ...s.modes, [id]: { ...init, id } }, modeOrder: [...s.modeOrder, id] },
+        state: { ...s, modes: { ...s.modes, [id]: { ...init, name: bounded(init.name, LIMITS.name) || 'Mode', id } }, modeOrder: [...s.modeOrder, id] },
     };
 }
 
@@ -473,7 +487,7 @@ export function updateMode(
     const mode = s.modes[id];
     if (!mode) return s;
     const { background, ...rest } = patch;
-    const next: Mode = { ...mode, ...rest, name: patch.name?.trim() || mode.name };
+    const next: Mode = { ...mode, ...rest, name: bounded(patch.name, LIMITS.name) || mode.name };
     // null clears the override; undefined leaves it as it was.
     if (background === null) delete next.background;
     else if (background) next.background = background;
@@ -594,6 +608,7 @@ export function isValidTemplate(template: string): boolean {
 }
 
 export function upsertProvider(s: AppState, provider: SearchProvider): AppState {
+    if (!bounded(provider.name, LIMITS.label) || (provider.urlTemplate !== undefined && !isValidTemplate(provider.urlTemplate))) return s;
     const exists = s.providers.some(p => p.id === provider.id);
     return {
         ...s,

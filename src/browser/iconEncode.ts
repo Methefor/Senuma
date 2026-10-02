@@ -1,9 +1,9 @@
 /**
- * Re-encodes an embedded icon smaller, in the browser (Senuma 2.1, phase 1: not used by the
- * product yet). Icons are shown at 64 CSS pixels at most, so 128 pixels keeps them sharp on
+ * Re-encodes an embedded icon smaller. Runs in a page (it needs canvas and image decoding),
+ * never in the service worker. Icons are shown at 64 CSS pixels at most, so 128 pixels keeps them sharp on
  * dense screens; smaller sizes are tried only when that does not fit. Nothing leaves the page.
  */
-import type { Reencode } from './icons';
+import type { Reencode } from '../core/iconPolicy';
 
 /** Largest edge, then quality: the first combination that fits is used, so quality falls only as far as it must. */
 const SIZES = [128, 96, 64, 48] as const;

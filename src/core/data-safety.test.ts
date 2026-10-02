@@ -489,7 +489,9 @@ describe('backup files', () => {
         expect(JSON.parse(exportBackup(seeded().state)).kind).toBe('senuma-backup');
         expect(BRAND.backupFilePrefix).toBe('senuma-backup');
         // Renaming these would orphan every user's setup.
-        expect(STORAGE_KEYS).toEqual({ state: 'bos.state', snapshots: 'bos.snapshots', newerState: 'bos.state.newer', legacyData: 'ntf_data' });
+        expect(STORAGE_KEYS).toMatchObject({ state: 'bos.state', snapshots: 'bos.snapshots', newerState: 'bos.state.newer', legacyData: 'ntf_data' });
+        // Keys added since are new names beside the old ones, never replacements.
+        expect(STORAGE_KEYS).toEqual({ state: 'bos.state', snapshots: 'bos.snapshots', newerState: 'bos.state.newer', legacyData: 'ntf_data', beforeLimits: 'bos.state.before-limits', device: 'bos.device' });
     });
 
     it('merging the same setup again adds nothing, even with two Spaces of one name', () => {

@@ -11,11 +11,13 @@
  */
 import { categorize, categoryById } from './catalog';
 import { emptyState, MAX_DOCK, newId } from './defaults';
+import { capIcons } from './iconPolicy';
 import { legacyBackground } from './legacy';
+import { LIMITS, bounded, tooLong, type ValidationOptions } from './limits';
 import { upgrade, type Resolved } from './migrate';
 import { isDict, sanitize } from './sanitize';
 import type { AppState, Item, Space, SpaceGroup } from './types';
-import { isImageUrl, normalizeUrl } from './url';
+import { isImageUrl, normalizeUrl, titleFromUrl } from './url';
 
 type Dict = Record<string, unknown>;
 
@@ -35,7 +37,8 @@ const LEGACY_THEMES: Record<string, string> = { dark: 'dusk', light: 'fjord', cy
 // ---------- Legacy 1.x conversion ----------
 
 /** Accepts the full legacy `ntf_data` object or a bare legacy folders array (old export files). */
-export function fromLegacy(raw: unknown): AppState | null {
+export function fromLegacy(raw: unknown, options: ValidationOptions = {}): AppState | null {
+    const { report } = options;
     const data: Dict | null = Array.isArray(raw) ? { folders: raw } : isDict(raw) ? raw : null;
     if (!data || !Array.isArray(data.folders)) return null;
 
@@ -49,6 +52,7 @@ export function fromLegacy(raw: unknown): AppState | null {
             summary.skipped++;
             continue;
         }
+        if (report && tooLong(folder.name, LIMITS.name)) report.namesReplaced++;
         const groups: SpaceGroup[] = [{ id: newId(), name: '', itemIds: [] }];
         const votes = new Map<string, number>();
         for (const link of Array.isArray(folder.links) ? folder.links : []) {
@@ -56,7 +60,11 @@ export function fromLegacy(raw: unknown): AppState | null {
                 summary.skipped++;
                 continue;
             }
-            const title = typeof link.title === 'string' ? link.title.trim() : '';
+            // Over the limit: not kept in part. A link gets its site's name, a header becomes an untitled section.
+            const most = link.type === 'header' ? LIMITS.name : LIMITS.title;
+            const long = tooLong(link.title, most);
+            if (long && report) report[link.type === 'header' ? 'namesReplaced' : 'titlesReplaced']++;
+            const title = bounded(link.title, most) ?? '';
             // Legacy "headers" were pseudo-links that split a folder into sections.
             if (link.type === 'header') {
                 groups.push({ id: newId(), name: title, itemIds: [] });
@@ -73,7 +81,7 @@ export function fromLegacy(raw: unknown): AppState | null {
             // appended "c" to every link ID), and fresh IDs make every record unique.
             const item: Item = {
                 id: newId(),
-                title: title || url,
+                title: title || (long || url.length > LIMITS.title ? titleFromUrl(url) : url),
                 url,
                 createdAt: typeof link.createdAt === 'number' ? link.createdAt : Date.now(),
             };
@@ -91,7 +99,7 @@ export function fromLegacy(raw: unknown): AppState | null {
         const dominant = [...votes.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
         const space: Space = {
             id: newId(),
-            name: (typeof folder.name === 'string' && folder.name.trim()) || 'Untitled',
+            name: bounded(folder.name, LIMITS.name) || 'Untitled',
             glyph: (dominant && categoryById(dominant)?.glyph) || 'folder',
             accent: LEGACY_COLORS[String(folder.color)] ?? '#7C9CF0',
             groups: kept.length ? kept : [groups[0]!],
@@ -155,17 +163,22 @@ export function fromLegacy(raw: unknown): AppState | null {
         acknowledged: summary.links === 0,
     };
     state.updatedAt = Date.now();
+    if (!options.keepIcons) {
+        const capped = capIcons(state);
+        if (report) report.iconsDropped += capped.dropped.length;
+        state.items = capped.value.items;
+    }
     return state;
 }
 
 /** Decides what to boot from: the stored state, a legacy install, or a fresh start. */
-export function resolveState(stored: unknown, legacy: unknown): Resolved {
+export function resolveState(stored: unknown, legacy: unknown, options: ValidationOptions = {}): Resolved {
     if (isDict(stored)) {
         // A state of the new model exists. Even if it is damaged it is repaired in place;
         // falling back to legacy data here would silently discard everything done since.
-        return { state: upgrade(stored) ?? sanitize(stored), source: 'stored' };
+        return { state: upgrade(stored, options) ?? sanitize(stored, options), source: 'stored' };
     }
-    const migrated = fromLegacy(legacy);
+    const migrated = fromLegacy(legacy, options);
     if (migrated) return { state: migrated, source: 'legacy' };
     return { state: emptyState(), source: 'fresh' };
 }

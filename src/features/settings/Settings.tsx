@@ -4,11 +4,14 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import {
     SETTINGS_SECTIONS, deleteSnapshot, downloadBackup, ensureSnapshots, providerLabel, removeSpaceWithUndo, replaceSetup, type SettingsSection,
 } from '../../app/actions';
+import { settleSetup } from '../../app/icons';
+import { limitsNotice } from '../../app/limitsNotice';
 import { BRAND } from '../../brand';
 import { readBookmarks } from '../../browser/bookmarks';
 import { releaseClosedTabsAccess, requestClosedTabsAccess } from '../../browser/sessions';
 import { importBackup, mergeBackup } from '../../core/backupImport';
 import { emptyState, newId } from '../../core/defaults';
+import { LIMITS, findings, newReport } from '../../core/limits';
 import {
     addMode, captureMode, isValidTemplate, parseAliases, removeMode, removeProvider, restoreMode, setActiveMode, setModeDock, setPrefs, shiftSpace,
     updateMode, updateModeDock, upsertProvider,
@@ -163,7 +166,7 @@ function ModeCard({ state, mode, open, onToggle }: { state: AppState; mode: Mode
                             })))}>
                             <Icon name={mode.glyph} size={17} />
                         </button>
-                        <input type="text" value={mode.name} aria-label={t('field.name')}
+                        <input type="text" value={mode.name} aria-label={t('field.name')} maxLength={LIMITS.name}
                             onChange={event => update(s => updateMode(s, id, { name: event.currentTarget.value }))} />
                     </div>
 
@@ -299,8 +302,8 @@ function Search({ state }: { state: AppState }) {
             </ul>
             <h3>{t('search.addTitle')}</h3>
             <form class="inline-form" onSubmit={add}>
-                <input type="text" value={name} placeholder={t('field.name')} aria-label={t('field.name')} onInput={e => setName(e.currentTarget.value)} />
-                <input type="text" value={template} placeholder="https://example.com/search?q=%s" aria-label={t('field.url')} aria-invalid={invalid}
+                <input type="text" value={name} placeholder={t('field.name')} aria-label={t('field.name')} maxLength={LIMITS.label} onInput={e => setName(e.currentTarget.value)} />
+                <input type="text" value={template} placeholder="https://example.com/search?q=%s" aria-label={t('field.url')} aria-invalid={invalid} maxLength={LIMITS.url}
                     spellcheck={false} onInput={e => setTemplate(e.currentTarget.value)} />
                 <input type="text" class="alias-input" value={alias} placeholder={t('search.alias')} aria-label={t('search.alias')}
                     spellcheck={false} onInput={e => setAlias(e.currentTarget.value)} />
@@ -348,8 +351,12 @@ function Data({ state }: { state: AppState }) {
 
     const read = async (file: File | undefined) => {
         if (!file) return;
-        const imported = importBackup(await file.text());
-        if (!imported) return toast(t('data.fileUnreadable'));
+        const report = newReport();
+        // Oversized icons are kept for a moment so that they can be made smaller rather than dropped.
+        const read = importBackup(await file.text(), { report, keepIcons: true });
+        if (!read) return toast(t('data.fileUnreadable'));
+        const imported = await settleSetup(read, report);
+        if (findings(report)) toast(limitsNotice(report));
         // An empty setup has nothing to protect, so there is nothing to choose.
         if (state.spaceOrder.length === 0) {
             if (await replaceSetup(imported, 'import')) toast(t('data.restored'));

@@ -1,10 +1,12 @@
 import { useState } from 'preact/hooks';
+import { prepareIcon } from '../../app/icons';
 import { ACCENTS } from '../../core/defaults';
+import { LIMITS } from '../../core/limits';
 import { addItem, addSpace, locateItem, moveItem, updateItem, updateSpace } from '../../core/ops';
 import type { AppState, ID } from '../../core/types';
 import { normalizeUrl } from '../../core/url';
 import { t } from '../../i18n';
-import { setUi, update, type EditorTarget } from '../../storage/store';
+import { app, setUi, toast, update, type EditorTarget } from '../../storage/store';
 import { Icon, SPACE_GLYPHS } from '../../ui/Icon';
 import { Overlay } from '../../ui/Overlay';
 
@@ -18,12 +20,15 @@ function ItemEditor({ state, target }: { state: AppState; target: Extract<Editor
     const [spaceId, setSpaceId] = useState<ID>(target.spaceId);
     const [invalid, setInvalid] = useState(false);
 
-    const submit = (event: Event) => {
+    const submit = async (event: Event) => {
         event.preventDefault();
         if (!normalizeUrl(url)) return setInvalid(true);
+        // A picture pasted as the icon is made small enough to store, here in the page; if it cannot be, the site's icon is used.
+        const prepared = await prepareIcon(icon, app.get(), item?.id);
+        if (prepared.fellBack) toast(t('item.iconTooLarge'));
         update(s => {
-            if (!item) return addItem(s, spaceId, target.groupId ?? null, { title, url, icon }).state;
-            const edited = updateItem(s, item.id, { title, url, icon });
+            if (!item) return addItem(s, spaceId, target.groupId ?? null, { title, url, icon: prepared.icon }).state;
+            const edited = updateItem(s, item.id, { title, url, icon: prepared.icon });
             return locateItem(edited, item.id)?.spaceId === spaceId ? edited : moveItem(edited, item.id, spaceId, null);
         });
         close();
@@ -31,11 +36,11 @@ function ItemEditor({ state, target }: { state: AppState; target: Extract<Editor
 
     return (
         <Overlay label={item ? t('item.edit') : t('item.add')} class="overlay-form" onClose={close}>
-            <form class="form" onSubmit={submit}>
+            <form class="form" onSubmit={event => void submit(event)}>
                 <h2>{item ? t('item.edit') : t('item.add')}</h2>
                 <label class="field">
                     <span>{t('field.url')}</span>
-                    <input type="text" value={url} autofocus placeholder="github.com" autocomplete="off" spellcheck={false} aria-invalid={invalid}
+                    <input type="text" value={url} autofocus placeholder="github.com" autocomplete="off" spellcheck={false} aria-invalid={invalid} maxLength={LIMITS.url}
                         onInput={event => {
                             setUrl(event.currentTarget.value);
                             setInvalid(false);
@@ -44,7 +49,7 @@ function ItemEditor({ state, target }: { state: AppState; target: Extract<Editor
                 </label>
                 <label class="field">
                     <span>{t('field.name')} <em>{t('field.optional')}</em></span>
-                    <input type="text" value={title} autocomplete="off" onInput={event => setTitle(event.currentTarget.value)} />
+                    <input type="text" value={title} autocomplete="off" maxLength={LIMITS.title} onInput={event => setTitle(event.currentTarget.value)} />
                 </label>
                 <label class="field">
                     <span>{t('field.icon')} <em>{t('field.iconHint')}</em></span>
@@ -97,7 +102,7 @@ function SpaceEditor({ state, spaceId }: { state: AppState; spaceId?: ID }) {
                 <h2>{space ? t('space.edit') : t('space.new')}</h2>
                 <label class="field">
                     <span>{t('field.name')}</span>
-                    <input type="text" value={name} autofocus required autocomplete="off" placeholder={t('space.namePlaceholder')}
+                    <input type="text" value={name} autofocus required autocomplete="off" maxLength={LIMITS.name} placeholder={t('space.namePlaceholder')}
                         onInput={event => setName(event.currentTarget.value)} />
                 </label>
                 <label class="field">

@@ -1,4 +1,5 @@
 /** Schema upgrades for stored states of the current model. (1.x conversion lives in legacyConvert.ts.) */
+import type { ValidationOptions, ValidationReport } from './limits';
 import { isDict, sanitize } from './sanitize';
 import { SCHEMA_VERSION, type AppState } from './types';
 
@@ -38,7 +39,7 @@ const MIGRATIONS: Record<number, (raw: Dict) => Dict> = {
 };
 
 /** Brings a stored or imported state up to the current schema and validates it. Null if unusable. */
-export function upgrade(raw: unknown): AppState | null {
+export function upgrade(raw: unknown, options: ValidationOptions = {}): AppState | null {
     if (!isDict(raw)) return null;
     let current = raw;
     let version = typeof current.schema === 'number' ? current.schema : SCHEMA_VERSION;
@@ -49,10 +50,12 @@ export function upgrade(raw: unknown): AppState | null {
         current = step(current);
         version++;
     }
-    return sanitize(current);
+    return sanitize(current, options);
 }
 
 export interface Resolved {
     state: AppState;
     source: 'stored' | 'legacy' | 'fresh';
+    /** What the size limits changed or left out while reading; absent when nothing. */
+    report?: ValidationReport;
 }

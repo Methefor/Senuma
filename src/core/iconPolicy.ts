@@ -1,5 +1,5 @@
 /**
- * Size policy for icons stored inside links (Senuma 2.1, phase 1: not used by the product yet).
+ * Size policy for icons stored inside links.
  *
  * A link's icon may be an image embedded as a `data:` URL. Such data barely compresses, so
  * without a limit a few of them would fill the synced workspace. The policy:
@@ -15,7 +15,7 @@
  * backup, an older setup), and `capIcons` is the guard on what sync uploads: it needs no
  * re-encoder, so the limits hold even where pictures cannot be decoded.
  */
-import type { ID, Item } from '../core/types';
+import type { ID, Item } from './types';
 
 /** Largest embedded icon, as stored (the whole `data:` URL). */
 export const ICON_CAP = 32 * 1024;
@@ -26,7 +26,7 @@ export const ICON_REFERENCE_MAX = 2048;
 
 /**
  * Produces a complete, smaller image of at most `maxLength` characters as a `data:` URL, or null
- * when it cannot. The browser implementation is in iconEncode.ts.
+ * when it cannot. The browser implementation is in browser/iconEncode.ts.
  */
 export type Reencode = (dataUrl: string, maxLength: number) => Promise<string | null>;
 

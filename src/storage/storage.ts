@@ -6,7 +6,9 @@ import { STORAGE_KEYS } from '../brand';
 import { kv, readLocal, writeLocal } from '../browser/kv';
 import { inExtension } from '../browser/result';
 import { sanitizeSnapshots } from '../core/backup';
+import { capIcons } from '../core/iconPolicy';
 import { emptyState } from '../core/defaults';
+import { findings, newReport, type ValidationReport } from '../core/limits';
 import { upgrade, type Resolved } from '../core/migrate';
 import { sanitize } from '../core/sanitize';
 import { SCHEMA_VERSION, type AppState, type Snapshot } from '../core/types';
@@ -26,12 +28,34 @@ export async function loadState(): Promise<Resolved> {
     const stored = await kv.get([STORAGE_KEYS.state, STORAGE_KEYS.legacyData]);
     const raw = stored[STORAGE_KEYS.state] as { schema?: unknown } | undefined;
     if (raw && typeof raw.schema === 'number' && raw.schema > SCHEMA_VERSION) newerOriginal = raw;
+    const report = newReport();
+    // Oversized icons are left in place here so that the page can make them smaller instead of dropping them.
+    const options = { report, keepIcons: true };
+    let resolved: Resolved;
     // A state of the current model wins, always (see legacyConvert.ts on why 1.x data is never a fallback).
-    if (typeof raw === 'object' && raw !== null && !Array.isArray(raw)) return { state: upgrade(raw) ?? sanitize(raw), source: 'stored' };
-    const legacy = stored[STORAGE_KEYS.legacyData];
-    if (legacy === undefined || legacy === null) return { state: emptyState(), source: 'fresh' };
-    // Only an install that still has 1.x data pays for the converter.
-    return (await import('../core/legacyConvert')).resolveState(raw, legacy);
+    if (typeof raw === 'object' && raw !== null && !Array.isArray(raw)) resolved = { state: upgrade(raw, options) ?? sanitize(raw, options), source: 'stored' };
+    else {
+        const legacy = stored[STORAGE_KEYS.legacyData];
+        if (legacy === undefined || legacy === null) return { state: emptyState(), source: 'fresh' };
+        // Only an install that still has 1.x data pays for the converter.
+        resolved = (await import('../core/legacyConvert')).resolveState(raw, legacy, options);
+    }
+    return withinLimits(resolved, report, raw);
+}
+
+/**
+ * The one-time pass over a setup saved before the size limits existed (and the guard for any
+ * later one that breaks them). Once a setup is within the limits this does nothing, so it needs
+ * no marker. What it changes is reported, and the stored original is set aside first.
+ */
+async function withinLimits(resolved: Resolved, report: ValidationReport, original: unknown): Promise<Resolved> {
+    let { state } = resolved;
+    if (capIcons(state).dropped.length > 0) state = await (await import('../app/icons')).settleSetup(state, report);
+    if (findings(report) === 0) return { ...resolved, state };
+    // Kept once, untouched, in case something the limits removed is wanted back. Best effort: a full store must not stop the page.
+    if (original !== undefined) await kv.set({ [STORAGE_KEYS.beforeLimits]: original }).catch(() => undefined);
+    // Newer than every copy made before the pass, so this is the one that is shown and saved.
+    return { ...resolved, state: { ...state, updatedAt: Date.now() }, report };
 }
 
 /** Rejects when the write fails (for example when the storage quota is exhausted). */

@@ -3,16 +3,21 @@
  * file:, chrome:, mailto:, custom app schemes) is rejected wherever a URL enters the product:
  * typing, pasting, bookmark import, backup import, 1.x migration and stored state.
  */
+import { LIMITS } from './limits';
+
 const ALLOWED_PROTOCOLS = new Set(['http:', 'https:']);
 const LOCAL_HOST = /^(localhost|127\.0\.0\.1|\[::1\]|[\w-]+\.(localhost|test|local))(:\d+)?(\/|$)/i;
 const BARE_DOMAIN = /^[\w-]+(\.[\w-]+)*\.[a-z]{2,}(:\d+)?([/?#].*)?$/i;
 const IPV4 = /^\d{1,3}(\.\d{1,3}){3}(:\d+)?([/?#].*)?$/;
 
-/** Turns user input into a safe absolute URL, or null when it is not one. */
+/**
+ * Turns user input into a safe absolute URL, or null when it is not one. An address over the
+ * length limit is refused whole: a shortened address would be a different address.
+ */
 export function normalizeUrl(input: unknown): string | null {
     if (typeof input !== 'string') return null;
     const text = input.trim();
-    if (!text || /\s/.test(text)) return null;
+    if (!text || text.length > LIMITS.url || /\s/.test(text)) return null;
     let candidate = text;
     if (!/^[a-z][a-z\d+.-]*:\/\//i.test(text)) {
         if (LOCAL_HOST.test(text) || IPV4.test(text)) candidate = `http://${text}`;
@@ -21,7 +26,7 @@ export function normalizeUrl(input: unknown): string | null {
     }
     try {
         const url = new URL(candidate);
-        return ALLOWED_PROTOCOLS.has(url.protocol) ? url.href : null;
+        return ALLOWED_PROTOCOLS.has(url.protocol) && url.href.length <= LIMITS.url ? url.href : null;
     } catch {
         return null;
     }

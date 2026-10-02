@@ -4,11 +4,13 @@
  */
 import { ATMOSPHERE_LEVELS, sanitizeBackground, sanitizeWallpapers, type WallpaperAsset } from './background';
 import { BUILTIN_PROVIDERS, DEFAULT_PREFS, MAX_DOCK, MAX_RECENTS, MAX_USAGE, emptyState, newId } from './defaults';
+import { capIcons } from './iconPolicy';
+import { LIMITS, bounded, tooLong, type ValidationOptions, type ValidationReport } from './limits';
 import { isValidTemplate, parseAliases } from './ops';
 import {
     SCHEMA_VERSION, type AppState, type DockEntry, type ID, type Item, type Mode, type Prefs, type RecentItem, type SearchProvider, type Space,
 } from './types';
-import { normalizeUrl } from './url';
+import { normalizeUrl, titleFromUrl } from './url';
 
 type Dict = Record<string, unknown>;
 
@@ -21,22 +23,38 @@ const oneOf = <T extends string>(v: unknown, options: readonly T[], fallback: T)
 /** IDs become object keys and DOM attributes; accept only plain tokens. */
 const RESERVED_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 const isId = (v: unknown): v is ID => typeof v === 'string' && /^[\w-]{1,64}$/.test(v) && !RESERVED_KEYS.has(v);
+/** Short internal tokens (a glyph, a theme or template id). Anything longer is not one. */
+const token = (v: unknown, fallback = ''): string => (typeof v === 'string' && v.length <= 64 ? v : fallback);
+/** A name within its limit, or the default; a name over the limit is counted, never shortened. */
+function named(value: unknown, max: number, report?: ValidationReport): string {
+    if (report && tooLong(value, max)) report.namesReplaced++;
+    return bounded(value, max) ?? '';
+}
 
-function sanitizeItems(raw: unknown): Record<ID, Item> {
+function sanitizeItems(raw: unknown, { report, keepIcons }: ValidationOptions): Record<ID, Item> {
     const items: Record<ID, Item> = {};
     if (!isDict(raw)) return items;
     for (const [id, value] of Object.entries(raw)) {
         if (!isId(id) || !isDict(value)) continue;
         const url = normalizeUrl(value.url);
-        if (!url) continue;
-        const item: Item = { id, title: str(value.title).trim() || url, url, createdAt: num(value.createdAt, 0) };
+        if (!url) {
+            if (report && str(value.url).trim()) report.linksSkipped++;
+            continue;
+        }
+        if (report && tooLong(value.title, LIMITS.title)) report.titlesReplaced++;
+        // No title: the address stands in when it is short enough to be one, else the site's name.
+        const title = bounded(value.title, LIMITS.title) || (url.length <= LIMITS.title ? url : titleFromUrl(url));
+        const item: Item = { id, title: tooLong(value.title, LIMITS.title) ? titleFromUrl(url) : title, url, createdAt: num(value.createdAt, 0) };
         if (str(value.icon).trim()) item.icon = str(value.icon).trim();
         items[id] = item;
     }
-    return items;
+    if (keepIcons) return items;
+    const capped = capIcons({ items });
+    if (report) report.iconsDropped += capped.dropped.length;
+    return capped.value.items;
 }
 
-function sanitizeSpaces(raw: unknown, items: Record<ID, Item>): Record<ID, Space> {
+function sanitizeSpaces(raw: unknown, items: Record<ID, Item>, report?: ValidationReport): Record<ID, Space> {
     const spaces: Record<ID, Space> = {};
     const claimed = new Set<ID>();
     const groupIds = new Set<ID>();
@@ -53,18 +71,20 @@ function sanitizeSpaces(raw: unknown, items: Record<ID, Item>): Record<ID, Space
             });
             const groupId = isId(g.id) && !groupIds.has(g.id) ? g.id : newId();
             groupIds.add(groupId);
-            return [{ id: groupId, name: str(g.name), itemIds }];
+            if (report && tooLong(g.name, LIMITS.name)) report.namesReplaced++;
+            return [{ id: groupId, name: tooLong(g.name, LIMITS.name) ? '' : str(g.name), itemIds }];
         });
         const space: Space = {
             id,
-            name: str(value.name).trim() || 'Untitled',
-            glyph: str(value.glyph, 'folder') || 'folder',
+            name: named(value.name, LIMITS.name, report) || 'Untitled',
+            glyph: token(value.glyph, 'folder') || 'folder',
             accent: /^#[\da-f]{6}$/i.test(str(value.accent)) ? str(value.accent) : '#7C9CF0',
             groups: groups.length ? groups : [{ id: newId(), name: '', itemIds: [] }],
             createdAt: num(value.createdAt, 0),
         };
-        if (str(value.note).trim()) space.note = str(value.note).trim();
-        if (str(value.templateId)) space.templateId = str(value.templateId);
+        const note = named(value.note, LIMITS.label, report);
+        if (note) space.note = note;
+        if (token(value.templateId)) space.templateId = token(value.templateId);
         spaces[id] = space;
     }
     // Items no Space refers to would be invisible forever; drop them.
@@ -91,7 +111,7 @@ function sanitizeDock(raw: unknown, items: Record<ID, Item>, spaces: Record<ID, 
     }).slice(0, MAX_DOCK);
 }
 
-function sanitizeProviders(raw: unknown): SearchProvider[] {
+function sanitizeProviders(raw: unknown, report?: ValidationReport): SearchProvider[] {
     const stored = new Map<ID, Dict>();
     for (const p of arr(raw)) if (isDict(p) && isId(p.id)) stored.set(p.id, p);
     const aliasesOf = (p: Dict | undefined, fallback: string[]) =>
@@ -102,7 +122,7 @@ function sanitizeProviders(raw: unknown): SearchProvider[] {
         if (providers.some(b => b.id === id)) continue;
         const urlTemplate = str(p.urlTemplate).trim();
         if (!isValidTemplate(urlTemplate)) continue;
-        providers.push({ id, name: str(p.name).trim() || id, urlTemplate, aliases: aliasesOf(p, []) });
+        providers.push({ id, name: named(p.name, LIMITS.label, report) || id, urlTemplate, aliases: aliasesOf(p, []) });
     }
     return providers;
 }
@@ -113,7 +133,7 @@ function sanitizePrefs(raw: unknown, providers: SearchProvider[], wallpapers: Re
     const providerId = str(p.defaultProviderId);
     return {
         language: oneOf(p.language, ['en', 'tr'] as const, DEFAULT_PREFS.language),
-        themeId: str(p.themeId, DEFAULT_PREFS.themeId) || DEFAULT_PREFS.themeId,
+        themeId: token(p.themeId, DEFAULT_PREFS.themeId) || DEFAULT_PREFS.themeId,
         background: sanitizeBackground(p.background, wallpapers),
         atmosphere: oneOf(p.atmosphere, ATMOSPHERE_LEVELS, DEFAULT_PREFS.atmosphere),
         motion: oneOf(p.motion, ['full', 'reduced', 'off'] as const, DEFAULT_PREFS.motion),
@@ -133,17 +153,18 @@ function sanitizeRecents(raw: unknown, spaces: Record<ID, Space>): RecentItem[] 
         const url = isDict(r) ? normalizeUrl(r.url) : null;
         if (!isDict(r) || !url || seen.has(url)) return [];
         seen.add(url);
-        const recent: RecentItem = { url, title: str(r.title) || url, at: num(r.at, 0), count: Math.max(1, Math.floor(num(r.count, 1))) };
+        const recent: RecentItem = { url, title: bounded(r.title, LIMITS.title) || (url.length <= LIMITS.title ? url : titleFromUrl(url)), at: num(r.at, 0), count: Math.max(1, Math.floor(num(r.count, 1))) };
         if (typeof r.spaceId === 'string' && Object.hasOwn(spaces, r.spaceId)) recent.spaceId = r.spaceId;
         return [recent];
     }).slice(0, MAX_RECENTS);
 }
 
-export function sanitize(raw: unknown): AppState {
+export function sanitize(raw: unknown, options: ValidationOptions = {}): AppState {
     if (!isDict(raw)) return emptyState();
-    const items = sanitizeItems(raw.items);
-    const spaces = sanitizeSpaces(raw.spaces, items);
-    const providers = sanitizeProviders(raw.providers);
+    const { report } = options;
+    const items = sanitizeItems(raw.items, options);
+    const spaces = sanitizeSpaces(raw.spaces, items, report);
+    const providers = sanitizeProviders(raw.providers, report);
     const wallpapers = sanitizeWallpapers(raw.wallpapers);
 
     const modes: Record<ID, Mode> = {};
@@ -152,11 +173,11 @@ export function sanitize(raw: unknown): AppState {
             if (!isId(id) || !isDict(value)) continue;
             const mode: Mode = {
                 id,
-                name: str(value.name).trim() || 'Mode',
-                glyph: str(value.glyph, 'layers') || 'layers',
+                name: named(value.name, LIMITS.name, report) || 'Mode',
+                glyph: token(value.glyph, 'layers') || 'layers',
                 spaceIds: [...new Set(arr(value.spaceIds).filter((x): x is ID => typeof x === 'string' && Object.hasOwn(spaces, x)))],
             };
-            if (str(value.themeId)) mode.themeId = str(value.themeId);
+            if (token(value.themeId)) mode.themeId = token(value.themeId);
             if (isDict(value.background)) mode.background = sanitizeBackground(value.background, wallpapers);
             if (providers.some(p => p.id === value.providerId)) mode.providerId = str(value.providerId);
             if (Array.isArray(value.dock)) mode.dock = sanitizeDock(value.dock, items, spaces);
