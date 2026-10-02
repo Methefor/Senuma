@@ -1,112 +1,30 @@
-# 📁 New Tab Folders - Professional Bookmark Manager
+# Senuma
 
-**Organize your digital life with a premium, tabme-inspired bookmark manager for Chrome.**
+Your personal place on the web. A local-first New Tab Workspace with Spaces, Modes, search, Command Center and personalization.
 
-![New Tab Folders Dashboard](assets/screenshots/dashboard.png)
+Status: **2.0.0 RC2, local only**. Public rename and final release remain on hold; see [release status](docs/RELEASE_STATUS.md).
 
----
+## Develop and verify
+Run npm ci, then npm run dev. Load dist/ after npm run build; never load this repository root.
 
-> ## V2 rebuild in progress (branch `rebuild/browser-os`)
->
-> This repository currently holds two products:
->
-> | | Legacy 1.x — **live in the Chrome Web Store** | V2 — release candidate, not published |
-> |---|---|---|
-> | Entry point | `index.html` | `newtab.html` → `src/` |
-> | How to run | load the repo root as an unpacked extension | `npm run build`, then load `dist/` unpacked |
->
-> The rest of this README describes 1.x. For V2:
->
-> ```
-> npm install
-> npm run dev        # preview at http://localhost:5173/newtab.html
-> npm run check      # typecheck, lint, unit tests, build, bundle budget
-> npm run build      # → dist/
-> npm run test:e2e   # runs the built extension in real Chromium
-> ```
->
-> Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). What must change before V2 ships:
-> [docs/RELAUNCH_CHECKLIST.md](docs/RELAUNCH_CHECKLIST.md).
+- npm run check — types, lint, unit tests, build and size budgets.
+- npm run test:e2e — real Chromium extension regression.
+- npm run test:rc — release candidate regression.
+- npm run rehearse — published 1.80 migration and rollback.
+- npm run store:assets — eight screenshots, hero, tile and icon, local only.
+- npm run package — inspected local RC package; never uploads.
 
----
+## Repository map
+- src/: active product, runtime assets, colocated unit tests.
+- assets/: brand delivery references, store captures, screenshots, GIF and video demos.
+- docs/: product, brand, architecture, compatibility, privacy and release procedures.
+- tests/: suite map and regression requirements; e2e/: browser test implementations.
+- scripts/: deterministic asset and local release tooling.
+- archive/legacy/: retired repository 1.x and provenance; archive/research/: superseded naming research.
+- release/: ignored local packages and published 1.80 fixture; dist/: generated unpacked extension.
+- drafts/site/: local website draft.
 
-## 🎯 Elevate Your Productivity
+[Audit](docs/REPOSITORY_AUDIT.md) · [Brand](docs/BRAND.md) · [Motion](docs/MOTION.md) · [Release](docs/RELEASE.md) · [Migration](docs/LEGACY_MIGRATION.md)
 
-New Tab Folders transforms your "New Tab" page into a powerful workstation. Say goodbye to bookmark clutter and hello to a structured, aesthetic, and lightning-fast workspace.
+Storage keys and IndexedDB names retain their historic spelling. This reorganization does not change the Chrome Web Store item or extension ID.
 
-### ✨ Core Features
-
-*   **📂 Multi-Folder Organization**: Group your links into beautiful, color-coded cards.
-*   **🖱️ Native Drag-and-Drop**: Save open tabs instantly by dragging them from the sidebar into any folder.
-*   **🌓 Premium Themes**: Choose between Dark (Default), Light, Cyberpunk, and Nord themes.
-*   **🌍 Global Localization**: Full support for Turkish, English, German, French, Portuguese, and Spanish.
-*   **⚡ Smart Sidebar**: Search open tabs, view recently closed sessions, and manage your current window in one place.
-*   **🛡️ Privacy First**: Your data stays on your device (Free) or syncs securely (Pro).
-
----
-
-## 📸 Interactive Showcase
-
-### 🛠️ Advanced Settings & Customization
-Take full control of your workspace with our intuitive settings menu. Import/Export backups or clear data with one click.
-![Settings Menu](assets/screenshots/settings_menu.png)
-
-### ❓ Comprehensive Documentation
-Never get lost with our built-in Guide, featuring smooth navigation and detailed installation steps.
-![Guide Page](assets/screenshots/guide_page.png)
-
----
-
-## 🚀 Recent Updates (v1.54)
-
-We've completely overhauled the interface to be cleaner and more powerful:
-- **Tabme-Style Header**: Redesigned navigation with dropdown menus for Profile, Help, and Settings.
-- **3D Workspace Depth**: Added glassmorphism and inset shadows for a premium visual feel.
-- **Improved Sidebar**: Collapse the sidebar to focus on your folders, or use the new sorting logic (Recent, Position, Reverse).
-- **Session Recovery**: Fixed bugs in Recently Closed tabs; now parses entire session windows efficiently.
-
----
-
-## 📦 Installation
-
-### For Users
-1. Download the extension from the [Chrome Web Store](#) (Coming Soon).
-2. Click **Add to Chrome**.
-3. Open a new tab and start organizing!
-
-### For Developers (Local Load)
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/Methefor/New-Tab-Folders.git
-   ```
-2. Open `chrome://extensions/` in your browser.
-3. Enable **Developer mode** (top right).
-4. Click **Load unpacked** and select the project folder.
-
----
-
-## 📖 How to Use
-
-1.  **Add a Folder**: Click the `+` icon on the dashboard or in the sidebar.
-2.  **Save a Link**: Use the `Click to add` button within a folder, or simply **drag an open tab** from the left sidebar.
-3.  **Customize**: Click the `Settings` icon to switch themes or the `Profile` icon to see Pro benefits.
-4.  **Right-Click Actions**: Use right-click on the dashboard empty space to quickly add folders or sticky notes.
-
----
-
-## 🔧 Tech Stack
-
-- **Frontend**: Vanilla JavaScript (ES6+) - High performance, zero bloat.
-- **Styling**: Modern CSS3 (Grid, Flexbox, Variable-based theming).
-- **API**: Chrome Extension Manifest V3 (Latest standard).
-- **Storage**: Chrome Storage sync/local & LocalStorage.
-
----
-
-## 🤝 Contributing & Support
-
-We welcome feedback and bug reports! 
-- **Report Bug**: Use the "Feedback" link in the Help menu.
-- **Project Link**: [https://github.com/Methefor/New-Tab-Folders](https://github.com/Methefor/New-Tab-Folders)
-
-Made with 💚 by **METHEFOR**

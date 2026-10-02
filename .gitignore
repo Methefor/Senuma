@@ -37,3 +37,9 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 dist-sync/
+
+# Local generated Senuma media
+assets/store/
+assets/gifs/*.gif
+assets/video/*.webm
+assets/video/*.mp4

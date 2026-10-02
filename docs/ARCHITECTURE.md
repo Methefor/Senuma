@@ -9,9 +9,9 @@ Chrome and the store show (unchanged until a rename is approved).
 | | Legacy 1.x | V2 rebuild |
 |---|---|---|
 | Status | **Production today** (Chrome Web Store) | Release candidate in development |
-| Entry point | `index.html` (repo root) | `newtab.html` → `src/main.tsx` |
-| Code | `js/`, `css/`, root `*.html` | `src/` |
-| Manifest | `manifest.json` (repo root) | generated from `src/manifest.ts` |
+| Entry point | `archive/legacy/repository-1.x/index.html` | `newtab.html` → `src/main.tsx` |
+| Code | `archive/legacy/repository-1.x/` | `src/` |
+| Manifest | `archive/legacy/repository-1.x/manifest.json` | generated from `src/manifest.ts` |
 | Build | none — load the repo root unpacked | `npm run build` → load `dist/` unpacked |
 | Tests | none | `npm test`, `npm run test:e2e` |
 
@@ -244,3 +244,6 @@ npm run visual      # screenshots at the supported sizes and themes → e2e/.out
 `npm run build:e2e` writes `dist-e2e/`, identical except that optional permissions are
 declared as required, because a test cannot click the browser's permission prompt. What a
 person must check by hand is in `MANUAL_QA.md`.
+
+
+
