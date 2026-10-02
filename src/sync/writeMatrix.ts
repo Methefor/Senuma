@@ -74,6 +74,9 @@ export const WRITE_CASES: WriteCase[] = [
     { group: 'shape', name: 'ciphertext that is text', before: settled, attempt: { revision: 6, payload: 'text' }, allowed: false },
     { group: 'shape', name: 'empty ciphertext', before: settled, attempt: { revision: 6, payload: 0 }, allowed: false },
     { group: 'shape', name: 'ciphertext shorter than one padded block', before: settled, attempt: { revision: 6, payload: 512 }, allowed: false },
+    { group: 'shape', name: 'ciphertext that is only a tag, with no content', before: settled, attempt: { revision: 6, payload: 16 }, allowed: false },
+    { group: 'shape', name: 'a first document with a time chosen by the client', before: null, attempt: { revision: 1, time: 'client' }, allowed: false },
+    { group: 'shape', name: 'a first document with a time that is not a time', before: null, attempt: { revision: 1, time: 'text' }, allowed: false },
     { group: 'shape', name: 'ciphertext that is not a whole number of blocks plus the tag', before: settled, attempt: { revision: 6, payload: 2000 }, allowed: false },
     { group: 'shape', name: 'ciphertext one block over the limit', before: settled, attempt: { revision: 6, payload: LARGEST_PAYLOAD + 1024 }, allowed: false },
 

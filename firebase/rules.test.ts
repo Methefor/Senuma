@@ -13,6 +13,7 @@ import {
     Bytes, Timestamp, collection, deleteDoc, doc, getDoc, getDocs, limit, query, serverTimestamp, setDoc, writeBatch,
     type DocumentData, type Firestore,
 } from 'firebase/firestore';
+import { createMockUserToken } from '@firebase/util';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { LARGEST_PAYLOAD, SMALLEST_PAYLOAD, WRITE_CASES, type Attempt, type Before } from '../src/sync/writeMatrix';
 
@@ -24,7 +25,7 @@ const DEVICE = 'abcdefghijklmnopqrstuvwxyz';
 
 let env: RulesTestEnvironment;
 
-const google = { firebase: { sign_in_provider: 'google.com' } };
+const google = { firebase: { sign_in_provider: 'google.com' as const } };
 const as = (uid: string, token: Record<string, unknown> = google): Firestore => env.authenticatedContext(uid, token).firestore() as unknown as Firestore;
 const anonymous = (): Firestore => env.unauthenticatedContext().firestore() as unknown as Firestore;
 
@@ -72,7 +73,7 @@ beforeAll(async () => {
     const address = process.env.FIRESTORE_EMULATOR_HOST ?? '';
     if (!/^(127\.0\.0\.1|localhost|\[::1\]):\d+$/.test(address)) throw new Error(`These tests run only against a local emulator (FIRESTORE_EMULATOR_HOST is “${address}”). Use: npm run test:rules`);
     const [host, port] = [address.slice(0, address.lastIndexOf(':')), Number(address.slice(address.lastIndexOf(':') + 1))];
-    env = await initializeTestEnvironment({ projectId: PROJECT, firestore: { host, port, rules: readFileSync('firebase/firestore.rules', 'utf8') } });
+    env = await initializeTestEnvironment({ projectId: PROJECT, firestore: { host, port, rules: readFileSync(process.env.SENUMA_RULES_FILE ?? 'firebase/firestore.rules', 'utf8') } });
 });
 afterAll(async () => {
     await env?.cleanup();
@@ -167,6 +168,56 @@ describe('the workspace document: shape, revision and rate (shared matrix)', () 
     it('the largest payload is accepted and stored whole', async () => {
         await assertSucceeds(setDoc(current(as(ALICE)), envelope(1, { payload: bytes(LARGEST_PAYLOAD) })));
         expect(((await getDoc(current(as(ALICE)))).data()!.payload as Bytes).toUint8Array()).toHaveLength(LARGEST_PAYLOAD);
+    });
+});
+
+describe('the same rules over the REST interface the extension will use', () => {
+    // The extension will not use the Firebase SDK. Its writes are commits like these, and some
+    // values the SDK cannot even produce (a whole number sent as a floating-point one) can arrive this way.
+    const name = `projects/${PROJECT}/databases/(default)/documents/vaults/${ALICE}/workspace/current`;
+    const b64 = (length: number) => Buffer.alloc(length, 7).toString('base64');
+    const fields = (revision: object, patch: Record<string, object> = {}) => ({
+        format: { integerValue: '1' }, keyId: { stringValue: KEY }, revision, nonce: { bytesValue: b64(12) }, payload: { bytesValue: b64(SMALLEST_PAYLOAD) }, ...patch,
+    });
+    async function commit(uid: string | null, revision: object, precondition: object, patch: Record<string, object> = {}, stamp = true): Promise<number> {
+        const response = await fetch(`http://${process.env.FIRESTORE_EMULATOR_HOST}/v1/projects/${PROJECT}/databases/(default)/documents:commit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...(uid ? { Authorization: `Bearer ${createMockUserToken({ sub: uid, user_id: uid, ...google }, PROJECT)}` } : {}) },
+            body: JSON.stringify({ writes: [{ update: { name, fields: fields(revision, patch) }, currentDocument: precondition, ...(stamp ? { updateTransforms: [{ fieldPath: 'updatedAt', setToServerValue: 'REQUEST_TIME' }] } : {}) }] }),
+        });
+        return response.status;
+    }
+
+    it('a first document and the next revision are accepted as plain commits with a server-time transform', async () => {
+        expect(await commit(ALICE, { integerValue: '1' }, { exists: false })).toBe(200);
+        await seedCurrent({ revision: 5, ageMs: 60_000 });
+        expect(await commit(ALICE, { integerValue: '6' }, { exists: true })).toBe(200);
+        const stored = (await getDoc(current(as(ALICE)))).data()!;
+        expect(stored.revision).toBe(6);
+        expect(Math.abs((stored.updatedAt as Timestamp).toMillis() - Date.now())).toBeLessThan(60_000);
+    });
+
+    it('a revision or format sent as a floating-point number is refused, even when its value is right', async () => {
+        expect(await commit(ALICE, { doubleValue: 1 }, { exists: false })).toBe(403);
+        expect(await commit(ALICE, { integerValue: '1' }, { exists: false }, { format: { doubleValue: 1 } })).toBe(403);
+        await seedCurrent({ revision: 5, ageMs: 60_000 });
+        expect(await commit(ALICE, { doubleValue: 6 }, { exists: true })).toBe(403);
+    });
+
+    it('a commit without the server-time transform, from a stranger, or from nobody is refused', async () => {
+        expect(await commit(ALICE, { integerValue: '1' }, { exists: false }, {}, false)).toBe(403); // no time at all
+        expect(await commit(ALICE, { integerValue: '1' }, { exists: false }, { updatedAt: { timestampValue: '2030-01-01T00:00:00Z' } }, false)).toBe(403);
+        expect(await commit(BOB, { integerValue: '1' }, { exists: false })).toBe(403);
+        expect(await commit(null, { integerValue: '1' }, { exists: false })).toBe(403);
+    });
+
+    it('a precondition the server does not meet stops the write: two devices cannot both write "the next" revision', async () => {
+        await seedCurrent({ revision: 5, ageMs: 60_000 });
+        expect(await commit(ALICE, { integerValue: '1' }, { exists: false })).not.toBe(200); // a document is already there
+        expect(await commit(ALICE, { integerValue: '6' }, { exists: true })).toBe(200);
+        // The second device read revision 5 too; its revision 6 is no longer the next one.
+        await seed({ [`vaults/${ALICE}/workspace/current`]: seededEnvelope(6) });
+        expect(await commit(ALICE, { integerValue: '6' }, { exists: true })).toBe(403);
     });
 });
 

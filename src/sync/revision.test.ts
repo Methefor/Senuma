@@ -156,6 +156,7 @@ describe('the write rule against the shared matrix (the same rows the emulator t
     it('covers every group, with rows that are accepted and rows that are refused', () => {
         for (const group of ['shape', 'revision', 'rate'] as const) expect(WRITE_CASES.some(entry => entry.group === group)).toBe(true);
         expect(WRITE_CASES.filter(entry => entry.allowed).length).toBeGreaterThanOrEqual(4);
-        expect(WRITE_CASES.filter(entry => !entry.allowed).length).toBeGreaterThanOrEqual(30);
+        expect(WRITE_CASES.filter(entry => !entry.allowed).length).toBeGreaterThanOrEqual(33);
+        expect(WRITE_CASES).toHaveLength(42);
     });
 });

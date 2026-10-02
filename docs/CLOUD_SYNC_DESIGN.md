@@ -1,7 +1,7 @@
 # Senuma cloud sync — design (for Senuma 2.1)
 
-Status: **design approved; PHASE 1 COMPLETE (2026-10-03); PHASE 2 WRITTEN BUT NOT YET RUN (no
-Java on this machine, see 6.5); nothing connected.** No backend
+Status: **design approved; PHASE 1 COMPLETE (2026-10-03); PHASE 2 COMPLETE (2026-10-03:
+rules pass 71 emulator tests, see 6.5); nothing connected.** No backend
 exists, no Firebase project was created or changed, nothing was published. Work is on the local
 branch `senuma-2.1`; the Senuma 2.0 branch (`rebuild/browser-os`) and its package are unchanged. Decided 2026-10-02: the 1.80 Firebase system is not a
 Senuma requirement; Senuma's sync is designed from first principles.
@@ -430,7 +430,7 @@ and App Check. Those are console settings for the real project, not part of this
 ### 6.4 The reference validator and the real rules
 
 `writeAllowed` (`src/sync/revision.ts`) restates the workspace write rule as a pure function.
-Both are run against the same 39 rows (`src/sync/writeMatrix.ts`): the reference in the unit
+Both are run against the same 42 rows (`src/sync/writeMatrix.ts`), and agree on every one: the reference in the unit
 tests, the rules in the emulator tests. Where they necessarily differ:
 
 | | Reference validator | Firestore rules |
@@ -442,15 +442,16 @@ tests, the rules in the emulator tests. Where they necessarily differ:
 | History, keys, devices, lists, deletes | not covered | checked |
 | Authority | a client-side pre-check and a specification | the only thing that actually enforces anything |
 
-### 6.5 Emulator test matrix (`firebase/rules.test.ts`, 64 tests)
+### 6.5 Emulator test matrix (`firebase/rules.test.ts`, 71 tests)
 
 | Area | Tests | Covers |
 |---|---|---|
 | Authorization | 8 | owner read; owner write; stranger read and list denied; stranger write denied; signed-out read denied; signed-out write and delete denied; non-Google sign-in denied; undeclared paths denied for everyone |
-| Workspace shape (shared matrix) | 29 | valid first and next document; largest payload; unknown field; schema or device field beside the ciphertext; each required field missing; wrong types; newer format; readable or short key id; client-chosen time; nonce too short, too long, or text; ciphertext as text, empty, too small, mis-sized, over the limit |
+| Workspace shape (shared matrix) | 32 | valid first and next document; largest payload; unknown field; schema or device field beside the ciphertext; each required field missing; wrong types; newer format; readable or short key id; client-chosen time; nonce too short, too long, or text; ciphertext as text, empty, tag-only, too small, mis-sized, over the limit; client-chosen or non-time `updatedAt` on a first document |
 | Workspace revision (shared matrix) | 8 | first write not at 1; same revision; skipped; far ahead; rollback by one and to 1; zero; negative |
 | Workspace rate (shared matrix) | 2 | too soon refused; later accepted |
 | Workspace, other | 3 | stored with server time and only six fields; key id may change (rotation); largest payload stored whole |
+| Over REST, as the extension will write | 4 | plain commits with the server-time transform accepted; a revision or format sent as a floating-point number refused even when its value is right; no transform, a client timestamp, a stranger, nobody: refused; a failed precondition stops a second device writing “the next” revision |
 | Revision across deletion | 2 | re-create only at revision 1; a second “first” write over an existing document refused |
 | Identity and ownership | 3 | account/path mismatch in both directions; ciphertext cannot be copied into another account's vault or history; naming an account in the data grants nothing |
 | History | 4 | verbatim copy accepted; copy plus next revision as one atomic write; invented, altered, misnumbered or rewritten history refused; list size bounded |
@@ -470,11 +471,26 @@ tools make no calls for it), the emulator listens on 127.0.0.1:8085, and the tes
 to start unless the emulator address is local. The first run downloads the emulator itself (a
 JAR, from Google's public download host) — a tool download, not a call to any project.
 
-**Status: NOT RUN.** This machine has no Java; `npm run test:rules` stops with “Could not spawn
-`java -version`”. The Firestore emulator needs a JDK (21 or newer for this firebase-tools
-version) on PATH. Until it has run: the rules file has never been parsed by Firestore, and the
-64 tests have only been type-checked and collected. What *has* run: the 39 shared rows against
-the reference validator (all agree).
+**Status: run, all green (2026-10-03).**
+
+| | |
+|---|---|
+| Java | OpenJDK 21.0.12.1 (Eclipse Temurin 21.0.12.1+1 LTS), installed for development only |
+| Tools | firebase-tools 15.32.1, Firestore emulator 1.22.0, @firebase/rules-unit-testing 5.0.2, firebase 12.19.0 |
+| Result | 71 of 71 tests pass |
+| Time | tests 9.9 s; whole command, including emulator start and stop, 18.7 s |
+| Rules changes needed after the first real run | none: the file parsed and behaved as written |
+
+**Do the tests have teeth?** `node scripts/rules-mutations.mjs` (with `npm run emulator` running)
+weakens one rule at a time — 27 weakenings, from “any signed-in account may act as owner” to
+“history may be rewritten” — and expects the suite to fail each time. First run: 24 of 27
+caught. The three misses were gaps in the tests, not in the rules (a tag-only payload, a
+client-chosen time on a *first* document, and numbers sent as floating-point, which the SDK
+cannot produce); rows and REST-level tests were added for them. Now 27 of 27 are caught.
+
+Still true after a green run: the emulator is Google's local implementation of the rules
+engine, not production. Behaviour that only exists in production (quota, real token
+verification, propagation delay after a deploy) is not exercised.
 
 ## 7. Account & Sync (Settings)
 
@@ -542,7 +558,7 @@ Senuma sync never reads, links to or migrates from the old project.
 |---|---|---|
 | 0 | Owner decisions D1–D5; owner creates the new Firebase project (free plan) and OAuth client | — |
 | 1 — **COMPLETE** | Pure sync core (`src/sync/`: scope, merge, revision, crypto, missing-wallpaper model) plus the product-side limits it depends on (icon policy, text and address limits, device-local record) | 231 unit tests in all; merge properties over 600 random edit runs; threat-model tests; payload budget; icon and text limits over 300 random mixes each; browser checks `e2e/icons.ts` (6) and `e2e/limits.e2e.ts` (8) |
-| 2 — **written, not run** | Security Rules + emulator test suite (section 6) | All 64 rule tests pass locally — blocked on a JDK |
+| 2 — **COMPLETE** | Security Rules + emulator test suite (section 6) | 71 emulator tests pass; 27 of 27 rule weakenings caught; 42 shared rows agree with the reference validator |
 | 3 | Sign-in (optional `identity`), REST client, against the emulator | Sign in/out; session refresh |
 | 4 | Engine in the service worker, state machine, restore points, history | Two browser profiles against the emulator: edit, offline edit, concurrent edit, conflict |
 | 5 | Account & Sync UI, recovery-key setup, conflict screen, copy in English and Turkish | Hands-on QA script |

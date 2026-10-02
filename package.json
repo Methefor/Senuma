@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src e2e scripts firebase vite.config.ts",
     "emulator": "firebase emulators:start --only firestore --project demo-senuma --config firebase/firebase.json",
+    "test:rules:mutations": "node scripts/rules-mutations.mjs",
     "test:rules": "firebase emulators:exec --only firestore --project demo-senuma --config firebase/firebase.json \"vitest run --config firebase/vitest.config.ts\"",
     "test": "vitest run",
     "test:e2e": "npm run build && npm run build:e2e && vite-node e2e/extension.e2e.ts",
