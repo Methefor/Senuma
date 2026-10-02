@@ -12,10 +12,13 @@ import { loadDeviceLocal, saveDeviceLocal } from '../storage/deviceLocal';
 import { app } from '../storage/store';
 import { SYNC, SYNC_ON_FLAG } from './config';
 import { createEngine, type Engine, type Status, type SyncMeta } from './engine';
-import { mockAuth, type MockUser } from './mockAuth';
+import { googleAuth, requestSignInPermission, type StoredSession } from './googleAuth';
+import { mockAuth, type Auth, type MockUser } from './mockAuth';
 import { firestoreTransport } from './transport';
 import { projectWithAssets } from './wallpaper';
 
+/** The Google sign-in kept on this device (real builds). Never uploaded. */
+const SESSION = 'bos.sync.session';
 /** Emulator builds only: who the mock sign-in signs in as, and the signed-in mock user. */
 const MOCK_PICK = 'bos.sync.mock.pick';
 const MOCK_SESSION = 'bos.sync.mock.session';
@@ -35,6 +38,11 @@ function deviceLabel(): string {
 
 export interface Runtime {
     engine: Engine;
+    /**
+     * Call straight from the click on “Continue with Google”, before anything else: asks for the
+     * sign-in permission (real builds). False when the person declined.
+     */
+    prepareSignIn(): Promise<boolean>;
     /** One sync, unless another tab is already doing one. */
     syncNow(): Promise<Status>;
 }
@@ -44,6 +52,10 @@ let runtime: Promise<Runtime> | null = null;
 function build(): Runtime {
     if (!SYNC) throw new Error('This build has no sync.');
     const config = SYNC;
+    // Decided at build time, so that a real build carries no mock sign-in and an emulator build no Google sign-in.
+    const auth: Auth = import.meta.env.VITE_SENUMA_SYNC === 'emulator'
+        ? mockAuth(config.project, { read: () => read<MockUser>(MOCK_SESSION), write: user => kv.set({ [MOCK_SESSION]: user }) }, async () => (await read<MockUser>(MOCK_PICK)) ?? DEFAULT_USER)
+        : googleAuth(config as Extract<typeof config, { kind: 'firebase' }>, { read: () => read<StoredSession>(SESSION), write: session => kv.set({ [SESSION]: session }) });
     const engine = createEngine({
         local: {
             state: () => app.get(),
@@ -64,7 +76,7 @@ function build(): Runtime {
             label: deviceLabel,
             wait: ms => new Promise(resolve => setTimeout(resolve, ms)),
         },
-        auth: mockAuth(config.project, { read: () => read<MockUser>(MOCK_SESSION), write: user => kv.set({ [MOCK_SESSION]: user }) }, async () => (await read<MockUser>(MOCK_PICK)) ?? DEFAULT_USER),
+        auth,
         transport: session => firestoreTransport(config, session),
     });
 
@@ -101,7 +113,7 @@ function build(): Runtime {
         lastSent = text;
     });
     void syncNow().then(settle);
-    return { engine, syncNow };
+    return { engine, syncNow, prepareSignIn: () => (import.meta.env.VITE_SENUMA_SYNC === 'emulator' ? Promise.resolve(true) : requestSignInPermission()) };
 }
 
 const canonicalText = (value: unknown): string => JSON.stringify(value);

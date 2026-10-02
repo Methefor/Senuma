@@ -1,4 +1,5 @@
 import { readFileSync, readdirSync } from 'node:fs';
+import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
 import type { Plugin } from 'vite';
 import { buildManifest } from './src/manifest';
@@ -11,11 +12,10 @@ const MARK_DIR = 'src/assets/marks';
 const WALLPAPER_DIR = 'src/assets/wallpapers';
 /** Set by `npm run build:e2e`; see src/manifest.ts. */
 const E2E_BUILD = process.env.BOS_E2E === '1';
-/** Set by `npm run build:sync`: the build with sync against the local emulator. Never packaged. */
-const SYNC_BUILD = process.env.VITE_SENUMA_SYNC === 'emulator';
+
 
 /** Emits the extension manifest (generated from brand constants), icons and service worker. */
-function extensionFiles(): Plugin {
+function extensionFiles(sync: string | undefined, key: string | undefined): Plugin {
     return {
         name: 'extension-files',
         apply: 'build',
@@ -23,7 +23,7 @@ function extensionFiles(): Plugin {
             this.emitFile({
                 type: 'asset',
                 fileName: 'manifest.json',
-                source: JSON.stringify(buildManifest({ grantOptional: E2E_BUILD }), null, 2),
+                source: JSON.stringify(buildManifest({ grantOptional: E2E_BUILD, signIn: sync === 'firebase', key }), null, 2),
             });
             for (const file of readdirSync(ICON_DIR)) {
                 if (!file.endsWith('.png')) continue;
@@ -40,9 +40,13 @@ function extensionFiles(): Plugin {
     };
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+    /** `npm run build:sync` (emulator) or `build:sync:firebase` (a real project): builds with sync. Never packaged. */
+    const env = { ...process.env, ...loadEnv(mode, process.cwd(), ['VITE_', 'SENUMA_']) };
+    const SYNC_BUILD = env.VITE_SENUMA_SYNC === 'emulator' || env.VITE_SENUMA_SYNC === 'firebase';
+    return {
     base: '',
-    plugins: [extensionFiles()],
+    plugins: [extensionFiles(SYNC_BUILD ? env.VITE_SENUMA_SYNC : undefined, SYNC_BUILD ? env.SENUMA_EXTENSION_KEY : undefined)],
     build: {
         outDir: E2E_BUILD ? 'dist-e2e' : SYNC_BUILD ? 'dist-sync' : 'dist',
         target: 'chrome120',
@@ -50,4 +54,5 @@ export default defineConfig({
         rollupOptions: { input: { newtab: 'newtab.html' } },
     },
     test: { environment: 'node', include: ['src/**/*.test.ts'] },
+    };
 });

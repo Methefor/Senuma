@@ -12,6 +12,7 @@ import { currentLanguage } from '../../i18n';
 const en = {
     title: 'Account & Sync',
     testBuild: 'Test build: sign-in here is a local stand-in, not Google, and the data goes to an emulator on this computer.',
+    devBuild: 'Development build: sync goes to Senuma’s development project. Use test data only.',
 
     'out.lede': 'Senuma works without an account. Everything is stored on this device.',
     'out.what': 'Sync keeps your Spaces, links, Modes, dock, search shortcuts and appearance the same on your devices.',
@@ -145,6 +146,7 @@ export type SyncKey = keyof typeof en;
 const tr: Partial<Record<SyncKey, string>> = {
     title: 'Hesap ve Eşitleme',
     testBuild: 'Deneme sürümü: buradaki oturum açma Google değil, yerel bir taklittir; veriler bu bilgisayardaki bir emülatöre gider.',
+    devBuild: 'Geliştirme sürümü: eşitleme Senuma’nın geliştirme projesine gider. Yalnızca deneme verisi kullan.',
     'out.lede': 'Senuma hesap olmadan çalışır. Her şey bu cihazda saklanır.',
     'out.what': 'Eşitleme; Alanlarını, bağlantılarını, Modlarını, dock’unu, arama kısayollarını ve görünümünü cihazlarında aynı tutar.',
     'out.signin': 'Google ile oturum açma yalnızca hangi şifreli kopyanın sana ait olduğunu bilmek için kullanılır. Senuma, Google hesabından yalnızca e-posta adresini alır.',

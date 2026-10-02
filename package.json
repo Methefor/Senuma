@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "build:sync": "cross-env VITE_SENUMA_SYNC=emulator vite build",
+    "build:sync:firebase": "vite build --mode senuma-dev",
     "build:e2e": "cross-env BOS_E2E=1 vite build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src e2e scripts firebase vite.config.ts",

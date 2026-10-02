@@ -37,3 +37,6 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 dist-sync/
+
+# Local project identifiers for development builds
+.env.*.local

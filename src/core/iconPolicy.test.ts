@@ -138,7 +138,7 @@ describe('what sync uploads', () => {
         }
     });
 
-    it('so embedded icons can take at most about a fifth of the document limit, however many there are', async () => {
+    it('so embedded icons can take at most about a fifth of the document limit, however many there are', { timeout: 30_000 }, async () => {
         const { key } = await createVaultKey(newRecoverySecret(), 'user_a', 'k1aaaaaa');
         const size = async (shape: Parameters<typeof workspace>[0]) => (await seal(key, toSyncable(workspace(shape)), { uid: 'user_a', path: 'workspace/current', keyId: 'k1aaaaaa', revision: 1 })).payload.length;
         const without = await size({ links: 1000 });

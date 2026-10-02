@@ -354,7 +354,12 @@ export function createEngine(deps: { local: Local; auth: Auth; transport: (sessi
         /** Signs in and finds out whether a vault exists. Uploads nothing. */
         signIn: () => run(async () => {
             set({ phase: 'connecting' });
-            session = await auth.signIn();
+            try {
+                session = await auth.signIn();
+            } catch (error) {
+                if (error instanceof SyncError && error.code === 'denied') return set({ phase: 'signed-out' });
+                throw error;
+            }
             transport = deps.transport(session);
             const keys = await transport.listKeys();
             if (Object.keys(keys).length) return set({ phase: 'needs-key', account: session.email });

@@ -54,7 +54,8 @@ function SignedOut({ runtime, status }: { runtime: Runtime; status: Status }) {
             <ul class="sync-facts">
                 {(['out.what', 'out.signin', 'out.encrypted', 'out.local', 'out.visible', 'out.analytics'] as const).map(key => <li key={key}>{st(key)}</li>)}
             </ul>
-            <button type="button" class="button is-primary" data-sync="sign-in" onClick={() => void runtime.engine.signIn()}>{st('out.action')}</button>
+            <button type="button" class="button is-primary" data-sync="sign-in"
+                onClick={() => void runtime.prepareSignIn().then(granted => (granted ? runtime.engine.signIn() : undefined))}>{st('out.action')}</button>
         </>
     );
 }
@@ -327,6 +328,7 @@ export function SyncSettings() {
         <div class="sync" data-sync="root" data-phase={status?.phase ?? 'loading'}>
             <h3>{st('title')}</h3>
             {SYNC?.mock && <p class="note sync-notice">{st('testBuild')}</p>}
+            {SYNC?.kind === 'firebase' && <p class="note sync-notice">{st('devBuild')}</p>}
             {runtime && status && (
                 status.phase === 'signed-out' ? <SignedOut runtime={runtime} status={status} />
                     : status.phase === 'connecting' ? <p class="note" role="status">{st('connecting')}</p>
