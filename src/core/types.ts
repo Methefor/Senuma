@@ -117,6 +117,8 @@ export interface LegacyRecord {
      */
     isPro: boolean;
     proExpiresAt: number | null;
+    /** A 1.8 licence key, kept as a record of a real purchase. Never sent anywhere; nothing reads it. */
+    licenseKey?: string;
     migratedAt: number;
     summary: MigrationSummary;
     /** False until the user has seen the upgrade summary. */

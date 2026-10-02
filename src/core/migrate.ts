@@ -7,7 +7,7 @@
  * duplicate anything, or overwrite later edits.
  */
 import { categorize, categoryById } from './catalog';
-import { emptyState, newId } from './defaults';
+import { emptyState, newId, MAX_DOCK } from './defaults';
 import { isDict, sanitize } from './sanitize';
 import { SCHEMA_VERSION, type AppState, type Item, type Space, type SpaceGroup } from './types';
 import { isImageUrl, normalizeUrl } from './url';
@@ -25,7 +25,7 @@ const LEGACY_COLORS: Record<string, string> = {
     teal: '#62B8D8',
 };
 
-const LEGACY_THEMES: Record<string, string> = { dark: 'dusk', light: 'fjord', cyberpunk: 'phosphor', nord: 'dusk' };
+const LEGACY_THEMES: Record<string, string> = { dark: 'dusk', light: 'fjord', cyberpunk: 'phosphor', nord: 'dusk', ocean: 'dusk' };
 
 // ---------- Schema upgrades for the new model ----------
 
@@ -84,6 +84,8 @@ export function fromLegacy(raw: unknown): AppState | null {
 
     const state = emptyState();
     const summary = { spaces: 0, links: 0, groups: 0, skipped: 0 };
+    const pinnedSpaces = new Set<string>();
+    const byUrl = new Map<string, string>();
 
     for (const folder of data.folders) {
         if (!isDict(folder)) {
@@ -122,6 +124,7 @@ export function fromLegacy(raw: unknown): AppState | null {
             // Stored favicon-service URLs are redundant: icons are now resolved at render time.
             if (icon && !icon.includes('/s2/favicons') && (isImageUrl(icon) || icon.length <= 4)) item.icon = icon;
             state.items[item.id] = item;
+            if (!byUrl.has(url)) byUrl.set(url, item.id);
             groups.at(-1)!.itemIds.push(item.id);
             summary.links++;
             const category = categorize(url);
@@ -139,12 +142,43 @@ export function fromLegacy(raw: unknown): AppState | null {
         };
         state.spaces[space.id] = space;
         state.spaceOrder.push(space.id);
+        if (folder.pinned === true) pinnedSpaces.add(space.id);
         summary.spaces++;
         summary.groups += space.groups.filter(g => g.name).length;
     }
 
     state.prefs.themeId = LEGACY_THEMES[String(data.theme)] ?? state.prefs.themeId;
-    state.prefs.language = data.language === 'EN' ? 'en' : data.language === 'TR' || data.language === undefined ? 'tr' : 'en';
+    // 1.x showed pinned folders first; keep that order.
+    state.spaceOrder = [...state.spaceOrder.filter(id => pinnedSpaces.has(id)), ...state.spaceOrder.filter(id => !pinnedSpaces.has(id))];
+
+    // The 1.8 quick bar becomes the dock. A quick-bar link whose folder copy is gone is kept in a Space of its own.
+    const orphans: Item[] = [];
+    for (const link of Array.isArray(data.quickBarLinks) ? data.quickBarLinks : []) {
+        if (!isDict(link)) continue;
+        const url = normalizeUrl(link.url);
+        if (!url) continue;
+        let id = byUrl.get(url);
+        if (!id) {
+            const item: Item = { id: newId(), title: (typeof link.title === 'string' && link.title.trim()) || url, url, createdAt: Date.now() };
+            state.items[item.id] = item;
+            byUrl.set(url, item.id);
+            orphans.push(item);
+            summary.links++;
+            id = item.id;
+        }
+        const itemId = id;
+        if (state.dock.length < MAX_DOCK && !state.dock.some(entry => entry.id === itemId)) state.dock.push({ kind: 'item', id: itemId });
+    }
+    if (orphans.length) {
+        const space: Space = { id: newId(), name: 'Quick bar', glyph: 'folder', accent: '#7C9CF0', groups: [{ id: newId(), name: '', itemIds: orphans.map(item => item.id) }], createdAt: Date.now() };
+        state.spaces[space.id] = space;
+        state.spaceOrder.push(space.id);
+        summary.spaces++;
+    }
+
+    // Early 1.x stored 'TR' / 'EN' and defaulted to Turkish; 1.8 stores locale codes and defaults to English.
+    const language = typeof data.language === 'string' ? data.language.toLowerCase() : !('quickBarLinks' in data) ? 'tr' : 'en';
+    state.prefs.language = language === 'tr' ? 'tr' : 'en';
     // Keep what existing users are used to: 1.x opened links in a new tab and loaded
     // every icon from the icon service.
     state.prefs.openInNewTab = true;
@@ -154,6 +188,7 @@ export function fromLegacy(raw: unknown): AppState | null {
     state.legacy = {
         isPro: data.isPro === true,
         proExpiresAt: typeof data.proExpiresAt === 'number' ? data.proExpiresAt : null,
+        ...(typeof data.licenseKey === 'string' && data.licenseKey ? { licenseKey: data.licenseKey } : {}),
         migratedAt: Date.now(),
         summary,
         acknowledged: summary.links === 0,

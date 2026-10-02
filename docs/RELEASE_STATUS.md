@@ -1,4 +1,4 @@
-# Release status — Senuma 2.0 (RC 1)
+# Release status — Senuma 2.0.0
 
 The one status document. Branch `rebuild/browser-os`; nothing pushed, nothing published.
 Last updated 2026-10-02.
@@ -23,24 +23,44 @@ Checks (last run 2026-10-02 on the Senuma build):
 
 | Command | Result |
 |---|---|
-| `npm run check` (types, lint, 98 unit tests, build, budgets) | pass |
+| `npm run check` (types, lint, 100 unit tests, build, budgets) | pass |
 | `npm run test:e2e` | 65 pass |
-| `npm run test:rc` | 33 pass (one several-tabs timing check has failed intermittently, about 1 run in 4; passes on re-run; not yet explained) |
-| `npm run rehearse` (real 1.x → Senuma, restart, rollback, forward) | 13 pass |
-| `npm run headed` (visible Google Chrome) | 22 recorded, 0 failed (one native-prompt click needed a re-run once) |
+| `npm run test:rc` | 33 pass (a several-tabs timing check has failed intermittently in earlier runs; unexplained) |
+| `npm run rehearse` (published 1.80 → Senuma 2.0.0, real ID, two restarts, rollback) | 14 pass |
+| `npm run headed` (visible Google Chrome) | 22 recorded, 0 failed |
 | `npm run headed:update` | recorded, see below |
 | `npm run visual` | 31 captures regenerated; brand-affected ones reviewed |
-| `npm run package` | clean; `release/Senuma-2.0.0-RC-1-1.99.10.zip`, 3.37 MB |
+| `npm run package` | clean; `release/Senuma-2.0.0-2.0.0.zip`, 3.37 MB, forward-slash paths verified |
 
-Build: manifest 1.99.10, display “2.0.0 RC 1”, schema 4 (frozen: add fields with defaults only).
-Startup JS 43.5 kB gzip (budget 44), CSS 9.1 kB (9.5), unpacked 3.53 MB.
+Build: manifest 2.0.0, display 2.0.0, package 2.0.0 (published: 1.80), schema 4 (frozen: add fields with defaults only).
+Startup JS 43.8 kB gzip (budget 44), CSS 9.1 kB (9.5), unpacked 3.53 MB.
 
-## HOLD
+## STOPPED BEFORE THE STORE — the published build is not the 1.x in this repository
 
-**One item: a professional opinion on SENUMA beside SENUMAC** (EUIPO no. 019237140, LLC “SE
-GROUP”, registered, classes 7, 9, 42 including computer programming and software rental).
-Until then the Senuma name is not published anywhere. Record: SENUMA_BRAND.md.
-If the opinion is unfavourable, the fallback is Avluna (AVLUNA_CLEARANCE.md); naming does not reopen.
+Found on 2026-10-02 by reading the published build (version 1.80, shown as 1.8.0) from this
+machine's own Chrome profile. The repository's 1.x files are an older, simpler build.
+What the published build has that this project had assumed did not exist:
+
+| Published 1.80 | Consequence for Senuma 2.0.0 |
+|---|---|
+| **Real paid licences**: LemonSqueezy licence activation and validation, monthly, yearly and lifetime; a 3-folder limit for free users | The earlier decision “PRO was a local flag with no purchase behind it” was made on the wrong build. Anyone who paid loses what they paid for. The licence key is now copied into the migrated record (unused), so it is not lost. **Owner decision needed.** |
+| **Cloud sync**: Google sign-in (`identity`, OAuth client) and Firestore | Senuma has no sync. A synced user keeps the copy on this device; other devices each migrate their own local copy. **Owner decision needed.** |
+| Store privacy disclosures: personally identifiable information, authentication information, location, website content | Must be changed to “none” in the dashboard with the update. |
+| Weather widget (location), clock, quotes, 8 interface languages, most-visited, custom background image | Not in Senuma. German, Spanish, French, Japanese, Korean and Portuguese users get English. A 1.80 custom background is not carried over. |
+| Quick bar, pinned folders, lower-case language codes, “ocean” theme | **Now migrated**: quick bar → dock, pinned folders first, language and theme carried (tests added). |
+
+Rehearsal against the real 1.80 build under the real extension ID: 14 of 14 pass (data kept,
+`ntf_data` untouched, one conversion only across two restarts and a rollback).
+Permissions go from storage, tabs, sessions, tabGroups, bookmarks, identity, search plus six
+host permissions down to storage and search, so the update needs no new consent.
+
+The Chrome Web Store update was therefore **not uploaded**. It needs the owner's decision on
+paid licences and sync, and the dashboard is only reachable in the owner's signed-in Chrome.
+
+## HOLD (documented, owner chose to proceed)
+
+SENUMA beside SENUMAC (EUIPO no. 019237140, classes 7, 9, 42). Not legally cleared; no
+document or listing may say otherwise. Record: SENUMA_BRAND.md. Fallback: AVLUNA_CLEARANCE.md.
 
 ## MANUAL
 

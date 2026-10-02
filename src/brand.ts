@@ -14,15 +14,12 @@ export const BRAND = {
     /** The name people upgrading from 1.x know the product by. */
     legacyName: 'New Tab Folders',
     /** Machine-readable pre-release version (package.json carries the same value). */
-    version: '2.0.0-rc.1',
+    version: '2.0.0',
     /** What people see: About, the browser's extension page, the RC package name. */
-    displayVersion: '2.0.0 RC 1',
-    /**
-     * Numeric manifest version for development builds. It stays below 2.0.0 on purpose:
-     * a release build sets it equal to `version` (a test enforces both cases).
-     */
-    manifestVersion: '1.99.10',
-    description: 'A personal new-tab workspace for your Spaces, searches and online world.',
+    displayVersion: '2.0.0',
+    /** The manifest version. A release sets it equal to `version`; a pre-release uses 1.99.x (a test enforces both). */
+    manifestVersion: '2.0.0',
+    description: 'Make your browser yours with Spaces, Modes, universal search, cinematic themes and a personal new-tab workspace.',
     backupFilePrefix: 'senuma-backup',
 } as const;
 

@@ -8,7 +8,7 @@ The live listing is untouched. Publishing any of this needs explicit approval an
 | Field | Draft |
 |---|---|
 | Title | Senuma — New Tab Workspace |
-| Short description (132 max) | A personal new-tab workspace for your Spaces, searches and online world. (72) |
+| Short description (132 max) | Make your browser yours with Spaces, Modes, universal search, cinematic themes and a personal new-tab workspace. (112) |
 | Tagline | Make the browser yours. |
 | Category | Productivity |
 
@@ -34,7 +34,7 @@ The live listing is untouched. Publishing any of this needs explicit approval an
 
 **What's new (for the update)**
 
-> New Tab Folders is now Senuma. Same product, a new name and a completely new experience.
+> New Tab Folders is now Senuma. Same product, a new name and a completely redesigned experience.
 > Your Spaces, links and settings came with you.
 
 **Privacy summary (store privacy tab)**
@@ -51,11 +51,7 @@ Data collected: none. Remote code: none. Details: PRIVACY_FACTS.md.
 | File | Use |
 |---|---|
 | `icon-128.png` | Store icon |
-| `screenshot-1-home.png` | “Everything you use, one calm page” |
-| `screenshot-2-command-center.png` | “Ctrl+K opens anything” |
-| `screenshot-3-mode.png` | “A different new tab for each part of your day” |
-| `screenshot-4-customize.png` | “Make it yours” |
-| `screenshot-5-first-run.png` | “Set up in three steps” |
+| `screenshot-1-home.png` … `screenshot-8-privacy.png` | Eight captioned 1280×800 screenshots: Home, Spaces, Modes, Search, Command center, Personalization, Themes, Privacy |
 | `hero-1400x560.png` | Marquee promo |
 | `tile-440x280.png` | Small promo tile |
 
@@ -99,3 +95,9 @@ no unrelated feature (no coupons, feeds, weather or notes).
 | Testimonials, “Loved by productivity nerds” | Removed unless each is real, attributable and about V2. |
 | Pricing page | Removed. |
 | “Organize your bookmarks with beautiful folders” | Replaced: Spaces for everything you do online. |
+
+## Dashboard changes that go with the update
+
+- Privacy practices: the published listing declares personally identifiable information, authentication information, location and website content. Senuma collects none of these; every box must be cleared and the justifications replaced with the table above.
+- Remove the Pro, pricing and cloud-sync text from the description.
+- Permission justifications for `identity`, `tabGroups` and the six host permissions are no longer needed.

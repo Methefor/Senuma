@@ -265,7 +265,7 @@ export const en = {
 
     // Upgrade from 1.x
     'migrate.title': 'New Tab Folders is now Senuma',
-    'migrate.body': 'Same product, a new name and a completely new experience. Your Spaces, links and settings came with you.',
+    'migrate.body': 'Same product, a new name and a completely redesigned experience. Your Spaces, links and settings came with you.',
     'migrate.spaces': '{n} folder → {n} Space|{n} folders → {n} Spaces',
     'migrate.links': '{n} link moved over|{n} links moved over',
     'migrate.groups': '{n} group created from a header|{n} groups created from headers',

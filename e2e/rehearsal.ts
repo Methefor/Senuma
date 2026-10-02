@@ -9,7 +9,7 @@
  * way they do for a Chrome Web Store update. Nothing here touches the repository or the store.
  */
 import { generateKeyPairSync, createHash } from 'node:crypto';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
@@ -22,15 +22,27 @@ const profile = join(root, 'profile');
 mkdirSync(profile);
 
 // One key for both versions: the browser derives the extension ID from it.
-const { publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
-const der = publicKey.export({ type: 'spki', format: 'der' });
+/**
+ * The published build, read from this machine's own Chrome profile when it is installed there
+ * (pass its folder in NTF_LIVE_BUILD to override). It carries the store key, so the rehearsal
+ * runs under the real extension ID. Without it, the 1.x files in the repository root are used.
+ */
+const LIVE_CANDIDATES = [process.env.NTF_LIVE_BUILD, ...['Profile 1', 'Default'].map(p => join(process.env.LOCALAPPDATA ?? '', 'Google/Chrome/User Data', p, 'Extensions/oghlifenjhpbebcdeboejbmemelkfobe'))]
+    .filter((p): p is string => !!p && existsSync(p))
+    .map(p => (existsSync(join(p, 'manifest.json')) ? p : join(p, readdirSync(p).sort().at(-1)!)));
+const LIVE = LIVE_CANDIDATES[0];
+const liveKey = LIVE ? (JSON.parse(readFileSync(join(LIVE, 'manifest.json'), 'utf8')).key as string | undefined) : undefined;
+const der = liveKey ? Buffer.from(liveKey, 'base64') : generateKeyPairSync('rsa', { modulusLength: 2048 }).publicKey.export({ type: 'spki', format: 'der' });
 const key = der.toString('base64');
 const expectedId = [...createHash('sha256').update(der).digest('hex').slice(0, 32)].map(c => String.fromCharCode(97 + parseInt(c, 16))).join('');
 
 function install(version: 'legacy' | 'v2'): { version: string; permissions: string[] } {
     rmSync(extension, { recursive: true, force: true });
     mkdirSync(extension);
-    if (version === 'legacy') {
+    if (version === 'legacy' && LIVE) {
+        cpSync(LIVE, extension, { recursive: true });
+        rmSync(join(extension, '_metadata'), { recursive: true, force: true });
+    } else if (version === 'legacy') {
         for (const entry of ['index.html', 'js', 'css', 'assets/icons', 'changelog.html', 'guide.html']) cpSync(entry, join(extension, entry), { recursive: true });
         writeFileSync(join(extension, 'manifest.json'), JSON.stringify({ ...JSON.parse(readFileSync('manifest.json', 'utf8')), key }, null, 2));
     } else {
@@ -80,7 +92,8 @@ const folders: unknown[] = Object.entries(sites).map(([name, entries], index) =>
 folders.push({ id: 'f1', name: 'AI Tools', color: 'blue', links: [link('dup', 'Claude', 'https://claude.ai')] }); // duplicate id and name
 folders.push({ id: 'f-empty', name: '', links: [] });
 
-const LEGACY_DATA = { folders, isPro: true, proExpiresAt: Date.now() + 200 * 86_400_000, theme: 'light', tutorialCompleted: true, sidebarCollapsed: true, tabsSortOrder: 'recent', language: 'TR' };
+(folders[1] as { pinned?: boolean }).pinned = true;
+const LEGACY_DATA = { licenseKey: 'TEST-KEY-0000', quickBarLinks: [{ id: 'q1', title: 'GitHub', url: 'https://github.com', icon: '' }, { id: 'q2', title: 'Spotify', url: 'https://open.spotify.com', icon: '' }], updatedAt: 1, folders, isPro: true, proExpiresAt: Date.now() + 200 * 86_400_000, theme: 'light', tutorialCompleted: true, sidebarCollapsed: true, tabsSortOrder: 'recent', language: 'TR' };
 const validLinks = Object.values(sites).flat().length + 3; // + the two colliding-id links and the duplicate folder's link
 const realFolders = Object.keys(sites).length;
 
@@ -103,8 +116,8 @@ let v2Stamp = 0;
         await session.worker.evaluate(data => chrome.storage.local.set({ ntf_data: data, app_version: '1.2' }), LEGACY_DATA);
         const page = await session.context.newPage();
         await page.goto('chrome://newtab/');
-        await page.waitForSelector('.folder-header', { timeout: 10_000 });
-        const shown = await page.locator('.folder-title-input').count();
+        await page.waitForSelector('.folder-card', { timeout: 10_000 });
+        const shown = await page.locator('.folder-card').count();
         expect(shown >= realFolders, `1.x shows only ${shown} folders`);
         await page.screenshot({ path: 'e2e/.out/rehearsal-1-legacy.png' });
         await page.close();
@@ -207,6 +220,33 @@ let v2Stamp = 0;
         return `${after.spaceOrder.length} Spaces, ${Object.keys(after.items).length} links, summary gone, 1.x data untouched`;
     });
 
+    await check('After the update', 'change data again, restart again: both edits kept, still one conversion, 1.x data untouched', async () => {
+        const tab = await session.context.newPage();
+        await tab.goto('chrome://newtab/');
+        await tab.waitForSelector('.home');
+        await tab.locator('.deck-head .quiet-button').click();
+        await tab.locator('.overlay-form input').first().fill('İkinci düzenleme');
+        await tab.locator('.overlay-form button[type=submit]').click();
+        await tab.waitForSelector('.overlay-space');
+        await tab.keyboard.press('Escape');
+        await tab.waitForTimeout(700);
+        await session.context.close();
+        session = await launch(extension, profile);
+        const again = await session.context.newPage();
+        await again.goto('chrome://newtab/');
+        await again.waitForSelector('.home');
+        const state = (await storage<{ 'bos.state': AppState }>(session, ['bos.state']))['bos.state'];
+        const names = Object.values(state.spaces).map(space => space.name);
+        expect(names.includes('V2 ile eklendi') && names.includes('İkinci düzenleme'), `Spaces: ${names.join(', ')}`);
+        expect(state.legacy?.migratedAt === migratedAt, 'migration ran again');
+        expect(Object.keys(state.items).length === validLinks, 'links changed');
+        expect((await again.locator('.migration').count()) === 0, 'the notice came back');
+        const stored = await storage<{ ntf_data: unknown }>(session, ['ntf_data']);
+        expect(JSON.stringify(stored.ntf_data) === legacySnapshot, 'ntf_data changed');
+        await again.close();
+        return `${state.spaceOrder.length} Spaces, ${Object.keys(state.items).length} links, dock ${state.dock.length}, Modes ${state.modeOrder.length}`;
+    });
+
     await check('After the update', 'storage holds both generations side by side', async () => {
         const everything = await storage<Record<string, unknown>>(session, null);
         const sizes = Object.entries(everything).map(([name, value]) => `${name} ${(JSON.stringify(value).length / 1024).toFixed(1)} kB`);
@@ -227,8 +267,8 @@ let v2Stamp = 0;
     await check('Rollback', 'putting 1.x back: it opens with its own data exactly as it left it', async () => {
         const page = await legacyContext.newPage();
         await page.goto('chrome://newtab/');
-        await page.waitForSelector('.folder-header', { timeout: 10_000 });
-        const shown = await page.locator('.folder-title-input').count();
+        await page.waitForSelector('.folder-card', { timeout: 10_000 });
+        const shown = await page.locator('.folder-card').count();
         expect(shown >= realFolders, `1.x shows ${shown} folders after rollback`);
         await page.screenshot({ path: 'e2e/.out/rehearsal-4-rollback.png' });
         await page.close();

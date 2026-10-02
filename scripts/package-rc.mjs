@@ -82,5 +82,8 @@ if (problems.length) {
 mkdirSync('release', { recursive: true });
 const zip = resolve('release', `${manifest.name}-${String(manifest.version_name).replace(/\s+/g, '-')}-${manifest.version}.zip`);
 rmSync(zip, { force: true });
-execFileSync('powershell', ['-NoProfile', '-Command', `Compress-Archive -Path '${resolve(DIST)}\\*' -DestinationPath '${zip}' -CompressionLevel Optimal`]);
+// Windows' bundled bsdtar writes a standard zip with forward-slash paths (Compress-Archive writes backslashes).
+execFileSync(join(process.env.SystemRoot ?? 'C:/Windows', 'System32/tar.exe'), ['-a', '-c', '-f', zip, '-C', resolve(DIST), ...readdirSync(DIST)]);
+const listed = execFileSync(join(process.env.SystemRoot ?? 'C:/Windows', 'System32/tar.exe'), ['-t', '-f', zip], { encoding: 'utf8' }).split(/\r?\n/).filter(Boolean);
+if (listed.some(name => name.includes('\\')) || !listed.includes('manifest.json')) { console.error('Not packaged: zip paths are wrong.'); process.exit(1); }
 console.log(`package            ${relative('.', zip)}  ${kb(statSync(zip).size)}${existsSync(zip) ? '' : ' (missing!)'}\n\nLocal file only. Nothing was uploaded.`);

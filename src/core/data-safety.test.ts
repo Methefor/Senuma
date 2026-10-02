@@ -1,3 +1,4 @@
+import { normalizeUrl } from './url';
 import { BRAND, STORAGE_KEYS } from '../brand';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_BACKGROUND, MAX_WALLPAPERS, sanitizeBackground, suggestedDim, type WallpaperAsset } from './background';
@@ -95,6 +96,39 @@ describe('legacy migration', () => {
     it('survives serialization unchanged', () => {
         const state = fromLegacy(LEGACY)!;
         expect(sanitize(roundTrip(state))).toEqual(state);
+    });
+});
+
+describe('migration from the published 1.8 build', () => {
+    const LIVE = {
+        folders: [
+            { id: 'a', name: 'Work', color: 'blue', links: [{ id: '1', title: 'Mail', url: 'https://mail.example.com' }, { id: '2', title: 'Docs', url: 'docs.example.com' }] },
+            { id: 'b', name: 'Fun', pinned: true, links: [{ id: '3', title: 'Video', url: 'https://video.example.com' }] },
+        ],
+        isPro: true, proExpiresAt: null, licenseKey: 'ABCD-1234', licenseInstanceId: 'x', theme: 'ocean', language: 'tr',
+        quickBarLinks: [{ id: '3', title: 'Video', url: 'https://video.example.com', icon: '' }, { id: '9', title: 'Gone', url: 'https://gone.example.com' }, { id: 'bad', url: 'javascript:alert(1)' }],
+        background: { type: 'image', value: 'data:image/png;base64,AAAA', id: 'x', overlay: 0, blur: 0 }, widgetLayout: {}, linkStats: {}, searchEngine: 'google', columnCount: 'auto',
+    };
+    const live = () => JSON.parse(JSON.stringify(LIVE));
+
+    it('keeps every link, turns the quick bar into the dock and puts pinned folders first', () => {
+        const state = fromLegacy(live())!;
+        expect(state.spaceOrder.map(id => state.spaces[id]!.name)).toEqual(['Fun', 'Work', 'Quick bar']);
+        expect(Object.values(state.items).map(item => item.url).sort()).toEqual(
+            ['https://docs.example.com', 'https://gone.example.com', 'https://mail.example.com', 'https://video.example.com'].map(u => normalizeUrl(u)!).sort());
+        expect(state.dock.map(entry => state.items[entry.id]!.title)).toEqual(['Video', 'Gone']);
+        expect(state.legacy!.summary.links).toBe(4);
+        expect(sanitize(JSON.parse(JSON.stringify(state))).dock).toEqual(state.dock);
+    });
+
+    it('carries language and theme, and keeps the licence key as a record only', () => {
+        const state = fromLegacy(live())!;
+        expect(state.prefs.language).toBe('tr');
+        expect(state.prefs.themeId).toBe('dusk');
+        expect(state.legacy).toMatchObject({ isPro: true, licenseKey: 'ABCD-1234' });
+        expect(sanitize(JSON.parse(JSON.stringify(state))).legacy?.licenseKey).toBe('ABCD-1234');
+        expect(fromLegacy({ ...live(), language: 'de' })!.prefs.language).toBe('en');
+        expect(fromLegacy({ ...live(), language: undefined })!.prefs.language).toBe('en');
     });
 });
 
