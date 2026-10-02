@@ -6,7 +6,7 @@
  * are never compared to decide anything.
  */
 import { SCHEMA_VERSION } from '../core/types';
-import { FORMAT, PAYLOAD_LIMIT } from './crypto';
+import { FORMAT, PAD_STEP, PAYLOAD_LIMIT } from './crypto';
 import type { SyncDoc } from './scope';
 
 /**
@@ -110,17 +110,23 @@ export function inspect(plain: unknown): { ok: true; plain: WorkspacePlain } | {
 }
 
 /**
- * The server-side write rule, restated so the client refuses first and so the Security Rules
- * (phase 2) have a reference to be tested against. `previous` is null when no document exists.
+ * The server-side write rule for the workspace document, as a pure function: the client checks
+ * with it before sending, and the Firestore Security Rules (firebase/firestore.rules) are tested
+ * against the same list of cases (writeMatrix.ts). `previous` is null when no document exists.
+ *
+ * Differences from the real rules, which are the authority: there `updatedAt` is a server
+ * timestamp rather than a number, bytes are Firestore bytes, and ownership and sign-in are
+ * checked as well; none of that can be expressed here.
  */
 export function writeAllowed(previous: Envelope | null, next: Record<string, unknown>, serverTime: number, minIntervalMs = 2000): boolean {
     const keys = Object.keys(next);
     if (keys.length !== ENVELOPE_FIELDS.length || !ENVELOPE_FIELDS.every(field => keys.includes(field))) return false;
     const { format, keyId, revision, updatedAt, nonce, payload } = next as unknown as Envelope;
     if (format !== FORMAT || typeof keyId !== 'string' || !/^[a-z0-9]{8,40}$/.test(keyId)) return false;
-    if (!Number.isSafeInteger(revision) || updatedAt !== serverTime) return false;
+    if (!Number.isSafeInteger(revision) || revision < 1 || updatedAt !== serverTime) return false;
     if (!(nonce instanceof Uint8Array) || nonce.length !== 12) return false;
-    if (!(payload instanceof Uint8Array) || payload.length === 0 || payload.length > PAYLOAD_LIMIT) return false;
+    // Ciphertext as format 1 writes it: whole padded blocks plus the 16-byte tag.
+    if (!(payload instanceof Uint8Array) || payload.length < PAD_STEP + 16 || payload.length > PAYLOAD_LIMIT || payload.length % PAD_STEP !== 16) return false;
     if (!previous) return revision === 1;
     return revision === previous.revision + 1 && serverTime > previous.updatedAt + minIntervalMs;
 }

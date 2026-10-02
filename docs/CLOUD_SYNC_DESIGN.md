@@ -1,6 +1,7 @@
 # Senuma cloud sync — design (for Senuma 2.1)
 
-Status: **design approved; PHASE 1 COMPLETE (2026-10-03); nothing connected.** No backend
+Status: **design approved; PHASE 1 COMPLETE (2026-10-03); PHASE 2 WRITTEN BUT NOT YET RUN (no
+Java on this machine, see 6.5); nothing connected.** No backend
 exists, no Firebase project was created or changed, nothing was published. Work is on the local
 branch `senuma-2.1`; the Senuma 2.0 branch (`rebuild/browser-os`) and its package are unchanged. Decided 2026-10-02: the 1.80 Firebase system is not a
 Senuma requirement; Senuma's sync is designed from first principles.
@@ -226,9 +227,9 @@ dialog RC 2 already has for imports. Restore point first in every case.
 ## 5. Firestore schema (new project, nothing shared with legacy)
 
 ```
-vaults/{uid}/keys/{keyId}          v, salt (bytes), wrapped (bytes: nonce + wrapped key)
+vaults/{uid}/keys/{keyId}          v, salt (16 bytes), wrapped (60 bytes: nonce + wrapped key)
 vaults/{uid}/workspace/current     format, keyId, revision, updatedAt (server time), nonce (bytes), payload (bytes)
-vaults/{uid}/history/{revision}    same six fields; last 5 kept, pruned by the client
+vaults/{uid}/history/{revision}    a verbatim copy of what `current` was at that revision; last 5 kept, pruned by the client
 vaults/{uid}/devices/{deviceId}    keyId, nonce (bytes), payload (bytes)
 ```
 
@@ -307,7 +308,8 @@ realistic 1 000-link case above, 92 links had their own 3 kB icon and 43 kept it
 | Import of a backup or a 1.x export | Read with oversized icons left in place, then `settleSetup` re-encodes in the page before anything is offered; the result is reported |
 | Merging an import into the current setup | Goes through `addItem`, so the 128 KB total holds across both |
 | Stored state on every load, other tabs' saves, restore points | `sanitize` enforces the limits (drops what is over) |
-| First load of a setup saved before the limits | One-time pass in `loadState`: re-encode in the page, report in a notice, keep the stored original once under `bos.state.before-limits`. It needs no marker: a setup within the limits is left alone, so it runs once by construction |
+| First load of a setup saved before the limits | One-time pass in `loadState`: re-encode in the page, report in a notice. Every text value it replaces or leaves out is first written, exactly as it was, to a record of originals (`bos.limits.originals`); **if that write fails the changed setup is not saved**, so the stored original is never the only copy lost. Settings → Data shows the record with counts and offers it as a file. It needs no marker: a setup within the limits is left alone |
+| Merging an import, icons | When the 128 KB total is reached, incoming links are still added and show their site's icon; the notice gives the exact number |
 | Preparing the synced copy | `toSyncable` applies `capIcons` to whatever it is given |
 
 Pictures are decoded and re-encoded **only in a page**, never in the service worker; no
@@ -332,7 +334,10 @@ the plain one: over the limit is not stored.
   an untitled section for a group, “Mode”) and it is counted.
 - The only change ever made to text that is kept is trimming whitespace at its ends.
 - Everything counted is shown to the person in one notice (links left out, titles replaced,
-  names replaced, icons made smaller, icons dropped).
+  names replaced, icons made smaller, icons replaced by the site's icon).
+- On upgrade the replaced text itself is kept (the record above). On import it is not copied,
+  because the imported file still holds it. Original *pictures* of icons are not kept: a
+  re-encoded icon is the same picture, smaller, and a dropped one is counted.
 
 ### 5.3 Chunking strategy (documented now, built only if needed)
 
@@ -361,65 +366,115 @@ approach the limit, format 2 is:
 Chunking is the future escape hatch, not the first solution (owner decision). The first
 solution is the icon limits of 5.2.1 and the warning at 75 %.
 
-## 6. Security Rules strategy
+## 6. Security Rules (phase 2)
 
-Principles: deny by default; a vault is reachable only by its own account, only when signed in
-through Google; every write is shape-, size-, order- and rate-checked; no wildcard reads.
+Files: `firebase/firestore.rules`, `firebase/firebase.json` (emulator only),
+`firebase/rules.test.ts`, shared cases in `src/sync/writeMatrix.ts`. **Nothing is deployed; no
+project exists.**
+
+### 6.1 What the rules do
+
+Nothing is allowed unless a rule allows it. `owner` means: signed in, the account id equals the
+`{uid}` in the path, and the sign-in was through Google.
+
+| Path | get | list | create | update | delete |
+|---|---|---|---|---|---|
+| `vaults/{uid}/workspace/current` | owner | never | owner; exact six fields; `updatedAt` = server time; revision **1** | owner; exact six fields; `updatedAt` = server time; revision = stored **+ 1**; more than 2 s after the stored `updatedAt` | owner |
+| `vaults/{uid}/history/{revision}` | owner | owner, at most 20 per query | owner; data **equal to the current workspace document** as it is on the server; id = that document's revision | never | owner |
+| `vaults/{uid}/keys/{keyId}` | owner | owner, at most 20 | owner; exactly `v` = 1, `salt` 16 bytes, `wrapped` 60 bytes; id is a random-looking token | never | owner |
+| `vaults/{uid}/devices/{deviceId}` | owner | owner, at most 50 | owner; exactly `keyId`, `nonce` 12 bytes, `payload` ciphertext up to 4 KiB; id is a 26-character token | same as create | owner |
+| anything else, including `vaults/{uid}` itself and any other document under `workspace` | never | never | never | never | never |
+
+The six workspace fields, as the rules check them: `format` is the integer 1; `keyId` matches
+`^[a-z0-9]{8,40}$`; `revision` is an integer ≥ 1; `updatedAt` is a timestamp; `nonce` is 12
+bytes; `payload` is bytes, at least 1 040 and at most 524 288, and a whole number of 1 KiB
+blocks plus the 16-byte tag (what format 1 produces; plaintext-sized or odd-sized data is
+refused). No other field is accepted, so nothing readable can be stored beside the ciphertext.
+
+History is stricter than the first draft: an entry can only be a verbatim copy of the document
+that is on the server at that moment, under its own revision number, and can never be changed.
+A client therefore cannot invent or alter history. (A history entry keeps the encryption
+context of `workspace/current` at its revision, since it is the same bytes.)
+
+### 6.2 Delete semantics
+
+- The owner may delete any document of their own vault; nobody else may delete anything.
+- “Delete cloud data” = delete history, the workspace document, device entries and keys,
+  client-side, then read back that each path is empty. There is no server-side cascade.
+- After the workspace document is deleted it can be created again **only at revision 1**. The
+  server keeps no memory of the old counter. Devices that had synced a higher revision see the
+  copy missing, or a lower revision, and stop (phase 1: `missing`, `went-backwards`) rather than
+  adopt it. This is deliberate: deletion is a reset the other devices must be told about, not
+  something to continue across silently.
+- Deleting keys makes existing ciphertext undecryptable for any device that does not already
+  hold the key. The client deletes keys last.
+
+### 6.3 What the rules cannot do (not to be claimed)
+
+| Not enforceable in rules | Consequence | Where it is handled instead |
+|---|---|---|
+| Whether `payload` is real ciphertext, made with the right key, for this account and revision | The owner (or someone with their session) can store well-shaped garbage | Devices reject it: authenticated encryption bound to account, path, key id and revision (phase 1 tests) |
+| Copying ciphertext into the copier's **own** vault | Allowed: it is their vault | Useless there: it does not decrypt under another account's context |
+| Schema version, device identity, device clock | Not visible to the server at all | Inside the ciphertext; clients refuse a newer schema |
+| Continuity of `revision` across delete and re-create | Counter restarts at 1 | Clients stop on `missing` / `went-backwards` |
+| Rate limiting beyond “2 s after the stored write” | No limit on the first write, on delete-and-recreate loops, on reads, on key or device documents, or across accounts | Client throttling; free-tier quota is the ceiling. Abuse costs availability, not confidentiality |
+| Number of documents (keys, devices) and total storage per account | An account can create many small key or device documents | Sizes are capped per document; no count limit is possible in rules |
+| Which device is writing; revoking one device | Any session of the account has full access to its vault | Key rotation and the account reset of 3.6 |
+| That history is pruned to 5 | A client may leave more | Client prunes; each entry is at most one workspace document |
+| Atomic “delete everything” | Deletion is several client writes | Read-back verification; safe to repeat |
+| Server time on documents the rules do not stamp | Key and device documents carry no time | By design: no readable timestamps about devices |
+
+Also outside the rules: Firebase Auth itself (who may create an account), API-key restrictions
+and App Check. Those are console settings for the real project, not part of this phase.
+
+### 6.4 The reference validator and the real rules
+
+`writeAllowed` (`src/sync/revision.ts`) restates the workspace write rule as a pure function.
+Both are run against the same 39 rows (`src/sync/writeMatrix.ts`): the reference in the unit
+tests, the rules in the emulator tests. Where they necessarily differ:
+
+| | Reference validator | Firestore rules |
+|---|---|---|
+| Time | a number of milliseconds passed in | `request.time`; the client must send the server-timestamp transform |
+| Bytes | `Uint8Array` | Firestore `bytes` |
+| Integers | `Number.isSafeInteger` | `is int` (a double such as 6.0 is refused) |
+| Ownership, sign-in provider, path | not expressible | checked |
+| History, keys, devices, lists, deletes | not covered | checked |
+| Authority | a client-side pre-check and a specification | the only thing that actually enforces anything |
+
+### 6.5 Emulator test matrix (`firebase/rules.test.ts`, 64 tests)
+
+| Area | Tests | Covers |
+|---|---|---|
+| Authorization | 8 | owner read; owner write; stranger read and list denied; stranger write denied; signed-out read denied; signed-out write and delete denied; non-Google sign-in denied; undeclared paths denied for everyone |
+| Workspace shape (shared matrix) | 29 | valid first and next document; largest payload; unknown field; schema or device field beside the ciphertext; each required field missing; wrong types; newer format; readable or short key id; client-chosen time; nonce too short, too long, or text; ciphertext as text, empty, too small, mis-sized, over the limit |
+| Workspace revision (shared matrix) | 8 | first write not at 1; same revision; skipped; far ahead; rollback by one and to 1; zero; negative |
+| Workspace rate (shared matrix) | 2 | too soon refused; later accepted |
+| Workspace, other | 3 | stored with server time and only six fields; key id may change (rotation); largest payload stored whole |
+| Revision across deletion | 2 | re-create only at revision 1; a second “first” write over an existing document refused |
+| Identity and ownership | 3 | account/path mismatch in both directions; ciphertext cannot be copied into another account's vault or history; naming an account in the data grants nothing |
+| History | 4 | verbatim copy accepted; copy plus next revision as one atomic write; invented, altered, misnumbered or rewritten history refused; list size bounded |
+| Keys | 1 (7 refusals) | write-once; exact fields and sizes; readable id refused |
+| Devices | 1 (7 refusals) | only key id and ciphertext; readable name, last-seen time, user agent, oversize, wrong shape refused |
+| Deletion | 3 | owner deletes everything and it is gone; nobody else deletes anything; one vault's deletion leaves another's untouched |
+
+Commands:
 
 ```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{db}/documents {
-    function owner(uid) {
-      return request.auth != null && request.auth.uid == uid
-          && request.auth.token.firebase.sign_in_provider == 'google.com';
-    }
-    function envelope(d) {
-      return d.keys().hasOnly(['format','keyId','revision','updatedAt','nonce','payload'])
-          && d.keys().hasAll(['format','keyId','revision','updatedAt','nonce','payload'])
-          && d.format == 1 && d.revision is int
-          && d.keyId.matches('^[a-z0-9]{8,40}$')
-          && d.updatedAt == request.time
-          && d.nonce is bytes && d.nonce.size() == 12
-          && d.payload is bytes && d.payload.size() <= 512 * 1024;
-    }
-    match /vaults/{uid}/workspace/current {
-      allow get:    if owner(uid);
-      allow create: if owner(uid) && envelope(request.resource.data) && request.resource.data.revision == 1;
-      allow update: if owner(uid) && envelope(request.resource.data)
-                    && request.resource.data.revision == resource.data.revision + 1
-                    && request.time > resource.data.updatedAt + duration.value(2, 's');
-      allow delete: if owner(uid);
-    }
-    // keys: get/list/create/delete by owner, never update; size-checked.
-    // history: get/list/create/delete by owner, never update; same envelope check.
-    // devices: get/list/create/update/delete by owner; only keyId, nonce, payload; size-checked.
-    match /{document=**} { allow read, write: if false; }
-  }
-}
+npm run emulator       # firebase emulators:start --only firestore --project demo-senuma --config firebase/firebase.json
+npm run test:rules     # firebase emulators:exec … "vitest run --config firebase/vitest.config.ts"
 ```
 
-The same write rule exists as a pure function (`writeAllowed` in `src/sync/revision.ts`) with
-tests; the emulator suite must agree with it case by case.
+Local only: the project id is `demo-senuma` (a `demo-` project has no real resources and the
+tools make no calls for it), the emulator listens on 127.0.0.1:8085, and the test file refuses
+to start unless the emulator address is local. The first run downloads the emulator itself (a
+JAR, from Google's public download host) — a tool download, not a call to any project.
 
-**Emulator tests** (local Firestore emulator + rules unit-testing library; development
-dependency only, nothing deployed, no billing):
-signed-out denied everywhere · another account denied on every path · non-Google sign-in denied ·
-create only at revision 1 · update only at +1 · skipped or repeated revision denied · extra or
-missing field denied · readable key id denied · oversized payload denied · wrong nonce length denied ·
-client-chosen timestamp denied · two writes inside the rate window denied · key and history
-documents immutable · owner can delete everything · undeclared paths denied.
-
-Also in the console (owner, later): Google as the only sign-in provider; API key restricted to
-the three APIs used; App Check is not usable from an extension **[verify]**, so the rules above
-are the whole defence.
-
-**Deletion flows (all client-side, no server code):**
-- *Delete cloud data:* delete history, current, devices, keys; stay signed in or sign out; local
-  data untouched; sync off.
-- *Delete account:* delete cloud data first, then the Firebase account (needs a fresh Google
-  sign-in). If the second step fails, an empty account remains and the action can be repeated.
-- Both verified by reading back that the paths are empty.
+**Status: NOT RUN.** This machine has no Java; `npm run test:rules` stops with “Could not spawn
+`java -version`”. The Firestore emulator needs a JDK (21 or newer for this firebase-tools
+version) on PATH. Until it has run: the rules file has never been parsed by Firestore, and the
+64 tests have only been type-checked and collected. What *has* run: the 39 shared rows against
+the reference validator (all agree).
 
 ## 7. Account & Sync (Settings)
 
@@ -487,7 +542,7 @@ Senuma sync never reads, links to or migrates from the old project.
 |---|---|---|
 | 0 | Owner decisions D1–D5; owner creates the new Firebase project (free plan) and OAuth client | — |
 | 1 — **COMPLETE** | Pure sync core (`src/sync/`: scope, merge, revision, crypto, missing-wallpaper model) plus the product-side limits it depends on (icon policy, text and address limits, device-local record) | 231 unit tests in all; merge properties over 600 random edit runs; threat-model tests; payload budget; icon and text limits over 300 random mixes each; browser checks `e2e/icons.ts` (6) and `e2e/limits.e2e.ts` (8) |
-| 2 | Security Rules + emulator test suite | All rule tests pass locally |
+| 2 — **written, not run** | Security Rules + emulator test suite (section 6) | All 64 rule tests pass locally — blocked on a JDK |
 | 3 | Sign-in (optional `identity`), REST client, against the emulator | Sign in/out; session refresh |
 | 4 | Engine in the service worker, state machine, restore points, history | Two browser profiles against the emulator: edit, offline edit, concurrent edit, conflict |
 | 5 | Account & Sync UI, recovery-key setup, conflict screen, copy in English and Turkish | Hands-on QA script |

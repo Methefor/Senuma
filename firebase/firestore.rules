@@ -1,0 +1,127 @@
+rules_version = '2';
+
+// Senuma sync: Firestore Security Rules.
+//
+// Nothing is allowed unless a rule below allows it. A vault belongs to one account and is
+// reachable by nobody else. Everything stored is ciphertext plus the few fields listed in
+// docs/CLOUD_SYNC_DESIGN.md 5.1; these rules never need, and must never be given, plaintext
+// workspace content or a readable device name.
+//
+// What these rules cannot do is listed in docs/CLOUD_SYNC_DESIGN.md 6.3.
+//
+// NOT DEPLOYED. Emulator only.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // The account the vault belongs to, signed in through Google.
+    function owner(uid) {
+      return request.auth != null
+          && request.auth.uid == uid
+          && request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+
+    // A random identifier made on a device: nothing readable.
+    function isKeyId(value) {
+      return value is string && value.matches('^[a-z0-9]{8,40}$');
+    }
+
+    // Ciphertext as format 1 writes it: padded to 1 KiB steps plus a 16-byte tag.
+    function isCiphertext(value, most) {
+      return value is bytes
+          && value.size() >= 1040
+          && value.size() <= most
+          && value.size() % 1024 == 16;
+    }
+
+    // The whole server-readable shape of a workspace document: exactly these six fields.
+    function isEnvelope(d) {
+      return d.keys().hasOnly(['format', 'keyId', 'revision', 'updatedAt', 'nonce', 'payload'])
+          && d.keys().hasAll(['format', 'keyId', 'revision', 'updatedAt', 'nonce', 'payload'])
+          && d.format is int && d.format == 1
+          && isKeyId(d.keyId)
+          && d.revision is int && d.revision >= 1
+          && d.updatedAt is timestamp
+          && d.nonce is bytes && d.nonce.size() == 12
+          && isCiphertext(d.payload, 524288);
+    }
+
+    function currentPath(uid) {
+      return /databases/$(database)/documents/vaults/$(uid)/workspace/current;
+    }
+
+    match /vaults/{uid} {
+
+      // ---- The workspace: one document, written one revision at a time ----
+      match /workspace/current {
+        allow get: if owner(uid);
+
+        // First write, and the first write after cloud data was deleted: revision 1 only.
+        allow create: if owner(uid)
+            && isEnvelope(request.resource.data)
+            && request.resource.data.updatedAt == request.time
+            && request.resource.data.revision == 1;
+
+        // Every later write: exactly the next revision, stamped by the server, not too soon after the last.
+        allow update: if owner(uid)
+            && isEnvelope(request.resource.data)
+            && request.resource.data.updatedAt == request.time
+            && request.resource.data.revision == resource.data.revision + 1
+            && request.time > resource.data.updatedAt + duration.value(2, 's');
+
+        // "Delete cloud data".
+        allow delete: if owner(uid);
+      }
+
+      // ---- History: verbatim copies of what the workspace document was ----
+      match /history/{revision} {
+        allow get: if owner(uid);
+        allow list: if owner(uid) && request.query.limit <= 20;
+
+        // Only the document that is on the server right now can be copied, only as it is, and
+        // only under its own revision number. History can therefore not be invented or altered.
+        allow create: if owner(uid)
+            && revision.matches('^[1-9][0-9]{0,15}$')
+            && exists(currentPath(uid))
+            && request.resource.data == get(currentPath(uid)).data
+            && request.resource.data.revision == int(revision);
+
+        allow update: if false;
+        allow delete: if owner(uid);
+      }
+
+      // ---- Wrapped workspace keys: written once, never changed ----
+      match /keys/{keyId} {
+        allow get: if owner(uid);
+        allow list: if owner(uid) && request.query.limit <= 20;
+
+        allow create: if owner(uid)
+            && isKeyId(keyId)
+            && request.resource.data.keys().hasOnly(['v', 'salt', 'wrapped'])
+            && request.resource.data.keys().hasAll(['v', 'salt', 'wrapped'])
+            && request.resource.data.v is int && request.resource.data.v == 1
+            && request.resource.data.salt is bytes && request.resource.data.salt.size() == 16
+            && request.resource.data.wrapped is bytes && request.resource.data.wrapped.size() == 60;
+
+        allow update: if false;
+        allow delete: if owner(uid);
+      }
+
+      // ---- Devices: an encrypted entry each; nothing about a device is readable here ----
+      match /devices/{deviceId} {
+        allow get: if owner(uid);
+        allow list: if owner(uid) && request.query.limit <= 50;
+
+        allow create, update: if owner(uid)
+            && deviceId.matches('^[a-z0-9]{26}$')
+            && request.resource.data.keys().hasOnly(['keyId', 'nonce', 'payload'])
+            && request.resource.data.keys().hasAll(['keyId', 'nonce', 'payload'])
+            && isKeyId(request.resource.data.keyId)
+            && request.resource.data.nonce is bytes && request.resource.data.nonce.size() == 12
+            && isCiphertext(request.resource.data.payload, 4112);
+
+        allow delete: if owner(uid);
+      }
+    }
+  }
+}

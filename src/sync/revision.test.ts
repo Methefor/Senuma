@@ -3,6 +3,7 @@ import { SCHEMA_VERSION } from '../core/types';
 import { FORMAT, PAYLOAD_LIMIT, createVaultKey, newRecoverySecret, open, seal } from './crypto';
 import { workspaceDoc } from './fixtures';
 import { ENVELOPE_FIELDS, inspect, plan, writeAllowed, type Envelope, type SyncMemory, type WorkspacePlain } from './revision';
+import { LARGEST_PAYLOAD, SMALLEST_PAYLOAD, WRITE_CASES, type Attempt } from './writeMatrix';
 
 const KEY = 'k1aaaaaa';
 const memory = (patch: Partial<SyncMemory> = {}): SyncMemory => ({ baseRevision: 5, keyId: KEY, dirty: false, ...patch });
@@ -115,8 +116,10 @@ describe('the write rule (reference for the Security Rules)', () => {
         expect(allowed(envelope({ updatedAt: now + 1 }))).toBe(false);
         expect(allowed(envelope({ nonce: new Uint8Array(11) }))).toBe(false);
         expect(allowed(envelope({ payload: new Uint8Array(0) }))).toBe(false);
-        expect(allowed(envelope({ payload: new Uint8Array(PAYLOAD_LIMIT + 1) }))).toBe(false);
-        expect(allowed(envelope({ payload: new Uint8Array(PAYLOAD_LIMIT) }))).toBe(true);
+        expect(allowed(envelope({ payload: new Uint8Array(PAYLOAD_LIMIT + 16) }))).toBe(false);
+        expect(allowed(envelope({ payload: new Uint8Array(PAYLOAD_LIMIT) }))).toBe(false); // not block-shaped
+        expect(allowed(envelope({ payload: new Uint8Array(LARGEST_PAYLOAD) }))).toBe(true);
+        expect(LARGEST_PAYLOAD).toBeLessThanOrEqual(PAYLOAD_LIMIT);
         expect(allowed(envelope({ keyId: 'Mete’s key' }))).toBe(false);
         expect(allowed(envelope({ format: FORMAT + 1 }))).toBe(false);
     });
@@ -124,5 +127,35 @@ describe('the write rule (reference for the Security Rules)', () => {
     it('rejects writes that come too fast', () => {
         expect(allowed(envelope(), envelope({ revision: 5, updatedAt: now - 500 }))).toBe(false);
         expect(allowed(envelope(), envelope({ revision: 5, updatedAt: now - 2001 }))).toBe(true);
+    });
+});
+
+describe('the write rule against the shared matrix (the same rows the emulator tests run against the real rules)', () => {
+    const now = 1_800_000_000_000;
+    /** Builds what a matrix row describes, in this side's types. */
+    function build(attempt: Attempt): Record<string, unknown> {
+        const data: Record<string, unknown> = {
+            format: 'format' in attempt ? attempt.format : FORMAT,
+            keyId: 'keyId' in attempt ? attempt.keyId : KEY,
+            revision: attempt.revision,
+            updatedAt: attempt.time === 'client' ? now + 5000 : attempt.time === 'text' ? 'now' : now,
+            nonce: attempt.nonce === 'text' ? 'AAAAAAAAAAAA' : new Uint8Array(attempt.nonce ?? 12),
+            payload: attempt.payload === 'text' ? 'not ciphertext' : new Uint8Array(attempt.payload ?? SMALLEST_PAYLOAD),
+            ...attempt.extra,
+        };
+        if (attempt.omit) delete data[attempt.omit];
+        return data;
+    }
+    for (const entry of WRITE_CASES) {
+        it(`${entry.group}: ${entry.name} is ${entry.allowed ? 'accepted' : 'refused'}`, () => {
+            const previous: Envelope | null = entry.before && { format: FORMAT, keyId: KEY, revision: entry.before.revision, updatedAt: now - entry.before.ageMs, nonce: new Uint8Array(12), payload: new Uint8Array(SMALLEST_PAYLOAD) };
+            expect(writeAllowed(previous, build(entry.attempt), now)).toBe(entry.allowed);
+        });
+    }
+
+    it('covers every group, with rows that are accepted and rows that are refused', () => {
+        for (const group of ['shape', 'revision', 'rate'] as const) expect(WRITE_CASES.some(entry => entry.group === group)).toBe(true);
+        expect(WRITE_CASES.filter(entry => entry.allowed).length).toBeGreaterThanOrEqual(4);
+        expect(WRITE_CASES.filter(entry => !entry.allowed).length).toBeGreaterThanOrEqual(30);
     });
 });

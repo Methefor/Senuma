@@ -31,3 +31,8 @@ proto/
 # Local store-listing images (regenerate with npm run store:assets)
 drafts/store/*.png
 drafts/store/raw/
+
+# Firebase emulator logs
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
