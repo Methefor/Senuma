@@ -1,11 +1,12 @@
 import { BrandLockup } from '../../ui/BrandMark';
-import type { ComponentChildren } from 'preact';
+import type { ComponentChildren, ComponentType } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import {
     SETTINGS_SECTIONS, deleteSnapshot, downloadBackup, downloadText, ensureSnapshots, providerLabel, removeSpaceWithUndo, replaceSetup, type SettingsSection,
 } from '../../app/actions';
 import { settleSetup } from '../../app/icons';
 import { limitsNotice } from '../../app/limitsNotice';
+import { loadLimitsText, lt } from '../../app/limitsText';
 import { BRAND } from '../../brand';
 import { readBookmarks } from '../../browser/bookmarks';
 import { releaseClosedTabsAccess, requestClosedTabsAccess } from '../../browser/sessions';
@@ -26,6 +27,7 @@ import { clearOriginals, countOriginals, loadOriginals } from '../../storage/ori
 import { app, openMenuBelow, setUi, snapshots, toast, update, useStore } from '../../storage/store';
 import { Icon, SPACE_GLYPHS } from '../../ui/Icon';
 import { Overlay } from '../../ui/Overlay';
+import { SYNC } from '../../sync/config';
 import { ImportReview } from './ImportReview';
 
 const SECTION_GLYPHS: Record<SettingsSection, string> = {
@@ -348,19 +350,19 @@ function Backups() {
 function Originals() {
     const [record, setRecord] = useState<OriginalsRecord | null>(null);
     useEffect(() => {
-        void loadOriginals().then(setRecord).catch(() => undefined);
+        void loadLimitsText().then(loadOriginals).then(setRecord).catch(() => undefined);
     }, []);
     if (!record?.batches.length) return null;
     const counts = { titles: countOriginals(record, 'title'), names: countOriginals(record, 'name'), links: countOriginals(record, 'link') };
     return (
-        <Row label={t('limits.kept')} hint={t('limits.keptHint', counts)}>
-            <button type="button" class="button" onClick={() => downloadText(JSON.stringify(record, null, 2), 'senuma-original-values.json')}>{t('limits.download')}</button>
+        <Row label={lt('kept')} hint={lt('keptHint', counts)}>
+            <button type="button" class="button" onClick={() => downloadText(JSON.stringify(record, null, 2), 'senuma-original-values.json')}>{lt('download')}</button>
             <button type="button" class="button"
                 onClick={async () => {
                     await clearOriginals().catch(() => toast(t('error.save')));
                     setRecord(await loadOriginals());
                 }}>
-                {t('limits.remove')}
+                {lt('remove')}
             </button>
         </Row>
     );
@@ -379,7 +381,7 @@ function Data({ state }: { state: AppState }) {
         const read = importBackup(await file.text(), { report, keepIcons: true });
         if (!read) return toast(t('data.fileUnreadable'));
         const imported = await settleSetup(read, report);
-        if (findings(report)) toast(limitsNotice(report));
+        if (findings(report)) toast(await limitsNotice(report));
         // An empty setup has nothing to protect, so there is nothing to choose.
         if (state.spaceOrder.length === 0) {
             if (await replaceSetup(imported, 'import')) toast(t('data.restored'));
@@ -405,7 +407,8 @@ function Data({ state }: { state: AppState }) {
                         onClick={async () => {
                             // A restore point first, so a merge can be undone like a replace.
                             const merged = mergeBackup(app.get(), incoming);
-                            if (await replaceSetup(merged.state, 'import')) toast([t('data.merged', { spaces: merged.spaces, links: merged.links }), ...(merged.iconsDropped ? [t('limits.iconsDropped', { n: merged.iconsDropped })] : [])].join(' '));
+                            if (merged.iconsDropped) await loadLimitsText();
+                            if (await replaceSetup(merged.state, 'import')) toast([t('data.merged', { spaces: merged.spaces, links: merged.links }), ...(merged.iconsDropped ? [lt('iconsDropped', { n: merged.iconsDropped })] : [])].join(' '));
                             setIncoming(null);
                         }}>
                         <Icon name="plus" size={18} />
@@ -577,8 +580,17 @@ function About({ state }: { state: AppState }) {
 
 // ---------- Shell ----------
 
+/** Account & Sync loads when it is opened, and exists only in a build that has sync. */
+function Account() {
+    const [Screen, setScreen] = useState<ComponentType | null>(null);
+    useEffect(() => {
+        void import('../sync/SyncSettings').then(module => setScreen(() => module.SyncSettings));
+    }, []);
+    return Screen ? <Screen /> : null;
+}
+
 export function Settings({ state, section }: { state: AppState; section: string }) {
-    const current = (SETTINGS_SECTIONS as readonly string[]).includes(section) ? (section as SettingsSection) : 'appearance';
+    const current = SYNC && section === 'account' ? 'account' : (SETTINGS_SECTIONS as readonly string[]).includes(section) ? (section as SettingsSection) : 'appearance';
     const close = () => setUi({ settings: null });
     return (
         <Overlay label={t('settings.title')} class="overlay-settings" onClose={close}>
@@ -590,6 +602,12 @@ export function Settings({ state, section }: { state: AppState; section: string 
                         <span>{t(`settings.${id}` as MessageKey)}</span>
                     </button>
                 ))}
+                {SYNC && (
+                    <button type="button" aria-current={current === 'account' ? 'page' : undefined} onClick={() => setUi({ settings: 'account' })}>
+                        <Icon name="users" size={16} />
+                        <span>{state.prefs.language === 'tr' ? 'Hesap ve Eşitleme' : 'Account & Sync'}</span>
+                    </button>
+                )}
             </nav>
             <div class="settings-body" key={current}>
                 <button type="button" class="icon-button settings-close" title={t('close')} aria-label={t('close')} onClick={close}>
@@ -603,6 +621,7 @@ export function Settings({ state, section }: { state: AppState; section: string 
                 {current === 'privacy' && <Privacy state={state} />}
                 {current === 'keyboard' && <Keyboard />}
                 {current === 'about' && <About state={state} />}
+                {SYNC && current === 'account' && <Account />}
             </div>
         </Overlay>
     );

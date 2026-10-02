@@ -1,0 +1,16 @@
+/* Account & Sync. Loaded with that screen only. */
+.sync h4 { margin: 22px 0 8px; font-size: 14px; font-weight: 600; }
+.sync-facts { margin: 12px 0 18px; padding-left: 18px; display: grid; gap: 6px; color: var(--text-secondary); font-size: 13px; line-height: 1.5; max-width: 62ch; }
+.sync-state { margin: 6px 0 2px; font-size: 15px; font-weight: 600; }
+.sync-notice { padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; max-width: 62ch; }
+.sync-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0; }
+.sync-key { display: block; margin: 12px 0; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; font: 600 15px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.04em; overflow-wrap: anywhere; user-select: all; }
+.sync-key-input { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; width: 100%; }
+.sync-device-name { width: 100%; background: none; border: 0; padding: 0; font: inherit; color: inherit; }
+.sync-conflicts { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 10px; }
+.sync-conflicts li { display: grid; gap: 6px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; }
+.sync-conflict-name { font-weight: 500; }
+.sync-side { display: grid; grid-template-columns: auto 92px 1fr; align-items: baseline; gap: 8px; padding: 4px 6px; border-radius: 6px; cursor: pointer; }
+.sync-side.is-picked { background: var(--surface-secondary); }
+.sync-side-label { font-size: 12px; color: var(--text-tertiary); }
+.sync-side-value { overflow-wrap: anywhere; }

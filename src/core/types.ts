@@ -159,6 +159,7 @@ export interface LooseLink {
 export interface Snapshot {
     id: ID;
     at: number;
-    reason: 'import' | 'reset' | 'restore';
+    /** `sync`: before a copy from another device was applied. */
+    reason: 'import' | 'reset' | 'restore' | 'sync';
     state: AppState;
 }

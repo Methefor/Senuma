@@ -31,7 +31,9 @@ export function exportBackup(state: AppState): string {
 
 /** Adds a restore point, newest first, keeping only the most recent few. */
 export function addSnapshot(list: Snapshot[], state: AppState, reason: Snapshot['reason'], now = Date.now()): Snapshot[] {
-    return [{ id: newId(), at: now, reason, state: { ...state, recents: [], usage: {} } }, ...list].slice(0, MAX_SNAPSHOTS);
+    // Sync applies copies often; it keeps one restore point, the latest, so it cannot push the person's own ones out.
+    const kept = reason === 'sync' ? list.filter(snapshot => snapshot.reason !== 'sync') : list;
+    return [{ id: newId(), at: now, reason, state: { ...state, recents: [], usage: {} } }, ...kept].slice(0, MAX_SNAPSHOTS);
 }
 
 /** Validates snapshots read from storage; unreadable ones are dropped. */
@@ -41,7 +43,7 @@ export function sanitizeSnapshots(raw: unknown): Snapshot[] {
         if (!isDict(entry) || typeof entry.id !== 'string' || typeof entry.at !== 'number') return [];
         const state = upgrade(entry.state);
         if (!state) return [];
-        const reason = entry.reason === 'reset' || entry.reason === 'restore' ? entry.reason : 'import';
+        const reason = entry.reason === 'reset' || entry.reason === 'restore' || entry.reason === 'sync' ? entry.reason : 'import';
         return [{ id: entry.id, at: entry.at, reason, state }];
     }).slice(0, MAX_SNAPSHOTS);
 }

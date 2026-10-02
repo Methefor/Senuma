@@ -4,6 +4,7 @@ import { applyAppearance, savedAppearance } from './app/appearance';
 import { ensureLanguage, setLanguage, t } from './i18n';
 import { loadState, onExternalChange, readCachedState, saveState } from './storage/storage';
 import { app, hydrate, onPersistError, toast } from './storage/store';
+import { SYNC, SYNC_ON_FLAG } from './sync/config';
 import './styles/base.css';
 import './styles/home.css';
 import './styles/overlays.css';
@@ -61,9 +62,12 @@ async function boot(): Promise<void> {
         saveState(app.get()).catch(() => toast(t('error.save')));
     }
     // The size limits changed something in a setup saved before them: say what, once.
-    if (resolved.report) void import('./app/limitsNotice').then(module => toast(module.limitsNotice(resolved.report!, true)));
+    if (resolved.report) void import('./app/limitsNotice').then(async module => toast(await module.limitsNotice(resolved.report!, true)));
     // Only on the upgrade itself: bring a picture 1.x stored over to the wallpaper library.
     if (source === 'legacy') void import('./app/legacyBackground').then(module => module.migrateLegacyPicture());
+
+    // Sync is loaded only on a device that has it turned on.
+    if (SYNC && localStorage.getItem(SYNC_ON_FLAG)) void import('./sync/syncRuntime').then(module => module.syncRuntime());
 
     onExternalChange(incoming => {
         if (incoming.updatedAt > app.get().updatedAt) hydrate(incoming);

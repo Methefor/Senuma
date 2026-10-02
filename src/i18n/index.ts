@@ -12,6 +12,9 @@ const LOADERS: Record<Exclude<Language, 'en'>, () => Promise<Dictionary>> = {
 const dictionaries: Partial<Record<Language, Dictionary>> = { en };
 let language: Language = 'en';
 
+/** For text that is kept out of the main dictionaries because only one lazily loaded screen uses it. */
+export const currentLanguage = (): Language => language;
+
 export function setLanguage(next: Language): void {
     language = next;
 }

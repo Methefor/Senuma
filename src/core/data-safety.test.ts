@@ -491,7 +491,7 @@ describe('backup files', () => {
         // Renaming these would orphan every user's setup.
         expect(STORAGE_KEYS).toMatchObject({ state: 'bos.state', snapshots: 'bos.snapshots', newerState: 'bos.state.newer', legacyData: 'ntf_data' });
         // Keys added since are new names beside the old ones, never replacements.
-        expect(STORAGE_KEYS).toEqual({ state: 'bos.state', snapshots: 'bos.snapshots', newerState: 'bos.state.newer', legacyData: 'ntf_data', limitsOriginals: 'bos.limits.originals', device: 'bos.device' });
+        expect(STORAGE_KEYS).toEqual({ state: 'bos.state', snapshots: 'bos.snapshots', newerState: 'bos.state.newer', legacyData: 'ntf_data', limitsOriginals: 'bos.limits.originals', device: 'bos.device', sync: 'bos.sync' });
     });
 
     it('merging the same setup again adds nothing, even with two Spaces of one name', () => {

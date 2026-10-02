@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "build:sync": "cross-env VITE_SENUMA_SYNC=emulator vite build",
     "build:e2e": "cross-env BOS_E2E=1 vite build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src e2e scripts firebase vite.config.ts",
     "emulator": "firebase emulators:start --only firestore --project demo-senuma --config firebase/firebase.json",
     "test:rules:mutations": "node scripts/rules-mutations.mjs",
+    "test:sync:e2e": "npm run build:sync && firebase emulators:exec --only firestore --project demo-senuma --config firebase/firebase.json \"vite-node e2e/sync.e2e.ts\"",
     "test:rules": "firebase emulators:exec --only firestore --project demo-senuma --config firebase/firebase.json \"vitest run --config firebase/vitest.config.ts\"",
     "test": "vitest run",
     "test:e2e": "npm run build && npm run build:e2e && vite-node e2e/extension.e2e.ts",

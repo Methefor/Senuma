@@ -24,11 +24,20 @@ describe('Firebase stays out of the extension', () => {
         expect(offenders).toEqual([]);
     });
 
-    it('the product imports the sync core nowhere except the limits it shares', () => {
+    it('the product reaches sync only through the build switch, the device-local store and the lazy screen', () => {
         const product = walk('src').filter(path => /\.(ts|tsx)$/.test(path) && !/\.test\./.test(path) && !path.replace(/\\/g, '/').startsWith('src/sync/'));
-        const importers = product.filter(path => /from ['"][./]+\/sync\//.test(readFileSync(path, 'utf8'))).map(path => path.replace(/\\/g, '/'));
-        // The device-local store is the one bridge, and nothing in the running product imports it yet.
-        expect(importers).toEqual(['src/storage/deviceLocal.ts']);
-        expect(product.filter(path => /deviceLocal['"]/.test(readFileSync(path, 'utf8')))).toEqual([]);
+        const importers = product.filter(path => /from ['"][./]+\/sync\//.test(readFileSync(path, 'utf8'))).map(path => path.replace(/\\/g, '/')).sort();
+        expect(importers).toEqual(['src/features/settings/Settings.tsx', 'src/features/sync/SyncSettings.tsx', 'src/main.tsx', 'src/storage/deviceLocal.ts']);
+        // Outside the sync screen itself, only the build switch is imported statically; the engine only ever by import().
+        for (const path of ['src/main.tsx', 'src/features/settings/Settings.tsx']) {
+            const text = readFileSync(path, 'utf8');
+            expect([...text.matchAll(/^import [^;]*from ['"]([./]+\/sync\/[^'"]+)['"]/gm)].map(match => match[1]), path).toEqual(['./sync/config', '../../sync/config'].filter(spec => text.includes(`'${spec}'`)));
+        }
+    });
+
+    it('an ordinary build has no sync: everything behind the build switch is left out', () => {
+        const main = readFileSync('src/main.tsx', 'utf8');
+        expect(main).toMatch(/if \(SYNC && localStorage\.getItem\(SYNC_ON_FLAG\)\) void import\('\.\/sync\/syncRuntime'\)/);
+        expect(readFileSync('src/sync/config.ts', 'utf8')).toMatch(/import\.meta\.env\.VITE_SENUMA_SYNC === 'emulator'/);
     });
 });

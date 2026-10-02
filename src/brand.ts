@@ -37,4 +37,6 @@ export const STORAGE_KEYS = {
     limitsOriginals: 'bos.limits.originals',
     /** What this device remembers that is not part of the setup and is never uploaded. */
     device: 'bos.device',
+    /** What this device remembers about sync (its key, the last common copy). Never uploaded. */
+    sync: 'bos.sync',
 } as const;

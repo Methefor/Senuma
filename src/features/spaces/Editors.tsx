@@ -25,7 +25,10 @@ function ItemEditor({ state, target }: { state: AppState; target: Extract<Editor
         if (!normalizeUrl(url)) return setInvalid(true);
         // A picture pasted as the icon is made small enough to store, here in the page; if it cannot be, the site's icon is used.
         const prepared = await prepareIcon(icon, app.get(), item?.id);
-        if (prepared.fellBack) toast(t('item.iconTooLarge'));
+        if (prepared.fellBack) void import('../../app/limitsText').then(async module => {
+            await module.loadLimitsText();
+            toast(module.lt('iconTooLarge'));
+        });
         update(s => {
             if (!item) return addItem(s, spaceId, target.groupId ?? null, { title, url, icon: prepared.icon }).state;
             const edited = updateItem(s, item.id, { title, url, icon: prepared.icon });

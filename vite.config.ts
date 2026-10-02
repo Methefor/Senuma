@@ -11,6 +11,8 @@ const MARK_DIR = 'src/assets/marks';
 const WALLPAPER_DIR = 'src/assets/wallpapers';
 /** Set by `npm run build:e2e`; see src/manifest.ts. */
 const E2E_BUILD = process.env.BOS_E2E === '1';
+/** Set by `npm run build:sync`: the build with sync against the local emulator. Never packaged. */
+const SYNC_BUILD = process.env.VITE_SENUMA_SYNC === 'emulator';
 
 /** Emits the extension manifest (generated from brand constants), icons and service worker. */
 function extensionFiles(): Plugin {
@@ -42,7 +44,7 @@ export default defineConfig({
     base: '',
     plugins: [extensionFiles()],
     build: {
-        outDir: E2E_BUILD ? 'dist-e2e' : 'dist',
+        outDir: E2E_BUILD ? 'dist-e2e' : SYNC_BUILD ? 'dist-sync' : 'dist',
         target: 'chrome120',
         modulePreload: { polyfill: false },
         rollupOptions: { input: { newtab: 'newtab.html' } },
