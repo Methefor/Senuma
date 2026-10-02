@@ -1,7 +1,7 @@
 # Senuma cloud sync — design (for Senuma 2.1)
 
-Status: **design approved; PHASE 1 COMPLETE (2026-10-03); PHASE 2 COMPLETE (2026-10-03:
-rules pass 71 emulator tests, see 6.5); nothing connected.** No backend
+Status: **design approved; PHASE 1 COMPLETE (2026-10-03); PHASE 2 COMPLETE; PHASE 3 COMPLETE
+against the local emulator with mock sign-in (section 13); nothing connected to a real service.** No backend
 exists, no Firebase project was created or changed, nothing was published. Work is on the local
 branch `senuma-2.1`; the Senuma 2.0 branch (`rebuild/browser-os`) and its package are unchanged. Decided 2026-10-02: the 1.80 Firebase system is not a
 Senuma requirement; Senuma's sync is designed from first principles.
@@ -559,9 +559,9 @@ Senuma sync never reads, links to or migrates from the old project.
 | 0 | Owner decisions D1–D5; owner creates the new Firebase project (free plan) and OAuth client | — |
 | 1 — **COMPLETE** | Pure sync core (`src/sync/`: scope, merge, revision, crypto, missing-wallpaper model) plus the product-side limits it depends on (icon policy, text and address limits, device-local record) | 231 unit tests in all; merge properties over 600 random edit runs; threat-model tests; payload budget; icon and text limits over 300 random mixes each; browser checks `e2e/icons.ts` (6) and `e2e/limits.e2e.ts` (8) |
 | 2 — **COMPLETE** | Security Rules + emulator test suite (section 6) | 71 emulator tests pass; 27 of 27 rule weakenings caught; 42 shared rows agree with the reference validator |
-| 3 | Sign-in (optional `identity`), REST client, against the emulator | Sign in/out; session refresh |
-| 4 | Engine in the service worker, state machine, restore points, history | Two browser profiles against the emulator: edit, offline edit, concurrent edit, conflict |
-| 5 | Account & Sync UI, recovery-key setup, conflict screen, copy in English and Turkish | Hands-on QA script |
+| 3 — **COMPLETE (emulator, mock sign-in)** | REST transport, engine, recovery-key flow, devices, Account & Sync screen and conflict screen (the original phases 3–5, without real Google sign-in) | 28 engine integration tests, 20 browser checks on two profiles plus a stranger, privacy scans; section 13 |
+| 4 | Real sign-in: Google through `launchWebAuthFlow`, Firebase token exchange and refresh, optional `identity` permission; production configuration | Needs the real project and OAuth client (owner) |
+| 5 | Hands-on QA of sync; copy review | Human QA script |
 | 6 | Deletion flows, devices, rotation, sign out everywhere, encrypted backup file | Read-back verification of deletions |
 | 7 | Test account against the real project; quota and failure drills; privacy policy and store declarations; release | Full regression + human QA |
 | later | Device-to-device approval; wallpaper sync | — |
@@ -623,3 +623,103 @@ Still to settle before phase 4:
   deletion on request, breach handling.
 - **Sync changes the product's privacy position** from “nothing leaves the device” to “an
   encrypted copy leaves if you turn it on”. Listing and policy must change with it, not before.
+
+## 13. Phase 3 as built (2026-10-03)
+
+Everything here runs against the local emulator with the emulator's mock sign-in. **No real
+Google sign-in, no real project.**
+
+### 13.1 Shape
+
+| Part | File | Loaded |
+|---|---|---|
+| Build switch | `src/sync/config.ts` | `VITE_SENUMA_SYNC=emulator` at build time (`npm run build:sync` → `dist-sync`). An ordinary build contains no sync code at all (checked: no sync file, no emulator address in `dist`). |
+| Transport | `src/sync/transport.ts` | Firestore REST, no SDK. A new revision and the verbatim history copy of the previous one go in **one atomic commit**, guarded by the previous document's version stamp; the server stamps the time. |
+| Engine | `src/sync/engine.ts` | With sync on, or when Account & Sync is opened |
+| Browser wiring | `src/sync/syncRuntime.ts` | Same chunk as the engine |
+| Mock sign-in | `src/sync/mockAuth.ts` | Emulator builds only; unsigned tokens the emulator accepts and no real service does |
+| Account & Sync | `src/features/sync/` | When the screen is opened |
+
+Differences from the design:
+- **The engine runs in the page, not the service worker.** Only one tab syncs at a time (a
+  browser lock); the others see the result through storage. Consequence: sync happens while a
+  Senuma tab is open — which is whenever the setup can change — and not in the background.
+- **Restore points:** sync keeps **one** restore point, its latest (“Before the last sync”), so
+  frequent syncs cannot push the person's own restore points out.
+- **Device-local records** under their own keys: `bos.sync` (account, device id and name, the
+  wrapped key, the recovery key, the last common copy, paused), `bos.device` (held
+  backgrounds, device choices). Neither is ever uploaded or in a backup file.
+
+### 13.2 Engine behaviour
+
+| Situation | What happens |
+|---|---|
+| Turning sync on, first device | Recovery key generated and shown; **nothing is uploaded** until the person types its last four characters; then the wrapped key, the device entry and revision 1 |
+| Second device | Recovery key entered and checked on the device. Wrong key: refused in place, nothing changes. If the device has its own setup: the person chooses merge (by address, nothing doubled), use cloud, or use this device; nothing is written before the choice. An empty device just receives the workspace. |
+| Local change | Sent as the next revision after a 3-second quiet period, only if something that syncs changed |
+| Remote change, nothing changed here | Applied, after a restore point |
+| Both changed | Three-way merge; if anything collides: **conflict**, and nothing changes here or in the cloud until the person chooses |
+| Conflict choices | per item; keep this device for all; keep the cloud for all; keep both (offered when every difference is in a link: this device's version stays and the cloud's is added beside it as a second link; an edit against a deletion keeps the edited one) |
+| Offline | A state, not an error; edits stay on the device and are merged when the connection is back |
+| Paused | Nothing sent or received; resume carries on |
+| Sign-in expired | Stops with “Sign in again”; nothing changes; signing in as the same account carries on |
+| Cloud copy deleted elsewhere | Stops (`missing`); nothing is re-uploaded unless the person asks (“Upload this device's setup again”) |
+| Corrupted ciphertext, wrong format, newer schema | Stops; nothing applied |
+| An old revision put back | Stops (`went-backwards`); the same old bytes renumbered are unreadable |
+| Over the size limit | Stops; nothing sent, nothing cut; everything stays on the device |
+| Written too soon (rules' 2-second spacing) | Waits and retries, up to three times |
+| Transient failure | Retried after 15 s, 1 min, then every 5 min, while a tab is open |
+
+### 13.3 Devices and keys
+
+- Device entries are encrypted (name, created, last synced, last revision); the list is
+  decrypted on the device. The name defaults to “browser · platform” and can be changed.
+- **Remove device** deletes the entry; that device stops syncing at its next attempt and signs
+  itself out, keeping its own data. It is **not a revocation**: the device keeps what it has,
+  its sign-in is untouched, and with the recovery key it can join again (tested). The screen
+  says so.
+- **New recovery key** makes a new key, re-encrypts the current copy, deletes history made with
+  the old key and the old key record. Other devices stop with “enter the new recovery key”;
+  the old key no longer opens anything (tested). It does not take back what a device already
+  has; the screen says so.
+- **Sign out** stops sync on that device only and leaves its setup exactly as it was; the cloud
+  copy stays. **Delete cloud data** removes history, the workspace, device entries, then keys,
+  and turns sync off on that device; its setup stays.
+
+### 13.4 Tests
+
+| Suite | Count | What |
+|---|---|---|
+| `firebase/engine.test.ts` (emulator) | 28 | first sync; second account; second device empty / with its own setup (merge, cloud, device); wrong, mistyped and foreign keys; local edit; remote edit with restore point; concurrent non-conflicting; conflicting (stop, keep cloud, keep this device, keep both, edit against deletion, per-item); offline edit and reconnect; unreachable service; paused and resumed; expired sign-in; corrupted ciphertext; replayed and renumbered old revision; newer format; deleted cloud copy and upload again; oversized workspace; icon limits with no back-and-forth; missing wallpaper reference with no back-and-forth; device list and rename; sign-out keeps local state; removal is not revocation; new recovery key; two privacy scans |
+| `firebase/rules.test.ts` (emulator) | 71 | unchanged |
+| `e2e/sync.e2e.ts` (emulator, browser) | 20 | lazy loading (nothing of sync loads with a new tab or with Settings, only when Account & Sync is opened; a device with sync on loads it by itself and one without does not); copy check (required statements present; no zero-knowledge, “never”, revocation or anonymity claims); recovery key shown once and confirmed; vault contents scanned; second device with wrong then right key; merge; edit; conflict (both versions shown, nothing changed before the choice, keep both, per-item); pause; offline; expired sign-in; recovery key shown again only after confirmation; device list wording; removal; sign-out; a stranger gets an empty vault; no console errors |
+
+Privacy scans (engine and browser): the stored documents, read with the rules off, contain no
+link title or address or host name, no Space, group or Mode name, no search-provider name, no
+device name, no picture file name or preview, no opened-page or recently-closed-page data, no
+command-centre usage, no e-mail address, and only the approved field names. Searches are not
+stored by Senuma at all, so there is nothing to upload.
+
+### 13.5 Bundle
+
+| | Before phase 3 | After |
+|---|---|---|
+| Startup JS | 44.00 kB | **43.78 kB** ordinary build, **43.94 kB** sync build (budget 44, unchanged) |
+| On-demand JS (sync excluded) | 21.92 kB (budget 22) | 22.74 kB ordinary, 23.23 kB sync build (**budget raised to 23.5**) |
+| Sync JS (new line) | — | 0 kB ordinary; 18.80 kB sync build (engine and transport 10.54, screen 8.27) (**new budget 20**) |
+| Language packs (tr) | 6.73 kB | 6.90 kB |
+
+Why the on-demand raise: startup had to shrink to make room for the switch that loads sync, so
+the words about the size limits moved from the startup dictionary into their own small module
+(English on demand, Turkish with the Turkish pack); and in a build with sync the backup reader
+becomes a chunk shared by Settings and the engine. Trimmed first: an unused startup string was
+removed and the limits words were split by language.
+
+### 13.6 Not done, and why
+
+- **Real sign-in** (phase 4): needs the real project and an OAuth client, which are not
+  approved yet. The engine's `Auth` interface is what the real sign-in will implement.
+- **Background sync** in the service worker: not needed while sync runs whenever a tab is open.
+- **Cross-origin access to the real Firestore REST endpoint from the extension page** is
+  unverified (the emulator allows it). **[verify]** in phase 4.
+- The Turkish sync words travel in the same chunk as the English ones.
