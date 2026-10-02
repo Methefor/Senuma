@@ -1,5 +1,7 @@
 # Worklog — 2026-10-02
 
+> 2026-10-03 update: this repository structure is now applied on `chore/senuma-professional-repository`, based on `senuma-2.1`. The earlier text below records the original RC2 preparation run. Current state and validation live in `CURRENT_STATE.md` and `WORKLOG.md`.
+
 ## Completed
 Audited current and ignored release artifacts; recorded plan before archive commit. Archived tracked legacy files without discarding content. Preserved original uncommitted manifest separately. Updated two migration fixture consumers. Added Senuma brand, product, motion and release guidance; test suite map; store/screenshots/GIF/video structure. Runtime src/ is byte-identical to baseline.
 Generated eight real 1280×800 store screenshots, 1400×560 hero, 440×280 tile, 128 icon, synthetic product WebM tours and 76-frame 800×500 GIF. Reviewed screenshot contact sheet. Media inventory and SHA256 records: assets/media-manifest.json. Published 1.80 fixture: 26 hashes verified.

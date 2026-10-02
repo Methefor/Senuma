@@ -27,7 +27,9 @@
     "size": "node scripts/size.mjs",
     "marks": "node scripts/brand-marks.mjs",
     "icons": "node scripts/brand-icons.mjs",
-    "demo:assets": "npm run build && vite-node e2e/demo-assets.ts"
+    "demo:assets": "npm run build && vite-node e2e/demo-assets.ts",
+    "demo:gif": "python scripts/demo-gif.py",
+    "media:manifest": "node scripts/media-manifest.mjs"
   },
   "dependencies": {
     "preact": "^10.27.0"

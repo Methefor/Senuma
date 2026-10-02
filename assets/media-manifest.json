@@ -1,21 +1,25 @@
 {
-  "date": "2026-10-02",
-  "status": "local draft, not published",
-  "generator": [
+  "generatedBy": [
     "npm run store:assets",
     "npm run demo:assets",
-    "scripts/demo-gif.py (Pillow)"
+    "npm run demo:gif"
   ],
+  "status": "local draft, not published",
   "files": [
     {
       "path": "assets/gifs/senuma-product-tour.gif",
-      "bytes": 9081316,
-      "sha256": "34ce6f1f1f77bdf85d7df532701a985123547644b3001c8e6f92f6710d7c83c0"
+      "bytes": 8938953,
+      "sha256": "b9142d20364777ca3cfb1520e047e05bafb466e89eb42b865bf369a571db48df"
+    },
+    {
+      "path": "assets/store/contact-sheet.png",
+      "bytes": 341146,
+      "sha256": "22a34b57274115c2533dab95ea293906d8e7d2a71b35ee57e7e8037b1880a64d"
     },
     {
       "path": "assets/store/hero-1400x560.png",
-      "bytes": 491250,
-      "sha256": "49029e0bd575b0b66a8247e2d0fc99261e368ff73d9dd47e74fb05dd09214523"
+      "bytes": 490050,
+      "sha256": "550295c59a4673687829dc98ae58b4e96e5ae0ae5ff19bd7e5efcedf5c341929"
     },
     {
       "path": "assets/store/icon-128.png",
@@ -24,43 +28,43 @@
     },
     {
       "path": "assets/store/screenshot-1-home.png",
-      "bytes": 770623,
-      "sha256": "8a0da428c21b6a413d8e778e27f72965b19b47ed4957f7d0d735b31b3fa530f2"
+      "bytes": 767305,
+      "sha256": "f0dd27b3697790bd9ffadddb67389ea80c41c36001c388c8138fba857a3fe444"
     },
     {
       "path": "assets/store/screenshot-2-spaces.png",
-      "bytes": 322681,
-      "sha256": "d96527ba0475fded10da5b4cc775aca18832d55fea12ce08777fe3fe483121c8"
+      "bytes": 322727,
+      "sha256": "87151424dbc844acb661eefc14299c7d90ed1da47357180b73b630b2d24d9bf5"
     },
     {
       "path": "assets/store/screenshot-3-modes.png",
-      "bytes": 307762,
-      "sha256": "976b3f2657ef522067e2699ab84306b5df6de902a2435778b9b06cc83dc98162"
+      "bytes": 305676,
+      "sha256": "ce49abf67be24980dd4102be53054346206bf5d5a8280c318a55fdae7c861407"
     },
     {
       "path": "assets/store/screenshot-4-search.png",
-      "bytes": 724914,
-      "sha256": "1fb3fa1eac8bf89b09b48467dbae8dc09dbdeee0f04d7107a0f9f045ac7dc835"
+      "bytes": 721811,
+      "sha256": "6375b672490c949944de1123d581f9971482b3d5248792459399eff5fcea79a7"
     },
     {
       "path": "assets/store/screenshot-5-command-center.png",
-      "bytes": 510781,
-      "sha256": "f1dceaa22f2afaf26d96924c72e237069301be3cdd34a04c26bf2fe6f2c425fa"
+      "bytes": 510719,
+      "sha256": "8dece2f9d9a62817e5a3698c66a94042a9c30d6f713b359d3245d7800fb6e312"
     },
     {
       "path": "assets/store/screenshot-6-personalization.png",
-      "bytes": 706230,
-      "sha256": "e60b54dec2d4de3e72a97780413beafd765331280a9171280b5f88f4868ecf2f"
+      "bytes": 703415,
+      "sha256": "aa7b2ba2020257ddd73d6cc2d6122737e3185fa8cebb7640812b2e46d1d6414d"
     },
     {
       "path": "assets/store/screenshot-7-themes.png",
-      "bytes": 986294,
-      "sha256": "a38169d7f127e1fa03c1f6a447ac98959e98df29ab770c87476a960d01857301"
+      "bytes": 983484,
+      "sha256": "3d092a9ab6e6b6029856ca74863a18bad146e54410d0fd2bc02cd64ba5c76452"
     },
     {
       "path": "assets/store/screenshot-8-privacy.png",
-      "bytes": 430361,
-      "sha256": "563461ac3494541efb017b8e4c4236114d60f425bb417869731bb12222bb1523"
+      "bytes": 430366,
+      "sha256": "1172a5618e66adb5d97f0c6872bcc16f71397bf510c4e1e38f524f85ce3025ff"
     },
     {
       "path": "assets/store/tile-440x280.png",
@@ -68,14 +72,9 @@
       "sha256": "4002f85429236c392eceac40237b7f2ece90676dbc348a3fa64335fe4ac08d97"
     },
     {
-      "path": "assets/video/senuma-product-tour-1790964287144.webm",
-      "bytes": 2651417,
-      "sha256": "e4b011b018e8ce29e02566fb04fc6b58ad7de6faad8512a210ee0fb7980c437c"
-    },
-    {
       "path": "assets/video/senuma-product-tour.webm",
-      "bytes": 2209943,
-      "sha256": "a53c454ae12f447203de263e7174abb9dc6eef3a39c64e4835e5b50328d62ce6"
+      "bytes": 2501961,
+      "sha256": "01c9c8e9f2efcc8206c61e4008487d71e3c20d8e2f5f8949b66a9b45cb140a07"
     }
   ]
 }

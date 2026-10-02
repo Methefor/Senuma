@@ -1,4 +1,5 @@
-import { mkdirSync, renameSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { resolve, join } from 'node:path';
 import { chromium } from 'playwright';
 import { emptyState } from '../src/core/defaults';
@@ -8,6 +9,7 @@ import { newProfile, removeProfile } from './harness';
 
 const out = resolve('assets/video');
 const frames = resolve('assets/gifs/frames');
+const recording = mkdtempSync(join(tmpdir(), 'senuma-demo-'));
 mkdirSync(out, { recursive: true });
 mkdirSync(frames, { recursive: true });
 const profile = newProfile();
@@ -15,7 +17,7 @@ const size = { width: 1280, height: 800 };
 const dist = resolve('dist');
 const context = await chromium.launchPersistentContext(profile, {
     channel: 'chromium', headless: true, viewport: size,
-    recordVideo: { dir: out, size },
+    recordVideo: { dir: recording, size },
     args: [`--disable-extensions-except=${dist}`, `--load-extension=${dist}`],
 });
 try {
@@ -62,9 +64,10 @@ try {
     const video = page.video();
     await page.close();
     await context.close();
-    if (video) renameSync(await video.path(), join(out, `senuma-product-tour-${Date.now()}.webm`));
+    if (video) copyFileSync(await video.path(), join(out, 'senuma-product-tour.webm'));
     console.log(`Recorded real RC interface: ${frame} GIF frames and WebM tour, synthetic state only.`);
 } finally {
     await context.close();
     removeProfile(profile);
+    rmSync(recording, { recursive: true, force: true });
 }

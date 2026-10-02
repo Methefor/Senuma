@@ -1,7 +1,7 @@
 # Release status — Senuma 2.0.0 (final package built, not uploaded)
 
-Release status: RC2, nothing pushed or published. Repository reorganization branch: `chore/senuma-product-repository`. Original product baseline: `rebuild/browser-os`. Latest local validation and paths: WORKLOG.md.
-Last updated 2026-10-02.
+Senuma 2.0 final package is built and not uploaded. Senuma 2.1 development continues locally on `chore/senuma-professional-repository`, based on `senuma-2.1`; its sync path is connected only to the local emulator with mock sign-in. Latest repository work and validation: WORKLOG.md.
+Last updated 2026-10-03.
 
 ## READY
 

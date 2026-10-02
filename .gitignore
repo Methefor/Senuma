@@ -43,4 +43,5 @@ assets/store/
 assets/gifs/*.gif
 assets/video/*.webm
 assets/video/*.mp4
+archive/legacy/generated-media/*.webm
 assets/gifs/frames/

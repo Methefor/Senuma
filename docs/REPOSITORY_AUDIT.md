@@ -1,5 +1,7 @@
 # Repository audit — 2026-10-02
 
+> Historical baseline note: the plan was first prepared against RC2, then reapplied on 2026-10-03 on top of `senuma-2.1`. See CURRENT_STATE.md for the active state.
+
 Baseline: local New Tab Folders repository. Senuma RC2 already exists in src/.
 Original checkout has an uncommitted manifest version change from 1.0.0 to 1.55; preserved separately, never overwritten.
 Synced project brain describes Mutlukent, so it is not authoritative for Senuma.
