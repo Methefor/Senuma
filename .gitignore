@@ -24,3 +24,6 @@ dist-e2e/
 release/
 e2e/.out/
 e2e/_*
+
+# Local brand prototypes
+proto/
