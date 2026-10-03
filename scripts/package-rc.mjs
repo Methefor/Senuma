@@ -88,6 +88,8 @@ rmSync(zip, { force: true });
 // Every file gets the source commit's time, so the same commit always gives a byte-identical zip.
 const stamp = new Date(Number(execFileSync('git', ['log', '-1', '--format=%ct'], { encoding: 'utf8' }).trim()) * 1000);
 for (const path of [...walk(DIST), ...readdirSync(DIST, { recursive: true }).map(name => join(DIST, name)).filter(path => statSync(path).isDirectory())]) utimesSync(path, stamp, stamp);
+// tar also records each file's creation time, which Node cannot set on Windows.
+execFileSync('powershell', ['-NoProfile', '-Command', `$t = [DateTime]::Parse('${stamp.toISOString()}'); Get-ChildItem -LiteralPath '${resolve(DIST)}' -Recurse -Force | ForEach-Object { $_.CreationTime = $t }`]);
 // Windows' bundled bsdtar writes a standard zip with forward-slash paths (Compress-Archive writes backslashes).
 execFileSync(join(process.env.SystemRoot ?? 'C:/Windows', 'System32/tar.exe'), ['-a', '-c', '-f', zip, '-C', resolve(DIST), ...readdirSync(DIST)]);
 const listed = execFileSync(join(process.env.SystemRoot ?? 'C:/Windows', 'System32/tar.exe'), ['-t', '-f', zip], { encoding: 'utf8' }).split(/\r?\n/).filter(Boolean);
