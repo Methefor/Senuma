@@ -1,5 +1,9 @@
 # Worklog — 2026-10-02
 
+## Chrome Web Store submission — 2026-10-03
+
+Senuma 2.0.0 was uploaded to the existing item `oghlifenjhpbebcdeboejbmemelkfobe`. The first review submission was cancelled after a privacy-declaration audit found that Chrome's **Web history** wording covers recently closed page entries handled by the optional `tabs` and `sessions` feature. The corrected submission ticks Web history and keeps every other data category unticked. Permission explanations state that Recently Closed / Continue reads entries live for the visible feature and that Senuma does not store or transmit the list. The listing, five screenshots, tile, hero, GitHub URLs, privacy policy, free distribution, and existing regions remain saved. The corrected update was resubmitted and the dashboard confirmed **Pending review**. Automatic publishing remains disabled; the live 1.8.0 version is unchanged.
+
 ## Integration update — 2026-10-03
 
 The professional repository commits were reapplied on top of `senuma-2.1` as `chore/senuma-professional-repository`; the 2.1 sync engine, rules, REST transport and mock sign-in work were retained. The only cherry-pick conflicts were `.gitignore` and the release package name. Both 2.1 Firebase ignore entries and generated-media entries were preserved. Package naming now retains the 2.1 final/pre-release label and adds a content fingerprint while refusing overwrite.

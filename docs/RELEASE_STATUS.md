@@ -1,6 +1,6 @@
-# Release status — Senuma 2.0.0 (final package built, not uploaded)
+# Release status — Senuma 2.0.0 (privacy-corrected submission under review)
 
-Senuma 2.0 final package is built and not uploaded. Senuma 2.1 development continues locally on `chore/senuma-professional-repository`, based on `senuma-2.1`; its sync path is connected only to the local emulator with mock sign-in. Latest repository work and validation: WORKLOG.md.
+Senuma 2.0.0 was uploaded to the existing Chrome Web Store item `oghlifenjhpbebcdeboejbmemelkfobe`. The first review submission was cancelled on 2026-10-03 so the data-usage declaration could be corrected. The corrected submission declares **Web history** for the optional Recently Closed / Continue feature; other data categories remain unticked. The dashboard status is **Pending review**. Automatic publishing remains disabled. Senuma 2.1 development continues locally on `chore/senuma-professional-repository`, based on `senuma-2.1`; its sync path is connected only to the local emulator with mock sign-in. Latest repository work and validation: WORKLOG.md.
 Last updated 2026-10-03.
 
 ## READY
@@ -36,7 +36,7 @@ Checks (last run 2026-10-02 on the Senuma build):
 Build: manifest 2.0.0, display 2.0.0, package 2.0.0 (published: 1.80), schema 4 (frozen: add fields with defaults only).
 Startup JS 42.8 kB gzip (budget 44), CSS 9.1 kB (9.5), unpacked 3.53 MB.
 
-## NOT UPLOADED — migration from the published 1.80 build
+## SUBMITTED — migration from the published 1.80 build
 
 The published build is 1.80, which differs from the repository's 1.x (licence keys, cloud
 sync, quick bar, weather, eight languages). Details and design: LEGACY_MIGRATION.md.
@@ -47,7 +47,7 @@ sync, quick bar, weather, eight languages). Details and design: LEGACY_MIGRATION
 | Cloud copy | Not migrated (owner decision: no user base to migrate). No cloud import in 2.0; the 1.x sign-in record is ignored and no request goes to the old backend. Old Firebase project untouched. |
 | Uploaded background | Migrated into the local wallpaper library with its dim and blur. A background at a web address is not carried over. |
 | Quick bar, pinned folders, language, theme, colour and gradient backgrounds | Migrated |
-| Store privacy declarations | The live listing declares personal, authentication, location and website-content data; all must be cleared with the update. Exact values: STORE_PRIVACY_CHANGES.md. |
+| Store privacy declarations | The submitted update declares Web history for optional Recently Closed / Continue handling. All other categories are unticked. Permission explanations and the Senuma privacy-policy URL match the 2.0.0 package. Exact values: STORE_SUBMISSION.md and STORE_PRIVACY_CHANGES.md. |
 | Dropped from 1.80 | Sync itself, weather, clock, quotes, most-visited, six languages |
 
 Rehearsal (published 1.80 → this build, real extension ID): 16 of 16 pass.
@@ -62,11 +62,9 @@ document or listing may say otherwise. Record: SENUMA_BRAND.md. Fallback: AVLUNA
 One hands-on session by a person with MANUAL_QA.md before any public release. The headed
 pass is automated and does not judge feel. macOS and Linux are untested.
 
-## PUBLIC — each needs explicit approval
+## PUBLIC — remaining actions need explicit approval
 
-- Chrome Web Store update (title, description, screenshots, package). Before uploading: confirm the published version in the
-  developer dashboard (store page read 1.8.0; repository's 1.x manifest says 1.55; 2.0.0 is
-  newer than both) and that the repository's 1.x files are the published build.
+- Chrome Web Store publication after review. The 2.0.0 update is submitted with automatic publishing disabled; the currently published version remains 1.8.0 until a separate publish action.
 - Staged rollout, to observe Chrome's “Change back to Google?” bubble on real updates.
 - Website deployment; removal of the 1.x landing and pricing pages; new privacy policy page.
 - Domain purchase (none bought; `senuma.app`, `usesenuma.com`, `getsenuma.com` were unregistered on 2026-10-02).
