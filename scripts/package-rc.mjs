@@ -3,11 +3,55 @@
 //
 //   npm run package
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
-import { gzipSync } from 'node:zlib';
+import { crc32, deflateRawSync, gzipSync } from 'node:zlib';
 
 const DIST = 'dist';
+
+/** A standard zip (deflate, UTF-8 names, DOS time only), the same bytes for the same input. */
+function zipOf(names, read, time) {
+    const dos = ((time.getUTCFullYear() - 1980) << 25) | ((time.getUTCMonth() + 1) << 21) | (time.getUTCDate() << 16)
+        | (time.getUTCHours() << 11) | (time.getUTCMinutes() << 5) | (time.getUTCSeconds() >> 1);
+    const locals = [];
+    const centrals = [];
+    let offset = 0;
+    for (const name of names) {
+        const data = read(name);
+        const packed = deflateRawSync(data, { level: 9 });
+        const file = Buffer.from(name, 'utf8');
+        const head = (size, signature) => {
+            const b = Buffer.alloc(size);
+            b.writeUInt32LE(signature, 0);
+            return b;
+        };
+        const local = head(30, 0x04034b50);
+        local.writeUInt16LE(20, 4); // version needed
+        local.writeUInt16LE(0x0800, 6); // UTF-8 names
+        local.writeUInt16LE(8, 8); // deflate
+        local.writeUInt32LE(dos >>> 0, 10);
+        local.writeUInt32LE(crc32(data), 14);
+        local.writeUInt32LE(packed.length, 18);
+        local.writeUInt32LE(data.length, 22);
+        local.writeUInt16LE(file.length, 26);
+        const central = head(46, 0x02014b50);
+        central.writeUInt16LE(20, 4); // made by: MS-DOS attributes
+        central.writeUInt16LE(20, 6);
+        local.copy(central, 8, 6, 30); // flags … name length, as in the local header
+        central.writeUInt32LE(offset, 42);
+        locals.push(local, file, packed);
+        centrals.push(central, file);
+        offset += local.length + file.length + packed.length;
+    }
+    const directory = Buffer.concat(centrals);
+    const tail = Buffer.alloc(22);
+    tail.writeUInt32LE(0x06054b50, 0);
+    tail.writeUInt16LE(names.length, 8);
+    tail.writeUInt16LE(names.length, 10);
+    tail.writeUInt32LE(directory.length, 12);
+    tail.writeUInt32LE(offset, 16);
+    return Buffer.concat([...locals, directory, tail]);
+}
 const walk = dir => readdirSync(dir).flatMap(name => {
     const path = join(dir, name);
     return statSync(path).isDirectory() ? walk(path) : [path];
@@ -85,13 +129,11 @@ const label = manifest.version_name === manifest.version ? manifest.version : `$
 // Named by the short name: the full name carries a dash and spaces.
 const zip = resolve('release', `${manifest.short_name}-${label}.zip`);
 rmSync(zip, { force: true });
-// Every file and folder gets the source commit's time, so the same commit always gives a
-// byte-identical zip. tar records modified, accessed and created times; Node cannot set the
-// last on Windows, so all three are set here, together, after nothing else will touch them.
-const stamp = new Date(Number(execFileSync('git', ['log', '-1', '--format=%ct'], { encoding: 'utf8' }).trim()) * 1000).toISOString();
-execFileSync('powershell', ['-NoProfile', '-Command', `$t = [DateTime]::Parse('${stamp}'); Get-ChildItem -LiteralPath '${resolve(DIST)}' -Recurse -Force | ForEach-Object { $_.CreationTime = $t; $_.LastWriteTime = $t; $_.LastAccessTime = $t }`]);
-// Windows' bundled bsdtar writes a standard zip with forward-slash paths (Compress-Archive writes backslashes).
-execFileSync(join(process.env.SystemRoot ?? 'C:/Windows', 'System32/tar.exe'), ['-a', '-c', '-f', zip, '-C', resolve(DIST), ...readdirSync(DIST)]);
+// Written here rather than by tar, so the zip depends only on the files and the commit:
+// one fixed time (the commit's) and no per-file system times, which Windows keeps changing.
+// The same commit therefore always gives a byte-identical zip.
+const stamp = new Date(Number(execFileSync('git', ['log', '-1', '--format=%ct'], { encoding: 'utf8' }).trim()) * 1000);
+writeFileSync(zip, zipOf(walk(DIST).map(path => relative(DIST, path).replace(/\\/g, '/')).sort(), name => readFileSync(join(DIST, name)), stamp));
 const listed = execFileSync(join(process.env.SystemRoot ?? 'C:/Windows', 'System32/tar.exe'), ['-t', '-f', zip], { encoding: 'utf8' }).split(/\r?\n/).filter(Boolean);
 if (listed.some(name => name.includes('\\')) || !listed.includes('manifest.json')) { console.error('Not packaged: zip paths are wrong.'); process.exit(1); }
 console.log(`package            ${relative('.', zip)}  ${kb(statSync(zip).size)}${existsSync(zip) ? '' : ' (missing!)'}\n\nLocal file only. Nothing was uploaded.`);
