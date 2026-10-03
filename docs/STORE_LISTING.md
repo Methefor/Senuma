@@ -1,11 +1,12 @@
-# Store listing — Senuma (local draft, nothing submitted)
+# Store listing — Senuma (nothing submitted)
 
-The live listing is untouched. Publishing any of this needs explicit approval and is on hold
-(see RELEASE_STATUS.md). Wording is a draft, not final copy.
+The live listing is untouched. Publishing any of this needs explicit approval. Title and
+summary are final (owner, 2026-10-03) and come from the manifest; the field-by-field
+submission sheet is STORE_SUBMISSION.md.
 
-## Draft copy
+## Copy
 
-| Field | Draft |
+| Field | Value |
 |---|---|
 | Title | Senuma — New Tab Workspace (approved 2026-10-03; also the manifest name) |
 | Short description (132 max) | Turn every new tab into a personal workspace with Spaces, Modes, search, themes and fast access to the web. (107) |
