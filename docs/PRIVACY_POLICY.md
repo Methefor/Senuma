@@ -1,13 +1,13 @@
-# Senuma — Privacy Policy (draft for 2.0, not published)
+# Senuma — Privacy Policy (2.0 release copy)
 
-Draft text for the page the store listing links to. Items in [brackets] are the owner's to
-fill in. The contact address is temporary, until a Senuma domain exists. Source for every statement: PRIVACY_FACTS.md.
+Source copy for the public `privacy.html` page. The contact address remains in use until a
+Senuma domain exists. Source for every statement: PRIVACY_FACTS.md.
 
 ---
 
 **Senuma privacy policy**
 
-Last updated: [date of publication]
+Last updated: October 3, 2026
 
 Senuma (previously New Tab Folders) is a new tab page for Chrome. It is built to work on your
 device, without an account.
@@ -43,10 +43,9 @@ Senuma asks for these only if you turn the feature on, and you can turn them off
 
 **If you used cloud sync in New Tab Folders 1.x**
 
-Senuma has no cloud sync and does not contact the service that version 1.x used. Your setup on
-this device was converted locally. Data that version 1.x saved to the cloud (your folders, links
-and settings, linked to your Google account's e-mail address and name) [is deleted on <date> /
-remains stored until <date>]. To have it deleted sooner, write to rumeliskelesi+senuma@gmail.com.
+Senuma 2.0 does not contact, read, modify or synchronize with the cloud service used by New Tab
+Folders 1.x. Records previously stored by that legacy service may remain there until a deletion
+request is processed. To request deletion, write to rumeliskelesi+senuma@gmail.com.
 
 **Removing your data**
 
