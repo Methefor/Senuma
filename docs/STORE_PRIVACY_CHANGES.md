@@ -29,14 +29,16 @@ confirm each against the dashboard before changing it.
 | Authentication information | ticked | **unticked** | No account, no sign-in, no token is read or sent. |
 | Personal communications | — | unticked | |
 | Location | ticked | **unticked** | Weather is removed; no location is read. |
-| Web history | check | **unticked** | Recently closed pages are read live on the device, only if turned on; never stored or sent. |
+| Web history | check | **ticked** | Chrome defines this category as visited-page lists and associated page title/visit time. Senuma reads recently closed entries live through optional `tabs`/`sessions` access when the user enables Recently Closed / Continue. Senuma does not store or transmit the list. |
 | User activity | check | **unticked** | No analytics. |
 | Website content | ticked | **unticked** | Nothing is read from web pages; no content scripts. |
 
-Every data-usage box is unticked for 2.0: no account, no cloud sync, no analytics. (The legacy
-cloud import that briefly justified keeping *Authentication information* was removed before
-release, owner decision 2026-10-02.) When cloud sync ships in 2.1 the declarations change again;
-see CLOUD_SYNC_DESIGN.md §8.
+Only **Web history** is ticked for 2.0 because Chrome's dashboard wording covers the recently
+closed page entries handled by the optional `tabs` and `sessions` feature. This declaration does
+not mean Senuma sends the entries off-device: they are read live for the visible user-facing
+feature and are not stored or transmitted by Senuma. The legacy cloud import that briefly
+justified keeping *Authentication information* was removed before release. When cloud sync ships
+in 2.1 the declarations change again; see CLOUD_SYNC_DESIGN.md §8.
 
 ## Certifications (all three ticked)
 

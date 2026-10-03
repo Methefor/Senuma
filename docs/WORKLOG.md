@@ -2,7 +2,7 @@
 
 ## Chrome Web Store submission — 2026-10-03
 
-Senuma 2.0.0 was uploaded to the existing item `oghlifenjhpbebcdeboejbmemelkfobe` and submitted for review. The submitted listing uses the Senuma title, description, icon, five product screenshots, tile, hero, GitHub home/support URLs, and the public Senuma privacy policy. The privacy form now declares no collected user-data categories and documents the required `storage`/`search` permissions plus optional `bookmarks`/`tabs`/`sessions` access. Distribution is free, public, and available in all existing regions. The dashboard confirmed **Pending review**. Automatic publishing after approval was deliberately disabled; the live 1.8.0 version remains unchanged until a separate publication decision.
+Senuma 2.0.0 was uploaded to the existing item `oghlifenjhpbebcdeboejbmemelkfobe`. The first review submission was cancelled after a privacy-declaration audit found that Chrome's **Web history** wording covers recently closed page entries handled by the optional `tabs` and `sessions` feature. The saved draft now ticks Web history and keeps every other data category unticked. Permission explanations state that Recently Closed / Continue reads entries live for the visible feature and that Senuma does not store or transmit the list. The listing, five screenshots, tile, hero, GitHub URLs, privacy policy, free distribution, and existing regions remain saved. Automatic publishing remains disabled; the live 1.8.0 version is unchanged. The corrected draft has not yet been resubmitted.
 
 ## Integration update — 2026-10-03
 
