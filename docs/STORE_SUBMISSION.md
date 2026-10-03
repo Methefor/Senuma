@@ -62,6 +62,7 @@ permissions, or Senuma server receiving browsing/session information.
 - Free, public, and available in the existing regions.
 - Automatic publishing after review is disabled. Review approval does not publish the update.
 - The published version remains 1.8.0 until a separate publication action.
+- The privacy-corrected 2.0.0 update was submitted on 2026-10-03; dashboard status: **Pending review**.
 
 ## 5. Release checks
 
