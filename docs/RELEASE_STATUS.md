@@ -1,7 +1,7 @@
 # Release status — Senuma 2.0.0 (final package built, not uploaded)
 
 The one status document. Branch `rebuild/browser-os`; nothing pushed, nothing published.
-Last updated 2026-10-02.
+Last updated 2026-10-03.
 
 ## READY
 
@@ -35,6 +35,22 @@ Checks (last run 2026-10-02 on the Senuma build):
 
 Build: manifest 2.0.0, display 2.0.0, package 2.0.0 (published: 1.80), schema 4 (frozen: add fields with defaults only).
 Startup JS 42.8 kB gzip (budget 44), CSS 9.1 kB (9.5), unpacked 3.53 MB.
+
+### Canonical package (2026-10-03) — RELEASE SAFE
+
+| | |
+|---|---|
+| File | `release/Senuma-2.0.0.zip` (41 files) |
+| SHA-256 | `c39cd5723256833f913e168bcfcc159dcedc16225fa70a6fb99f35035d511b1d` |
+| Built from | this branch, last package-input commit `0418b69`; `npm run package` reproduces it byte for byte (a docs-only commit does not change it) |
+| Name / short name | Senuma — New Tab Workspace / Senuma (toolbar title: Senuma) |
+| Description | Turn every new tab into a personal workspace with Spaces, Modes, search, themes and fast access to the web. |
+
+Approved by the owner on 2026-10-03. Against the earlier frozen build (`5680f0e8…`, from `0389fd0`)
+only the manifest `name` and `description` differ; all other 40 files are byte-identical, and
+permissions, background worker, new-tab override, icons and runtime JS/CSS are unchanged. No
+sync or Firebase code, no keys, no source maps, no tests. It replaces a hand-edited zip
+(`42962ca3…`, same values, kept in `release/legacy/`) that no source could reproduce.
 
 ## NOT UPLOADED — migration from the published 1.80 build
 
