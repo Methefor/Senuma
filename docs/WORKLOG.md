@@ -1,5 +1,9 @@
 # Worklog — 2026-10-02
 
+## Chrome Web Store submission — 2026-10-03
+
+Senuma 2.0.0 was uploaded to the existing item `oghlifenjhpbebcdeboejbmemelkfobe` and submitted for review. The submitted listing uses the Senuma title, description, icon, five product screenshots, tile, hero, GitHub home/support URLs, and the public Senuma privacy policy. The privacy form now declares no collected user-data categories and documents the required `storage`/`search` permissions plus optional `bookmarks`/`tabs`/`sessions` access. Distribution is free, public, and available in all existing regions. The dashboard confirmed **Pending review**. Automatic publishing after approval was deliberately disabled; the live 1.8.0 version remains unchanged until a separate publication decision.
+
 ## Integration update — 2026-10-03
 
 The professional repository commits were reapplied on top of `senuma-2.1` as `chore/senuma-professional-repository`; the 2.1 sync engine, rules, REST transport and mock sign-in work were retained. The only cherry-pick conflicts were `.gitignore` and the release package name. Both 2.1 Firebase ignore entries and generated-media entries were preserved. Package naming now retains the 2.1 final/pre-release label and adds a content fingerprint while refusing overwrite.
