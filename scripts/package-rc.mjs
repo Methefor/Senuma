@@ -3,7 +3,7 @@
 //
 //   npm run package
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, utimesSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
@@ -82,8 +82,12 @@ if (problems.length) {
 mkdirSync('release', { recursive: true });
 // A release build (display version = manifest version) is named by its version alone.
 const label = manifest.version_name === manifest.version ? manifest.version : `${String(manifest.version_name).replace(/\s+/g, '-')}-${manifest.version}`;
-const zip = resolve('release', `${manifest.name}-${label}.zip`);
+// Named by the short name: the full name carries a dash and spaces.
+const zip = resolve('release', `${manifest.short_name}-${label}.zip`);
 rmSync(zip, { force: true });
+// Every file gets the source commit's time, so the same commit always gives a byte-identical zip.
+const stamp = new Date(Number(execFileSync('git', ['log', '-1', '--format=%ct'], { encoding: 'utf8' }).trim()) * 1000);
+for (const path of [...walk(DIST), ...readdirSync(DIST, { recursive: true }).map(name => join(DIST, name)).filter(path => statSync(path).isDirectory())]) utimesSync(path, stamp, stamp);
 // Windows' bundled bsdtar writes a standard zip with forward-slash paths (Compress-Archive writes backslashes).
 execFileSync(join(process.env.SystemRoot ?? 'C:/Windows', 'System32/tar.exe'), ['-a', '-c', '-f', zip, '-C', resolve(DIST), ...readdirSync(DIST)]);
 const listed = execFileSync(join(process.env.SystemRoot ?? 'C:/Windows', 'System32/tar.exe'), ['-t', '-f', zip], { encoding: 'utf8' }).split(/\r?\n/).filter(Boolean);

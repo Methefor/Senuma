@@ -7,8 +7,8 @@ The live listing is untouched. Publishing any of this needs explicit approval an
 
 | Field | Draft |
 |---|---|
-| Title | Senuma — New Tab Workspace |
-| Short description (132 max) | Make your browser yours with Spaces, Modes, universal search, cinematic themes and a personal new-tab workspace. (112) |
+| Title | Senuma — New Tab Workspace (approved 2026-10-03; also the manifest name) |
+| Short description (132 max) | Turn every new tab into a personal workspace with Spaces, Modes, search, themes and fast access to the web. (107) |
 | Tagline | Make the browser yours. |
 | Category | Productivity |
 | Support / privacy contact | rumeliskelesi+senuma@gmail.com (temporary, until a Senuma domain exists) |

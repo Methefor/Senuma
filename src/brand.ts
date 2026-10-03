@@ -6,8 +6,9 @@
  */
 export const BRAND = {
     productName: 'Senuma',
-    /** What the browser and the store show. */
-    extensionName: 'Senuma',
+    /** The manifest name: what the browser's extension list and the store show (approved 2026-10-03). */
+    extensionName: 'Senuma — New Tab Workspace',
+    /** Where space is short: the toolbar button's title, and the package file name. */
     shortName: 'Senuma',
     descriptor: 'New Tab Workspace',
     tagline: 'Make the browser yours.',
@@ -19,7 +20,8 @@ export const BRAND = {
     displayVersion: '2.0.0',
     /** The manifest version. A release sets it equal to `version`; a pre-release uses 1.99.x (a test enforces both). */
     manifestVersion: '2.0.0',
-    description: 'Make your browser yours with Spaces, Modes, universal search, cinematic themes and a personal new-tab workspace.',
+    /** The manifest and store short description (approved 2026-10-03; 132 characters at most). */
+    description: 'Turn every new tab into a personal workspace with Spaces, Modes, search, themes and fast access to the web.',
     backupFilePrefix: 'senuma-backup',
 } as const;
 
