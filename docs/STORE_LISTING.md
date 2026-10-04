@@ -1,45 +1,76 @@
 # Store listing — Senuma (nothing submitted)
 
-The live listing is untouched. Publishing any of this needs explicit approval. Title and
-summary are final (owner, 2026-10-03) and come from the manifest; the field-by-field
+The live listing is untouched. Publishing any of this needs explicit approval. Wording comes from
+MESSAGING_SYSTEM.md; screenshots, GIFs and video from MEDIA_PLAN.md; the field-by-field
 submission sheet is STORE_SUBMISSION.md.
 
-## Copy
+2.0.0 was submitted with the shorter description kept in git history (commit 46336e6). The copy
+below is for the 2.0.1 update; title and summary are unchanged because they come from the manifest.
+
+## Fields
 
 | Field | Value |
 |---|---|
-| Title | Senuma — New Tab Workspace (approved 2026-10-03; also the manifest name) |
-| Short description (132 max) | Turn every new tab into a personal workspace with Spaces, Modes, search, themes and fast access to the web. (107) |
-| Tagline | Make the browser yours. |
+| Title (manifest name) | Senuma — New Tab Workspace |
+| Summary (manifest description, 132 max) | Turn every new tab into a personal workspace with Spaces, Modes, search, themes and fast access to the web. (107) |
 | Category | Productivity |
+| Listing language | English. The package has no `_locales`, so the store offers no Turkish listing; Turkish copy (MESSAGING_SYSTEM.md) is for the landing page. |
 | Support / privacy contact | rumeliskelesi+senuma@gmail.com (temporary, until a Senuma domain exists) |
+| Privacy policy | https://methefor.github.io/Senuma/privacy.html |
 
-**Long description**
+## Description (paste as plain text)
 
-> Senuma is your personal place on the web.
->
-> Open a new tab and see what you actually use, gathered into Spaces: work, code, media,
-> whatever your day is made of. Switch Mode and the page changes with you: different Spaces,
-> a different look, a different search. Press Ctrl+K (⌘K) and type to open anything.
->
-> • Spaces — everything for one kind of activity, together
-> • Modes — a different new tab for work, for code, for the evening
-> • One search box — the web through your browser's default engine, plus your own links
-> • Command center — open, switch and search from the keyboard
-> • Continue — pick up the links you opened here
-> • Your look — six themes, photographs, or your own images
->
-> On your device. No account, no analytics, no tracking.
->
-> Previously New Tab Folders. Same extension, same developer; your folders become Spaces and
-> everything you saved is kept.
+```
+Make the browser yours.
 
-**What's new (for the update)**
+Senuma turns every new tab into your own workspace: the sites you use, gathered into Spaces, with one search bar and a look that is yours.
 
-> New Tab Folders is now Senuma. Same product, a new name and a completely redesigned experience.
-> Your Spaces, links and settings came with you.
+SPACES · Everything you use, organized
+A Space holds everything for one kind of activity: work, code, media, research. Start from a ready-made set or from scratch, add only the suggestions you want, and arrange links in groups. Number keys 1–9 open your first nine Spaces.
 
-**Privacy summary (store privacy tab)**
+SEARCH · One search bar. Your rules.
+Type a shortcut, a space and your query: "y lofi mix" opens YouTube results for "lofi mix". Shortcuts come ready for Google, YouTube, GitHub, Reddit, ChatGPT, Claude, Wikipedia and more, and you can change them or add any site that has a search page. Plain searches go to your browser's default search engine, or to one you choose, and your own links and Spaces show up as you type.
+
+COMMAND CENTER · Everything, one shortcut away
+Press Ctrl+K (⌘K on Mac) to open any link or Space, switch Mode, change theme or search. It understands plain phrases such as "switch to work mode".
+
+MODES · A workspace for every mode
+A Mode changes the whole page for what you are doing: its Spaces, and if you like its theme, background, search engine and dock. Keep work, code and evenings apart, and press M to switch.
+
+CUSTOMIZATION · Make every new tab feel like yours
+Choose one of six themes, a built-in photograph or your own image. Fill or fit it, pick the part that stays in view, set dim, blur and colour strength, and add a Subtle or Cinematic atmosphere. Every change is previewed live before you apply it.
+
+PRIVACY · Personal by design
+Your Spaces, links and settings are stored in your browser, on your device. No account, no analytics, no tracking, and nothing is sent to us. Images you add stay on your device.
+
+BACKUP · Your setup, in one file
+Export your setup as a JSON file and bring it back, merged or as a replacement; a restore point is saved first. You can also bring in your browser bookmarks or a pasted list of links.
+
+OPTIONAL PERMISSIONS
+Senuma needs only storage and search to work. Two features ask for more, and only when you turn them on:
+• Import browser bookmarks: reads your bookmarks once, never changes them, and gives the permission back afterwards.
+• Recently closed tabs in Continue: Chrome words this as "read your browsing history on all your signed-in devices". Senuma uses it only to list and reopen pages you recently closed; nothing is stored or sent.
+
+GOOD TO KNOW
+• Backgrounds are images stored on your device (built-in photographs or files you upload), not image links.
+• Moving to another computer: export your setup and import it there. This version has no cloud sync.
+• Site icons come from each site by default. You can switch to Google's icon service or to letters only in Settings → Privacy.
+
+Your place on the web.
+
+Previously New Tab Folders: same extension, same developer. Your folders became Spaces and everything you saved was kept.
+```
+
+## What's new in 2.0.1 (update notes)
+
+```
+• Spaces made from a ready-made set now offer more services as suggestions: add only the ones you use, one at a time.
+• Default names (such as Finance or Media) now follow the interface language; names you choose never change.
+• The search bar shows how search shortcuts work: try "y lofi mix".
+• Clearer wording for importing a list of links.
+```
+
+## Privacy summary (store privacy tab)
 
 > Senuma stores your Spaces, links and settings in your browser, on your device. It has no
 > account, no analytics and no tracking, and sends nothing to its developer. Searches go to
@@ -48,18 +79,14 @@ submission sheet is STORE_SUBMISSION.md.
 
 Data collected: none. Remote code: none. Details: PRIVACY_FACTS.md.
 
-## Assets (generated locally by `npm run store:assets` into `drafts/store/`)
+## Assets
 
-| File | Use |
-|---|---|
-| `icon-128.png` | Store icon |
-| `screenshot-1-home.png` … `screenshot-8-privacy.png` | Eight captioned 1280×800 screenshots: Home, Spaces, Modes, Search, Command center, Personalization, Themes, Privacy |
-| `hero-1400x560.png` | Marquee promo |
-| `tile-440x280.png` | Small promo tile |
-
-Screenshots are taken with the “letters only” icon setting and a dock of GitHub, Vercel and
-Letterboxd, so no third-party logo is shown larger than the product itself allows.
-The landing-page draft is `drafts/site/index.html`. It carries no reviews, ratings or user counts.
+Selection, captions and recapture instructions: MEDIA_PLAN.md (§1). Current images are generated
+by `npm run store:assets` into `drafts/store/` (git-ignored); the 2.0.0 set is kept in
+`release/Senuma-2.0.0-store/`. Screenshots use the “letters only” icon setting and a dock of
+GitHub, Vercel and Letterboxd, so no third-party logo is shown larger than the product itself
+allows. The landing-page draft is `drafts/site/index.html`; it carries no reviews, ratings or
+user counts.
 
 ## Single purpose
 
