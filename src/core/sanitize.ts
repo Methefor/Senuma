@@ -2,6 +2,7 @@
  * Rebuilds a trustworthy AppState from anything read off disk or imported. Damaged entries
  * are dropped one by one, so a single corrupted record can never break the page.
  */
+import { NAME_KEY } from './names';
 import { ATMOSPHERE_LEVELS, sanitizeBackground, sanitizeWallpapers, type WallpaperAsset } from './background';
 import { BUILTIN_PROVIDERS, DEFAULT_PREFS, MAX_DOCK, MAX_RECENTS, MAX_USAGE, emptyState, newId } from './defaults';
 import { isValidTemplate, parseAliases } from './ops';
@@ -53,7 +54,7 @@ function sanitizeSpaces(raw: unknown, items: Record<ID, Item>): Record<ID, Space
             });
             const groupId = isId(g.id) && !groupIds.has(g.id) ? g.id : newId();
             groupIds.add(groupId);
-            return [{ id: groupId, name: str(g.name), itemIds }];
+            return [{ id: groupId, name: str(g.name), itemIds, ...(NAME_KEY.test(str(g.nameKey)) ? { nameKey: str(g.nameKey) } : {}) }];
         });
         const space: Space = {
             id,
@@ -65,6 +66,7 @@ function sanitizeSpaces(raw: unknown, items: Record<ID, Item>): Record<ID, Space
         };
         if (str(value.note).trim()) space.note = str(value.note).trim();
         if (str(value.templateId)) space.templateId = str(value.templateId);
+        if (NAME_KEY.test(str(value.nameKey))) space.nameKey = str(value.nameKey);
         spaces[id] = space;
     }
     // Items no Space refers to would be invisible forever; drop them.
@@ -156,6 +158,7 @@ export function sanitize(raw: unknown): AppState {
                 glyph: str(value.glyph, 'layers') || 'layers',
                 spaceIds: [...new Set(arr(value.spaceIds).filter((x): x is ID => typeof x === 'string' && Object.hasOwn(spaces, x)))],
             };
+            if (NAME_KEY.test(str(value.nameKey))) mode.nameKey = str(value.nameKey);
             if (str(value.themeId)) mode.themeId = str(value.themeId);
             if (isDict(value.background)) mode.background = sanitizeBackground(value.background, wallpapers);
             if (providers.some(p => p.id === value.providerId)) mode.providerId = str(value.providerId);

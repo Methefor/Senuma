@@ -1,13 +1,14 @@
 import { useRef, useState } from 'preact/hooks';
-import { remember, removeGroupWithUndo } from '../../app/actions';
-import { CATEGORIES, type Category } from '../../core/catalog';
+import { remember, removeGroupWithUndo, setupNames } from '../../app/actions';
+import { CATEGORIES, type Category, type Service } from '../../core/catalog';
 import { addGroup, addItem, isDocked, itemsOf, moveItem, renameGroup, shiftGroup } from '../../core/ops';
-import { fillFromCategory } from '../../core/setup';
+import { MORE } from '../../core/recommendations';
+import { addService, fillFromCategory } from '../../core/setup';
 import type { AppState, ID, Item, Space, SpaceGroup } from '../../core/types';
 import { hostOf, normalizeUrl } from '../../core/url';
 import { t, type MessageKey } from '../../i18n';
 import { openMenu, openMenuBelow, setUi, update } from '../../storage/store';
-import { AppIcon } from '../../ui/AppIcon';
+import { AppIcon, Monogram } from '../../ui/AppIcon';
 import { Icon } from '../../ui/Icon';
 import { Overlay } from '../../ui/Overlay';
 import { itemMenu, openAll, spaceMenu } from './menus';
@@ -165,12 +166,47 @@ function categoryFor(space: Space): Category | null {
     );
 }
 
+/** The catalog's services for this Space that it does not have yet, starters first, each with its group. */
+function offersFor(state: AppState, space: Space, category: Category): { key: string; service: Service }[] {
+    const have = new Set(itemsOf(state, space).map(item => item.url));
+    return [...category.groups, ...(MORE[category.id] ?? [])].flatMap(group => group.services.flatMap(service => {
+        const url = normalizeUrl(service[1]);
+        if (!url || have.has(url)) return [];
+        have.add(url);
+        return [{ key: group.key, service }];
+    }));
+}
+
+/**
+ * Suggestions are added one at a time, by the person. They show as letters: looking at them
+ * requests nothing from any site.
+ */
+function Picks({ space, offers }: { space: Space; offers: { key: string; service: Service }[] }) {
+    return (
+        <div class="pick-row">
+            {offers.map(({ key, service }) => (
+                <button type="button" class="pick" key={service[1]} onClick={event => {
+                    // The button goes once its service is added: keep focus in the panel, so Escape still closes it.
+                    const button = event.currentTarget;
+                    const next = (button.nextElementSibling ?? button.previousElementSibling ?? button.closest('.overlay')) as HTMLElement | null;
+                    update(s => addService(s, space.id, key, service, setupNames()));
+                    next?.focus();
+                }}>
+                    <Monogram url={service[1]} title={service[0]} />
+                    {service[0]}
+                </button>
+            ))}
+        </div>
+    );
+}
+
 /** How far the entrance leans toward where the Space was opened from (0 = none). */
 const ORIGIN_PULL = 0.16;
 
 export function SpaceView({ state, space, origin }: { state: AppState; space: Space; origin: { x: number; y: number } | null }) {
     const [filterText, setFilterText] = useState('');
     const suggested = categoryFor(space);
+    const offers = suggested ? offersFor(state, space, suggested) : [];
     // The panel arrives from the direction of the plate or dock icon that opened it.
     const entrance = {
         '--from-x': `${origin ? Math.round((origin.x - innerWidth / 2) * ORIGIN_PULL) : 0}px`,
@@ -232,15 +268,8 @@ export function SpaceView({ state, space, origin }: { state: AppState; space: Sp
                             {suggested ? (
                                 <>
                                     <p>{t('space.emptyAdd')}</p>
-                                    <div class="pick-row">
-                                        {suggested.groups.flatMap(group => group.services).map(([title, url]) => (
-                                            <button type="button" class="pick" key={url} onClick={() => update(s => addItem(s, space.id, null, { title, url }).state)}>
-                                                <AppIcon url={url} title={title} size={20} />
-                                                {title}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    <button type="button" class="button" onClick={() => update(s => fillFromCategory(s, space.id, suggested.id))}>
+                                    <Picks space={space} offers={offers} />
+                                    <button type="button" class="button" onClick={() => update(s => fillFromCategory(s, space.id, suggested.id, setupNames()))}>
                                         {t('space.addAll')}
                                     </button>
                                 </>
@@ -251,7 +280,7 @@ export function SpaceView({ state, space, origin }: { state: AppState; space: Sp
                                     <div class="pick-row">
                                         {CATEGORIES.filter(c => c.onboarding !== false).map(category => (
                                             <button type="button" class="pick" key={category.id} style={{ '--tint': category.accent }}
-                                                onClick={() => update(s => fillFromCategory(s, space.id, category.id))}>
+                                                onClick={() => update(s => fillFromCategory(s, space.id, category.id, setupNames()))}>
                                                 <Icon name={category.glyph} size={16} />
                                                 {t(`cat.${category.id}` as MessageKey)}
                                             </button>
@@ -271,6 +300,13 @@ export function SpaceView({ state, space, origin }: { state: AppState; space: Sp
                     )}
                     {space.groups.map((group, index) => <Group key={group.id} state={state} space={space} group={group} index={index} filter={filter} />)}
                     {nothingMatches && <p class="space-empty">{t('space.noMatch', { query: filterText.trim() })}</p>}
+                    {count > 0 && !filter && offers.length > 0 && (
+                        <details class="suggestions">
+                            <summary>{t('space.suggestions', { n: offers.length })}</summary>
+                            <p class="note">{t('space.suggestionsHint')}</p>
+                            <Picks space={space} offers={offers} />
+                        </details>
+                    )}
                 </div>
             </div>
         </Overlay>

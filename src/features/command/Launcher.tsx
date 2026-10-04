@@ -15,6 +15,16 @@ const REMEMBERED: ReadonlySet<Result['kind']> = new Set(['item', 'space', 'mode'
 
 export const MODIFIER_KEY = navigator.platform.startsWith('Mac') ? '⌘' : 'Ctrl';
 
+/** Set once a search shortcut has been used; the tip that teaches them is not needed after that. */
+const SHORTCUT_USED = 'bos.tip.shortcutUsed';
+const shortcutUsed = (): boolean => {
+    try {
+        return localStorage.getItem(SHORTCUT_USED) === '1';
+    } catch {
+        return true;
+    }
+};
+
 function ProviderIcon({ provider, size }: { provider: SearchProvider; size: number }) {
     // The browser's own engine is not ours to name; every other engine shows its site icon.
     if (!provider.urlTemplate) return <Icon name="search" size={size - 2} />;
@@ -53,6 +63,7 @@ export function Launcher({ variant }: Props) {
     const state = useStore(app);
     const [query, setQuery] = useState('');
     const [index, setIndex] = useState(0);
+    const [focused, setFocused] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
     const listId = `launcher-${variant}`;
@@ -83,6 +94,11 @@ export function Launcher({ variant }: Props) {
             return;
         }
         if (REMEMBERED.has(result.kind)) update(s => recordUsage(s, result.key));
+        if (routed) {
+            try {
+                localStorage.setItem(SHORTCUT_USED, '1');
+            } catch { /* the tip just keeps showing */ }
+        }
         setQuery('');
         setIndex(0);
         runAction(result.action);
@@ -104,11 +120,15 @@ export function Launcher({ variant }: Props) {
     };
 
     const open = results.length > 0;
-    const placeholder = t(variant === 'home' ? 'search.placeholder' : 'palette.placeholder');
     const provider = findProvider(state.providers, providerId);
     // While typing, say where Enter will send a search: "y lofi" shows YouTube before you commit.
     const route = routeQuery(query, state.providers, providerId);
     const routed = route?.kind === 'search' && route.via === 'alias' ? route.provider : null;
+    // Built from the person's own YouTube shortcut, so the example always works as shown.
+    const tipAlias = variant === 'home' && focused && !query && !shortcutUsed() ? state.providers.find(p => p.id === 'youtube')?.aliases[0] : undefined;
+    const label = t(variant === 'home' ? 'search.placeholder' : 'palette.placeholder');
+    // Clicking into the empty box shows what shortcuts do, in the box itself: no extra line, gone on the first key.
+    const placeholder = tipAlias ? t('search.tip', { example: `${tipAlias} lofi mix` }) : label;
 
     const row = (result: Result, i: number) => (
         <div key={result.key} id={`${listId}-${i}`} role="option" aria-selected={i === active}
@@ -136,13 +156,14 @@ export function Launcher({ variant }: Props) {
                 {variant === 'home' ? <ProviderButton state={state} provider={routed ?? provider} /> : <Icon name="search" size={20} />}
                 <input ref={inputRef} id={variant === 'home' ? 'home-search' : undefined} type="text" value={query}
                     autofocus={variant === 'palette'} autocomplete="off" spellcheck={false}
-                    placeholder={placeholder} aria-label={placeholder}
+                    placeholder={placeholder} aria-label={label}
                     role="combobox" aria-expanded={open} aria-controls={listId} aria-autocomplete="list"
                     aria-activedescendant={open ? `${listId}-${active}` : undefined}
                     onInput={event => {
                         setQuery(event.currentTarget.value);
                         setIndex(0);
                     }}
+                    onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
                     onKeyDown={onKeyDown} />
                 {routed && <span class="route-chip">{routed.name}</span>}
                 {variant === 'home' && !query && (

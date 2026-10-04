@@ -72,7 +72,7 @@ export function visibleSpaces(s: AppState): Space[] {
 
 export function addSpace(
     s: AppState,
-    init: { name: string; glyph?: string; accent?: string; note?: string; templateId?: string },
+    init: { name: string; glyph?: string; accent?: string; note?: string; templateId?: string; nameKey?: string },
 ): { state: AppState; id: ID } {
     const id = newId();
     const space: Space = {
@@ -84,6 +84,7 @@ export function addSpace(
         createdAt: Date.now(),
         ...(init.note?.trim() ? { note: init.note.trim() } : {}),
         ...(init.templateId ? { templateId: init.templateId } : {}),
+        ...(init.nameKey ? { nameKey: init.nameKey } : {}),
     };
     const mode = activeMode(s);
     return {
@@ -101,6 +102,8 @@ export function addSpace(
 export function updateSpace(s: AppState, id: ID, patch: Partial<Pick<Space, 'name' | 'glyph' | 'accent' | 'note'>>): AppState {
     return withSpace(s, id, space => {
         const next: Space = { ...space, ...patch, name: patch.name?.trim() || space.name };
+        // A name the person typed is theirs: it no longer follows the language.
+        if (next.name !== space.name) delete next.nameKey;
         if (patch.note !== undefined) {
             if (patch.note.trim()) next.note = patch.note.trim();
             else delete next.note;
@@ -178,15 +181,20 @@ export function shiftSpace(s: AppState, id: ID, delta: -1 | 1, scope: 'visible' 
 
 // ---------- Groups ----------
 
-export function addGroup(s: AppState, spaceId: ID, name: string): AppState {
+export function addGroup(s: AppState, spaceId: ID, name: string, nameKey?: string): AppState {
     return withSpace(s, spaceId, space => ({
         ...space,
-        groups: [...space.groups, { id: newId(), name: name.trim(), itemIds: [] }],
+        groups: [...space.groups, { id: newId(), name: name.trim(), itemIds: [], ...(nameKey ? { nameKey } : {}) }],
     }));
 }
 
 export function renameGroup(s: AppState, spaceId: ID, groupId: ID, name: string): AppState {
-    return withSpace(s, spaceId, space => mapGroups(space, g => (g.id === groupId ? { ...g, name: name.trim() } : g)));
+    return withSpace(s, spaceId, space => mapGroups(space, g => {
+        if (g.id !== groupId || g.name === name.trim()) return g;
+        const renamed = { ...g, name: name.trim() };
+        delete renamed.nameKey;
+        return renamed;
+    }));
 }
 
 export function shiftGroup(s: AppState, spaceId: ID, groupId: ID, delta: -1 | 1): AppState {
@@ -474,6 +482,7 @@ export function updateMode(
     if (!mode) return s;
     const { background, ...rest } = patch;
     const next: Mode = { ...mode, ...rest, name: patch.name?.trim() || mode.name };
+    if (next.name !== mode.name) delete next.nameKey;
     // null clears the override; undefined leaves it as it was.
     if (background === null) delete next.background;
     else if (background) next.background = background;

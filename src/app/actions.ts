@@ -134,6 +134,7 @@ export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 export function setupNames(): SetupNames {
     return {
         category: id => t(`cat.${id}` as MessageKey),
+        group: key => t(`catgroup.${key}` as MessageKey),
         mode: key => t(`modePreset.${key}` as MessageKey),
         otherSpace: t('import.otherSpace'),
         importedGroup: t('import.importedGroup'),

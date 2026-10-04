@@ -45,6 +45,15 @@ function IconImage({ candidates, letter, mark }: { candidates: string[]; letter:
     );
 }
 
+/** The letter alone, never a request: for things shown before they are saved (suggestions). */
+export function Monogram({ url, title, size = 20 }: { url: string; title: string; size?: number }) {
+    return (
+        <span class="app-icon" style={{ '--size': `${size}px`, '--hue': hueOf(hostOf(url) || title) }} aria-hidden="true">
+            <span class="app-icon-mono">{(title.trim() || '?').charAt(0).toUpperCase()}</span>
+        </span>
+    );
+}
+
 interface Props {
     url: string;
     title: string;

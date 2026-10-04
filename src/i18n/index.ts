@@ -22,6 +22,11 @@ export async function ensureLanguage(lang: Language): Promise<void> {
     dictionaries[lang] = await LOADERS[lang]();
 }
 
+/** Every loaded translation of a key: English always, others once fetched. */
+export function translations(key: string): string[] {
+    return Object.values(dictionaries).flatMap(d => (d?.[key as MessageKey] ? [d[key as MessageKey]!] : []));
+}
+
 /** Looks up a message, falls back to English, picks the "one|many" form by `n`, fills {params}. */
 export function t(key: MessageKey, params: Record<string, string | number> = {}): string {
     let text: string = dictionaries[language]?.[key] ?? en[key] ?? key;

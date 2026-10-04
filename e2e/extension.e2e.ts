@@ -75,7 +75,7 @@ async function freshInstall(): Promise<void> {
 
     await check('Onboarding', 'a new user gets onboarding, not an empty page', async () => {
         await page.waitForSelector('.onboarding');
-        expect((await page.locator('.interest').count()) === 10, 'expected 10 interest choices');
+        expect((await page.locator('.interest').count()) === 11, 'expected 11 interest choices');
     });
 
     await check('Onboarding', 'three steps create Spaces, apply the theme and finish', async () => {

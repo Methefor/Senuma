@@ -440,7 +440,7 @@ describe('catalog and import', () => {
         for (const category of CATEGORIES) {
             const count = category.groups.reduce((sum, g) => sum + g.services.length, 0);
             expect(count, category.id).toBeLessThanOrEqual(10);
-            for (const group of category.groups) expect(group.services.length, `${category.id}/${group.name}`).toBeLessThanOrEqual(5);
+            for (const group of category.groups) expect(group.services.length, `${category.id}/${group.key}`).toBeLessThanOrEqual(5);
         }
         expect(applyStarter(emptyState(), ['ai'], names).modeOrder).toHaveLength(0);
         // Running it again (onboarding reopened) adds nothing.

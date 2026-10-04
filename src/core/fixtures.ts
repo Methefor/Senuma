@@ -4,9 +4,11 @@ import { emptyState } from './defaults';
 import * as ops from './ops';
 import type { SetupNames } from './setup';
 import type { AppState } from './types';
+import { en } from '../i18n/en';
 
 export const names: SetupNames = {
     category: id => id.toUpperCase(),
+    group: key => en[`catgroup.${key}` as keyof typeof en] ?? key,
     mode: key => `${key} mode`,
     otherSpace: 'Other',
     importedGroup: 'Imported',

@@ -1,14 +1,22 @@
 import type { ComponentType } from 'preact';
 import { useEffect, useLayoutEffect, useState } from 'preact/hooks';
 import { sourceKey } from '../core/background';
+import { relocalize } from '../core/names';
 import { visibleSpaces } from '../core/ops';
 import { Backdrop } from '../features/background/Backdrop';
 import { CommandPalette } from '../features/command/Launcher';
 import { Home } from '../features/home/Home';
-import { ensureLanguage, setLanguage } from '../i18n';
-import { app, setUi, ui, useStore } from '../storage/store';
+import { ensureLanguage, setLanguage, t, translations, type MessageKey } from '../i18n';
+import { app, setUi, ui, update, useStore } from '../storage/store';
 import { ContextMenu, Toasts } from '../ui/Layers';
 import { applyAppearance, savedAppearance } from './appearance';
+
+/** Names Senuma gave follow the language; a name the person typed is never touched (core/names.ts). */
+async function localizeNames(): Promise<void> {
+    // A setup from before names carried keys may hold Turkish defaults: have both languages to recognise them.
+    if (Object.values(app.get().spaces).some(space => space.templateId && !space.nameKey)) await ensureLanguage('tr');
+    update(s => relocalize(s, { text: key => t(key as MessageKey), known: translations }));
+}
 
 /** Loads a secondary screen only when it is first shown, keeping it out of the startup path. */
 function useLazy<P>(wanted: boolean, loader: () => Promise<ComponentType<P>>): ComponentType<P> | null {
@@ -83,7 +91,10 @@ export function App() {
     // Switching language may need its strings fetched; render again once they are here.
     const [, setStringsReady] = useState(0);
     useEffect(() => {
-        void ensureLanguage(state.prefs.language).then(() => setStringsReady(n => n + 1));
+        void ensureLanguage(state.prefs.language).then(() => {
+            setStringsReady(n => n + 1);
+            void localizeNames();
+        });
     }, [state.prefs.language]);
 
     // What is shown is the saved look, unless Customize is trying one out.

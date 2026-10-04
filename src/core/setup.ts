@@ -1,12 +1,14 @@
 /** Building Spaces from the catalog: onboarding starters and organizing imported links. */
-import { CATEGORIES, MODE_PRESETS, categorize, categoryById } from './catalog';
+import { CATEGORIES, MODE_PRESETS, categorize, categoryById, type Service } from './catalog';
 import { addGroup, addItem, addMode, addSpace, itemsOf } from './ops';
-import type { AppState, ID, LooseLink } from './types';
+import type { AppState, ID, LooseLink, SpaceGroup } from './types';
 import { normalizeUrl } from './url';
 
 /** Display strings are supplied by the caller so this module stays language-agnostic. */
 export interface SetupNames {
     category: (id: string) => string;
+    /** A catalog group's name; the key '' is an untitled group. */
+    group: (key: string) => string;
     mode: (key: string) => string;
     otherSpace: string;
     importedGroup: string;
@@ -16,38 +18,44 @@ function spaceForCategory(s: AppState, categoryId: string): ID | undefined {
     return s.spaceOrder.find(id => s.spaces[id]?.templateId === categoryId);
 }
 
-function createCategorySpace(s: AppState, categoryId: string, name: string, withServices: boolean): { state: AppState; id: ID } {
+function createCategorySpace(s: AppState, categoryId: string, names: SetupNames, withServices: boolean): { state: AppState; id: ID } {
     const category = categoryById(categoryId);
-    const created = addSpace(s, { name, glyph: category?.glyph, accent: category?.accent, templateId: categoryId });
-    return { state: withServices ? fillFromCategory(created.state, created.id, categoryId) : created.state, id: created.id };
+    const created = addSpace(s, { name: names.category(categoryId), nameKey: `cat.${categoryId}`, glyph: category?.glyph, accent: category?.accent, templateId: categoryId });
+    return { state: withServices ? fillFromCategory(created.state, created.id, categoryId, names) : created.state, id: created.id };
+}
+
+/**
+ * The group a catalog group's services go into: the one made for it earlier (by key, or by its
+ * name from before keys were stored), else an untouched first group, else a new one.
+ */
+function groupFor(s: AppState, spaceId: ID, key: string, names: SetupNames): { state: AppState; groupId: ID } {
+    const space = s.spaces[spaceId]!;
+    const name = key ? names.group(key) : '';
+    const nameKey = key ? `catgroup.${key}` : undefined;
+    const found = space.groups.find(g => (nameKey ? g.nameKey === nameKey || (!g.nameKey && g.name === name) : !g.name));
+    if (found) return { state: s, groupId: found.id };
+    const first = space.groups[0]!;
+    if (space.groups.length === 1 && !first.name && first.itemIds.length === 0) {
+        const named: SpaceGroup = { ...first, name, ...(nameKey ? { nameKey } : {}) };
+        return { state: { ...s, spaces: { ...s.spaces, [spaceId]: { ...space, groups: [named] } } }, groupId: first.id };
+    }
+    const state = addGroup(s, spaceId, name, nameKey);
+    return { state, groupId: state.spaces[spaceId]!.groups.at(-1)!.id };
+}
+
+/** Adds one suggested service to a Space, in its catalog group. Unchanged if the Space already has that address. */
+export function addService(s: AppState, spaceId: ID, groupKey: string, [title, url]: Service, names: SetupNames): AppState {
+    if (!s.spaces[spaceId] || itemsOf(s, s.spaces[spaceId]).some(i => i.url === normalizeUrl(url))) return s;
+    const { state, groupId } = groupFor(s, spaceId, groupKey, names);
+    return addItem(state, spaceId, groupId, { title, url }).state;
 }
 
 /** Adds a category's starter services to an existing Space, in their groups, skipping links it already has. */
-export function fillFromCategory(s: AppState, spaceId: ID, categoryId: string): AppState {
+export function fillFromCategory(s: AppState, spaceId: ID, categoryId: string, names: SetupNames): AppState {
     const category = categoryById(categoryId);
     if (!category || !s.spaces[spaceId]) return s;
     let state = s;
-    const existing = new Set(itemsOf(state, state.spaces[spaceId]!).map(i => i.url));
-    for (const group of category.groups) {
-        const space = state.spaces[spaceId]!;
-        // An untouched first group takes the first set of services instead of staying empty.
-        const first = space.groups[0]!;
-        let groupId = space.groups.find(g => g.name === group.name)?.id;
-        if (!groupId && space.groups.length === 1 && !first.name && first.itemIds.length === 0) {
-            state = { ...state, spaces: { ...state.spaces, [spaceId]: { ...space, groups: [{ ...first, name: group.name }] } } };
-            groupId = first.id;
-        }
-        if (!groupId) {
-            state = addGroup(state, spaceId, group.name);
-            groupId = state.spaces[spaceId]!.groups.at(-1)!.id;
-        }
-        for (const [title, url] of group.services) {
-            const added = addItem(state, spaceId, groupId, { title, url });
-            if (!added.id || existing.has(added.state.items[added.id]!.url)) continue;
-            existing.add(added.state.items[added.id]!.url);
-            state = added.state;
-        }
-    }
+    for (const group of category.groups) for (const service of group.services) state = addService(state, spaceId, group.key, service, names);
     return state;
 }
 
@@ -57,7 +65,7 @@ export function applyStarter(s: AppState, categoryIds: string[], names: SetupNam
     const created = new Map<string, ID>();
     for (const category of CATEGORIES) {
         if (!categoryIds.includes(category.id) || spaceForCategory(state, category.id)) continue;
-        const result = createCategorySpace(state, category.id, names.category(category.id), true);
+        const result = createCategorySpace(state, category.id, names, true);
         state = result.state;
         created.set(category.id, result.id);
     }
@@ -65,7 +73,7 @@ export function applyStarter(s: AppState, categoryIds: string[], names: SetupNam
     if (presets.length >= 2 && state.modeOrder.length === 0) {
         for (const preset of presets) {
             const spaceIds = preset.includes.flatMap(c => created.get(c) ?? []);
-            state = addMode(state, { name: names.mode(preset.key), glyph: preset.glyph, spaceIds }).state;
+            state = addMode(state, { name: names.mode(preset.key), nameKey: `modePreset.${preset.key}`, glyph: preset.glyph, spaceIds }).state;
         }
     }
     return state;
@@ -112,10 +120,9 @@ export function applyProposals(s: AppState, proposals: Proposal[], names: SetupN
         let spaceId = spaceForCategory(state, key);
         const isNew = !spaceId;
         if (!spaceId) {
-            const name = proposal.categoryId ? names.category(proposal.categoryId) : names.otherSpace;
             const result = proposal.categoryId
-                ? createCategorySpace(state, key, name, false)
-                : addSpace(state, { name, glyph: 'folder', templateId: key });
+                ? createCategorySpace(state, key, names, false)
+                : addSpace(state, { name: names.otherSpace, nameKey: 'import.otherSpace', glyph: 'folder', templateId: key });
             state = result.state;
             spaceId = result.id;
         }
@@ -131,7 +138,7 @@ export function applyProposals(s: AppState, proposals: Proposal[], names: SetupN
                 const space = state.spaces[spaceId]!;
                 groupId = space.groups.find(g => g.name === groupName)?.id;
                 if (!groupId) {
-                    state = addGroup(state, spaceId, groupName);
+                    state = addGroup(state, spaceId, groupName, proposal.categoryId && !isNew ? 'import.importedGroup' : undefined);
                     groupId = state.spaces[spaceId]!.groups.at(-1)!.id;
                 }
                 groupIds.set(groupName, groupId);

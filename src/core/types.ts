@@ -19,6 +19,8 @@ export interface SpaceGroup {
     id: ID;
     /** Empty name renders as an untitled section. */
     name: string;
+    /** Present on a name Senuma gave (see core/names.ts); dropped when the person renames it. */
+    nameKey?: string;
     itemIds: ID[];
 }
 
@@ -26,6 +28,8 @@ export interface SpaceGroup {
 export interface Space {
     id: ID;
     name: string;
+    /** Present on a name Senuma gave (see core/names.ts); dropped when the person renames it. */
+    nameKey?: string;
     /** Optional one-line context shown under the title. */
     note?: string;
     glyph: string;
@@ -49,6 +53,8 @@ export interface DockEntry {
 export interface Mode {
     id: ID;
     name: string;
+    /** Present on a name Senuma gave (see core/names.ts); dropped when the person renames it. */
+    nameKey?: string;
     glyph: string;
     /** Spaces shown on Home, in this Mode's own order. */
     spaceIds: ID[];
