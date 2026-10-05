@@ -134,7 +134,8 @@ rmSync(zip, { force: true });
 // The same commit therefore always gives a byte-identical zip.
 // The time is that of the last commit that changed what goes into the package, so a commit
 // that only touches docs or tests (recording this zip's hash, say) does not change the zip.
-const INPUTS = ['src', 'newtab.html', 'vite.config.ts', 'tsconfig.json', 'package.json', 'package-lock.json', 'scripts/package-rc.mjs'];
+// docs/guide is an input too: the packaged help pages are built from it.
+const INPUTS = ['src', 'docs/guide', 'newtab.html', 'vite.config.ts', 'tsconfig.json', 'package.json', 'package-lock.json', 'scripts/package-rc.mjs'];
 const stamp = new Date(Number(execFileSync('git', ['log', '-1', '--format=%ct', '--', ...INPUTS], { encoding: 'utf8' }).trim()) * 1000);
 writeFileSync(zip, zipOf(walk(DIST).map(path => relative(DIST, path).replace(/\\/g, '/')).sort(), name => readFileSync(join(DIST, name)), stamp));
 const listed = execFileSync(join(process.env.SystemRoot ?? 'C:/Windows', 'System32/tar.exe'), ['-t', '-f', zip], { encoding: 'utf8' }).split(/\r?\n/).filter(Boolean);
