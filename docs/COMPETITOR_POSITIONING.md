@@ -25,7 +25,7 @@ Senuma sits between them: a workspace on the new tab that is also personal-looki
 | Search | basic | engine choice | basic | engine choice | own items, history (paid) | tabs/history | basic | web + own links/Spaces, shortcuts, custom `%s` engines, Ctrl+K |
 | Modes / contexts | — | — | — | — | spaces | workspaces (paid beyond 5) | pages | Modes with own Spaces, look, engine, dock |
 | Customization | daily photos; own images paid | 4K photos/video, CSS, fonts | photos, widgets | wallpapers | minimal | minimal | themes, widgets | own images on device, Fill/Fit, 3×3 position, dim, blur, colour, atmosphere, 6 themes, per-Mode looks |
-| Privacy | no data selling; account for Plus | no data, no account, open source | no tracking, local, open source | account optional | account, cloud sync | account, cloud | account | no account, no analytics, nothing sent; optional permissions released after use |
+| Privacy | no data selling; account for Plus | no data, no account, open source | no tracking, local, open source | account optional | account, cloud sync | account, cloud | account | no Senuma account, no analytics, workspace data local; optional permissions released after use |
 | Onboarding | name, focus | none / settings | none | — | account first | account first | account | 1-minute choice of interests → Spaces + Modes, theme, bookmarks |
 | Help / support | help site | docs, GitHub | GitHub | site | help site | help site | help site | packaged offline guide EN/TR (next), email feedback |
 | Community / feedback | — | GitHub, Discord | GitHub | — | — | — | — | email (v1); public board later |
@@ -51,8 +51,9 @@ What reviews say, in short:
    search only their own items.
 4. **Your own photo, finely tuned, for free, never uploaded.** Momentum charges for custom images;
    Senuma stores them on the device with fit, position, dim, blur and atmosphere.
-5. **Privacy as a fact, not a promise.** No account, no analytics, optional permissions released
-   after use. Bonjourr-level privacy with Workona-level organization.
+5. **Privacy as a fact, not a promise.** No Senuma account, no analytics, no Senuma cloud required;
+   workspace data stays local in this release; optional permissions released after use. (Not “no
+   network requests”: searches and site icons go out.) Bonjourr-level privacy with Workona-level organization.
 6. **Native Turkish** with a Turkish guide, from day one (alongside English).
 
 Where Senuma is weaker today (be honest in copy and roadmap): no sync between computers (backup file

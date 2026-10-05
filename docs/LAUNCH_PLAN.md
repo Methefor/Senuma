@@ -12,6 +12,10 @@ recording). No fake numbers, no competitor names, no claims beyond MESSAGING_SYS
 - Captions burned in (most people watch muted); English and Turkish versions of the best clips.
 - Each post links the store listing with a channel tag (`?utm_source=tiktok` etc.).
 - Disclose being the maker in communities. Never ask for upvotes or reviews in posts.
+- Privacy claims (MESSAGING_SYSTEM.md, “Privacy claims”): say no Senuma account, no analytics, no
+  Senuma cloud required, workspace data stays local in this release. **Never** say or show that
+  Senuma makes no network requests: searches go to the chosen search provider, and site icons
+  come from the sites or from Google’s icon service if chosen.
 - Music: only tracks the platform licenses for that use (TikTok/Reels libraries); none in files
   we keep (MEDIA_PLAN.md: no licensed track yet).
 
@@ -34,7 +38,7 @@ recording). No fake numbers, no competitor names, no claims beyond MESSAGING_SYS
 | 13 | Suggestions | Add only what you use. | Media Space → suggestions → add SoundCloud, HBO Max | all | Shorts, Threads |
 | 14 | Paste a list | 40 links sorted in seconds. | paste a list → Sort into Spaces → review → Add | knowledge workers, students | X, LinkedIn |
 | 15 | Backup | Your setup, in one file. | Export → new profile → Import → Merge | developers | X, GitHub |
-| 16 | Privacy in 10 s | No account. Nothing sent to us. | Settings → Privacy → Site icons: **Letters only**, then DevTools Network stays empty while using Home (with the default “From each site”, the only requests are each saved site's own icon — say so) | developers, privacy-minded | X, Reddit answers |
+| 16 | Privacy in 10 s | No Senuma account. No analytics. | Settings → Privacy: the five facts, **Site icons** (From each site / Icon service / Letters only), the optional permissions; then Export shows the setup is one local file | developers, privacy-minded | X, Reddit answers |
 | 17 | Keyboard only | No mouse needed. | Tab, 1–9, M, `/`, Ctrl+K, Esc | developers | X, Shorts |
 | 18 | Turkish | Tarayıcını kendine göre yap. | the TR interface: onboarding in Turkish, `y lofi mix` | TR users | TikTok TR, Reels TR |
 
@@ -64,7 +68,8 @@ The same recording, cut and written differently per audience:
 
 **Concept 16 — Privacy**
 - Reddit (answer only, in threads asking for private new tabs): one paragraph, maker disclosed,
-  the facts, link to the privacy policy, no hype.
+  the facts including what does go out (searches to the chosen provider, site icons), link to
+  the privacy policy, no hype.
 
 ## 4. Sequence (6 weeks, after the store update with Help & Feedback is live)
 
@@ -92,4 +97,4 @@ after two tries.
 | One search bar. Your rules. | Tek arama çubuğu. Senin kuralların. |
 | Everything, one shortcut away. | Her şey tek kısayol uzağında. |
 | Make every new tab feel like yours. | Her yeni sekme sana ait hissettirsin. |
-| Free. No account. Nothing is sent to us. | Ücretsiz. Hesap yok. Bize hiçbir şey gönderilmez. |
+| Free. No Senuma account. No analytics. | Ücretsiz. Senuma hesabı yok. Analitik yok. |

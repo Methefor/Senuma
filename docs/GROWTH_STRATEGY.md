@@ -14,7 +14,8 @@ no account.
 
 - Primary line: *Make the browser yours.* Secondary: *Your place on the web.*
 - Reason to try: the look (own photo, atmosphere). Reason to stay: Spaces, search shortcuts,
-  Ctrl+K, Modes. Reason to trust: no account, and nothing is sent to us.
+  Ctrl+K, Modes. Reason to trust: no Senuma account, no analytics, no
+  Senuma cloud required; workspace data stays local in this release.
 - Lead audience: developers and AI power users, then knowledge workers (PERSONAS.md § 3).
 
 ## 2. Funnel and what moves it
@@ -55,8 +56,9 @@ reviews), cross-posting the same text everywhere.
 - Title stays “Senuma — New Tab Workspace”; summary says what it does in plain words.
 - First screenshot: Home with real Spaces and a photo, captioned “Make the browser yours.”
 - Order the rest by the reason to stay: Spaces → search shortcuts → Modes → Customize → privacy.
-- Description opens with the five-part combination and “Free. No account. Nothing is sent to
-  us.” before any feature list.
+- Description opens with the five-part combination and “Free. No Senuma account. No analytics.”
+  before any feature list. Never claim that Senuma makes no network requests
+  (MESSAGING_SYSTEM.md, “Privacy claims”).
 - Video: the 28-second silent cut (MEDIA_PLAN.md) on YouTube, linked in the listing.
 - Respond to every review within a week; fix and say so.
 - The “Featured” badge is being retired in 2026 and ratings now weigh recent reviews; recency and

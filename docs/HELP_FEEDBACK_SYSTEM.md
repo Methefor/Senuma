@@ -1,7 +1,8 @@
 # Help, feedback and review request
 
 Built on branch `senuma-help-growth` (from the frozen 2.0.1 release candidate `5ed7cec`, which is
-unchanged). Not released, not submitted. The next store update carries it once the owner approves.
+unchanged). This branch is the basis for the future **2.0.2** update. Not released, not packaged,
+not submitted; the source version is still 2.0.1 until the 2.0.2 bump.
 
 Companion documents: HELP_CENTER.md (a future help website), MESSAGING_SYSTEM.md (wording),
 GROWTH_STRATEGY.md (how help and feedback feed growth).
@@ -13,7 +14,8 @@ GROWTH_STRATEGY.md (how help and feedback feed growth).
 The user guide (guide/en.md, guide/tr.md) is packaged with the extension as two static pages,
 `help/en.html` and `help/tr.html`, generated at build time (src/features/help/guidePage.ts).
 
-- Opens in a new tab from the extension itself: works offline, no website, no domain, no request.
+- Opens in a new tab from the extension itself: the guide page needs no website, no domain and
+  no server (this is about the guide page only, not a claim about Senuma as a whole).
 - No script on the page; the text is escaped from the repository's own Markdown.
 - One anchor per guide section, **the same id in every language** (src/features/help/topics.ts:
   `search-shortcuts`, `privacy`, …), so a contextual link is never translated.
@@ -60,8 +62,8 @@ Data → Paste a list of links (`#import-links`), Space suggestions (`#spaces`).
 
 ## 2. Localization architecture
 
-Languages now: English, Turkish. Planned: French, Spanish, German, Portuguese, then others.
-Nothing beyond EN/TR is translated now.
+Languages now: English, Turkish. Planned order (owner decision, 2026-10-05): **Spanish and
+French first, then German and Portuguese**, then others. Nothing beyond EN/TR is translated now.
 
 ### 2.1 How text is organised
 
@@ -149,8 +151,8 @@ backend, sends nothing itself and stores nothing about the message.
   preview and the email alike (tested end to end).
 - The email opens in the person's own mail app, where they can change it or not send it at all.
 - Address: `rumeliskelesi+senuma@gmail.com`, the temporary support contact already listed in the
-  store (STORE_LISTING.md). **Owner decision:** replace with a Senuma address before release if the
-  personal address should not appear inside the product (src/features/help/report.ts,
+  store (STORE_LISTING.md). Approved by the owner on 2026-10-05 as the temporary Help & Feedback
+  address; replace it when a Senuma address exists (src/features/help/report.ts,
   `FEEDBACK_ADDRESS`, one line).
 
 Why not a form service or GitHub Issues: a form service is a SaaS dependency that receives data;
@@ -233,10 +235,19 @@ keeps within the store policy against manipulating ratings (incentivized or filt
 | “Send feedback” | opens the feedback form; 60 days |
 | Ever | at most 3 times |
 
-Evidence of use comes from data already on the device (the Continue list); no counter, no
-analytics, nothing sent. If the person cleared their activity or turned Continue off, the card
-simply does not appear. Its own record (`bos.review` in this browser's local storage) holds four
-numbers: first seen, next possible date, times shown, times dismissed.
+**No analytics or server-side tracking. Eligibility is calculated locally from existing on-device
+activity.**
+
+- The 10-link / 4-day test reads the activity list Senuma already keeps for **Continue**
+  (`recents` in the saved setup: up to 30 recently opened links, each with its last-opened time and
+  an open count). No new usage counter was added for the review card.
+- That list is written whenever a link is opened from Senuma, whether or not the Continue row is
+  shown. **Clear activity** (Settings → Privacy), a reset or a replaced setup empties it, and the
+  card then waits until there is enough use again. The list is not part of backup files.
+- The card keeps one small record of its own, `bos.review`, in this browser’s local storage: when
+  this version was first seen, the earliest date it may next be considered, how many times it was
+  shown and how many times “Not now” was chosen. It schedules the card; it does not measure use,
+  is never sent anywhere and is not synced or exported.
 
 Cost: one localStorage read per new tab; the card's code loads only when it is due (at most once
 a day otherwise).
@@ -251,15 +262,15 @@ a day otherwise).
 | help text, Turkish (help-tr-*) | 1.2 kB | 2.5 (new line) |
 | user guide pages (help/) | 67 kB on disk | 96 (new line) |
 
-New lines need owner sign-off like any budget. Tests: unit (guide build, strings parity, review
+The three new lines were approved by the owner on 2026-10-05 (help ≤ 6 kB, Turkish help ≤ 2.5 kB,
+guide pages ≤ 96 kB). **The 44 kB startup budget is not to be raised:** Help & Feedback stays
+lazy-loaded, and any future startup code must be paid for by trimming first. Tests: unit (guide build, strings parity, review
 rules, feedback message), `npm run test:help` (Settings section, guide pages offline in both
 languages, contextual links, Turkish UI, feedback preview and consent, review card timing and
 dismissal).
 
 ## 7. Before this ships
 
-- Owner: support address in the product (§ 3.1).
-- Owner: new budget lines (§ 6).
 - Version and release notes (“Help & Feedback in Settings”), STORE_LISTING.md update notes.
 - Update the review URL if the store ID ever changes (`REVIEW_URL`).
 - Hands-on check: mailto on a machine with no mail app (Chrome shows nothing; **Copy message** is

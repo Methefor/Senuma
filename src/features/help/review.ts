@@ -7,8 +7,10 @@
  *   no rating first, nobody filtered towards or away from the store;
  * - at most three times ever; "Not now" twice, or "Leave a review" once, and it never returns.
  *
- * Everything it reads is already on this device (the Continue list); nothing is counted or sent
- * for it. Its own small record stays in this browser's local storage.
+ * No analytics or server-side tracking. Eligibility is calculated locally from existing on-device
+ * activity: the list of recently opened links kept for Continue. No usage counter was added. The
+ * card's own record (first seen, next date, times shown, times dismissed) only schedules it and
+ * stays in this browser's local storage.
  */
 import type { AppState } from '../../core/types';
 

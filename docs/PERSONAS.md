@@ -44,7 +44,7 @@ be reached, and the first thing to show them.
 - **Senuma answer:** Coding and AI Spaces with the catalog (GitHub, Vercel, Netlify, Supabase,
   MDN, Stack Overflow, ChatGPT, Claude, Gemini, Copilot…), Ctrl+K command center, search shortcuts
   (`gh`, `mdn`, `npm`, `so`, `c`, `cl`, custom `%s` engines), Modes (Work / Dev / Chill), dock,
-  keyboard-only use, JSON backup, no account and no telemetry.
+  keyboard-only use, JSON backup, no Senuma account and no analytics.
 - **Why primary:** strongest product fit (the keyboard and search features are built for them),
   reachable through communities that welcome tools when the post is useful (GitHub, dev
   communities, r/SideProject), and they talk about tools they adopt. Privacy is a selling point,
@@ -97,13 +97,15 @@ be reached, and the first thing to show them.
 
 ## 3. Segment decision
 
-| Order | Segment | Role in launch |
+Confirmed by the owner on 2026-10-05:
+
+| Tier | Segment | Role in launch |
 |---|---|---|
-| 1 | Developers / AI power users | lead message, communities, GitHub |
-| 2 | Knowledge workers | store copy, Modes and Work content |
-| 3 | Creators / designers | short-form visual content, landing hero visuals |
-| 4 | Students / researchers | Turkish launch, term-start content |
-| 5 | Gamers | content hook only |
+| Primary | Developers / AI power users | lead message, communities, GitHub |
+| Primary | Knowledge workers | store copy, Modes and Work content |
+| Secondary | Creators / designers | short-form visual content, landing hero visuals |
+| Secondary | Students / researchers | Turkish launch, term-start content |
+| Later | Gamers | content hook only (“Work → Gaming”) |
 
 Check after 4–6 weeks (GROWTH_STRATEGY.md § 6): which channel brought installs that stayed
 (weekly users trend), which persona's words appear in reviews and feedback. Move a segment up or
@@ -117,6 +119,6 @@ down on that evidence, not on taste.
 | Knowledge workers | Everything you use, organized. | Spaces, dock, Work Mode |
 | Creators | Make every new tab feel like yours. | Fill/Fit, position, blur, atmosphere |
 | Students | One search bar. Your rules. | `w`, `y`, custom engines |
-| All | Make the browser yours. · Personal by design. | no account, nothing sent |
+| All | Make the browser yours. · Personal by design. | no Senuma account, no analytics, data stays local |
 
 Sources: see COMPETITOR_POSITIONING.md.

@@ -5,12 +5,12 @@ import { gzipSync } from 'node:zlib';
 
 /** [label, file pattern, budget in kB gzip]. Raise a budget deliberately, in review, or not at all. */
 const BUDGETS = [
-    // What every new tab parses before Home appears.
+    // What every new tab parses before Home appears. Not to be raised (owner, 2026-10-05): trim before adding.
     ['startup JS (newtab-*.js)', /^newtab-.*\.js$/, 44],
     ['CSS (newtab-*.css)', /^newtab-.*\.css$/, 9.5],
     // Screens loaded on demand (Space view, settings, customize, onboarding), language packs excluded.
     ['on-demand JS', /^(?!newtab-|tr-|help).*\.js$/, 22],
-    // Help & Feedback and the review card (2.0.x next): their own chunk and stylesheet, Turkish text apart.
+    // Help & Feedback and the review card (2.0.2): lazy chunks and stylesheet, Turkish text apart. Approved 2026-10-05.
     ['help & feedback (help-*)', /^help-(?!tr-).*\.(js|css)$/, 6],
     ['help text, Turkish (help-tr-*)', /^help-tr-.*\.js$/, 2.5],
     ['language pack (tr)', /^tr-.*\.js$/, 8],

@@ -12,6 +12,20 @@ Rules for every line:
 - Product names are not translated: Senuma, Spaces → **Alanlar**, Modes → **Modlar**, Dock → **Dock**, Command center → **Komut merkezi** (the names the Turkish interface uses).
 - The legal status of the name is open (SENUMA_BRAND.md). No copy says or implies it is registered or cleared.
 
+### Privacy claims (owner decision, 2026-10-05)
+
+Marketing may say: **no Senuma account · no analytics · no Senuma cloud required · workspace data
+remains local in this release.**
+
+Never say, show or imply that Senuma makes no network requests (no “empty Network panel”, no
+“nothing leaves your device”, no “works fully offline”). Senuma may make requests to:
+
+- the search provider the person chose (their searches);
+- websites, for site icons;
+- Google’s icon service, if the person selected it.
+
+“Nothing is sent to us” (the developer) remains true and may be used with that meaning only.
+
 ## 1. Brand level
 
 | | English | Türkçe |
