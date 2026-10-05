@@ -35,7 +35,7 @@ export const HELP_TR: HelpStrings = {
     'feedback.email': 'E-posta uygulamasında aç',
     'feedback.copy': 'Mesajı kopyala',
     'feedback.copied': 'Mesaj kopyalandı',
-    'feedback.address': 'Adres: {email}',
+    'feedback.address': 'E-posta uygulaması açılmazsa mesajı kopyalayıp şu adrese gönder: {email}',
     'feedback.private': 'Senuma kendiliğinden hiçbir şey göndermez. E-posta uygulaman bu mesajla açılır; değiştirebilirsin ve gönderip göndermemeye sen karar verirsin.',
 
     'report.type': 'Tür',

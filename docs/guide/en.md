@@ -591,7 +591,8 @@ works offline; feedback is an email you read, change and send yourself.
 2. Choose a guide topic (**User Guide**, **Getting Started**, **Privacy & Permissions**,
    **Import & Backup**) or **Keyboard Shortcuts**.
 3. To write to us, choose **Report a problem**, **Suggest an idea** or **Share feedback**, write
-   your message, then **Open in email app** or **Copy message**.
+   your message, then **Open in email app** or **Copy message**. If no email app opens, copy the
+   message and send it to the address shown under the buttons.
 
 Small “learn more” links also sit where questions come up: under search shortcuts, the background
 adjustments, recently closed tabs and restore points.

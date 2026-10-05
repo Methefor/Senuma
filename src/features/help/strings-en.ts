@@ -39,7 +39,7 @@ export const HELP_EN = {
     'feedback.email': 'Open in email app',
     'feedback.copy': 'Copy message',
     'feedback.copied': 'Message copied',
-    'feedback.address': 'Address: {email}',
+    'feedback.address': 'If no email app opens, copy the message and send it to {email}',
     'feedback.private': 'Senuma sends nothing by itself. Your email app opens with this message; you can change it, and you decide whether to send it.',
 
     'report.type': 'Type',

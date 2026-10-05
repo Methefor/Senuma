@@ -45,7 +45,7 @@
 }
 .feedback-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .feedback-actions .is-disabled { opacity: .5; pointer-events: none; }
-.feedback-address { font-size: 12px; }
+.feedback-address { font-size: 12px; user-select: text; }
 
 .review-card {
     position: fixed;

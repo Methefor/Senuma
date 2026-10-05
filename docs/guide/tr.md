@@ -596,7 +596,8 @@ e-postadır.
 2. Bir kılavuz konusu seç (**Kullanım Kılavuzu**, **Başlarken**, **Gizlilik ve İzinler**,
    **İçe Aktarma ve Yedekleme**) ya da **Klavye Kısayolları**.
 3. Bize yazmak için **Sorun bildir**, **Fikir öner** ya da **Geri bildirim gönder**’i seç,
-   mesajını yaz, ardından **E-posta uygulamasında aç** ya da **Mesajı kopyala**.
+   mesajını yaz, ardından **E-posta uygulamasında aç** ya da **Mesajı kopyala**. E-posta uygulaması
+   açılmazsa mesajı kopyala ve düğmelerin altında yazan adrese gönder.
 
 Soruların çıktığı yerlerde küçük “daha fazlası” bağlantıları da var: arama kısayollarının, arka plan
 ayarlarının, az önce kapatılan sekmelerin ve geri yükleme noktalarının altında.

@@ -27,7 +27,7 @@ describe('help strings', () => {
 
     it('falls back to English for a language that has no help strings yet', () => {
         expect(helpText('fr' as never, 'review.rate')).toBe('Leave a review');
-        expect(helpText('en', 'feedback.address', { email: 'a@b.c' })).toBe('Address: a@b.c');
+        expect(helpText('en', 'feedback.address', { email: 'a@b.c' })).toBe('If no email app opens, copy the message and send it to a@b.c');
     });
 });
 
