@@ -1,5 +1,5 @@
 import type { ComponentChildren } from 'preact';
-import { useEffect, useRef } from 'preact/hooks';
+import { useLayoutEffect, useRef } from 'preact/hooks';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
 
@@ -20,7 +20,9 @@ interface Props {
 export function Overlay({ label, class: className = '', style, onClose, children }: Props) {
     const ref = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
+    // Focus moves in the same task the panel appears in, so a key pressed right away (Escape,
+    // Tab) already reaches the panel rather than the page behind it.
+    useLayoutEffect(() => {
         const opener = document.activeElement as HTMLElement | null;
         const node = ref.current!;
         // Focus the field a panel asks for; otherwise the panel itself, so no control looks pre-selected.
