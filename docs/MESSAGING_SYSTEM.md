@@ -117,3 +117,17 @@ description for landing and store use.
 | GitHub README | first line | feature list | feature list | — |
 | Social posts | sign-off | hook | body | — |
 | Help Center | home page | category titles | article summaries | — |
+
+## 5. Help, feedback and review request (next update)
+
+The in-product words live in src/features/help/strings-en.ts and strings-tr.ts (keys checked by the
+compiler and a test); HELP_FEEDBACK_SYSTEM.md explains the design. Lines that also appear outside
+the product:
+
+| | English | Türkçe |
+|---|---|---|
+| Section | Help & Feedback | Yardım ve Geri Bildirim |
+| Feedback cards | Report a problem · Suggest an idea · Share feedback | Sorun bildir · Fikir öner · Geri bildirim gönder |
+| Feedback promise | Senuma sends nothing by itself. | Senuma kendiliğinden hiçbir şey göndermez. |
+| Review card | Enjoying Senuma? A short Chrome Web Store review helps Senuma grow. | Senuma işine yarıyor mu? Chrome Web Store’da bırakacağın kısa bir yorum Senuma’nın gelişmesine yardımcı olur. |
+| Review actions | Leave a review · Send feedback · Not now | Yorum bırak · Geri bildirim gönder · Şimdi değil |

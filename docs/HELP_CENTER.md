@@ -58,21 +58,13 @@ Search and search shortcuts → Modes → Backgrounds and your own images.
 4. Privacy and permissions
 5. Modes
 
-## Contextual help from inside Senuma (suggestions; not implemented)
+## Contextual help from inside Senuma
 
-Small “Help” links next to existing hints, opening the article in a new tab. They need a
-published Help Center first and a decision that the page may link out.
-
-| Place in Senuma | Article |
-|---|---|
-| Settings → Search, next to the Shortcuts hint | `search#search-shortcuts` |
-| Settings → Data → Import links | `import-links` |
-| Settings → Data → Backup file | `backup` |
-| Settings → Privacy, site icons | `privacy` |
-| Settings → Modes intro | `modes` |
-| Settings → Keyboard | `keyboard-shortcuts` |
-| Customize, under the background picker | `backgrounds` |
-| Settings → About | Help Center home |
+Implemented (branch `senuma-help-growth`, not released) without waiting for this website: the
+guide is packaged with the extension as offline pages, and Settings → Help & Feedback plus four
+“learn more” links open it at the right section. Details: HELP_FEEDBACK_SYSTEM.md § 1. When this
+Help Center is published, the same anchors (`#search-shortcuts`, `#privacy`, …) can be reused so
+the product can link either to its packaged guide or to the website.
 
 ## Reuse
 
