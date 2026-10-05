@@ -150,6 +150,35 @@ try {
         expect(keyed === 'Coding,Finance,Media' && !spaces.find(x => x.name === 'Ofis').nameKey, JSON.stringify(spaces.map(x => [x.name, x.nameKey ?? null])));
         return 'backup export/import of the keys is covered by the unit tests';
     });
+    await check('Brand', 'the browser tab reads “Senuma”: fresh tab, reload, language change, Mode switch', async () => {
+        const tab = await openNewTab(session);
+        const cdp = await session.context.newCDPSession(tab);
+        // What the browser shows on the tab itself, not only document.title.
+        const shown = async () => {
+            const { targetInfo } = (await cdp.send('Target.getTargetInfo')) as { targetInfo: { title: string } };
+            return `${targetInfo.title}|${await tab.title()}`;
+        };
+        const seen: string[] = [await shown()];
+        await tab.reload();
+        await tab.waitForSelector('.home');
+        seen.push(await shown());
+        await tab.locator('.topbar .icon-button[aria-label]').last().click();
+        await tab.locator('.settings-nav button').first().click();
+        await tab.locator('.settings-body select').first().selectOption('tr');
+        await tab.waitForTimeout(500);
+        seen.push(await shown());
+        await tab.locator('.settings-body select').first().selectOption('en');
+        await tab.keyboard.press('Escape');
+        await tab.locator('#mode-switch').click();
+        await tab.locator('.menu button', { hasText: 'Work' }).click();
+        await tab.waitForTimeout(400);
+        seen.push(await shown());
+        await tab.locator('#mode-switch').click();
+        await tab.locator('.menu button', { hasText: 'All Spaces' }).click();
+        await tab.close();
+        expect(seen.every(title => title === 'Senuma|Senuma'), seen.join(' · '));
+        return seen.join(' · ');
+    });
 } finally {
     await session.context.close();
     removeProfile(profile);
@@ -193,6 +222,7 @@ try {
     const restored = async (round: string) => {
         tab = await openNewTab(photoSession!);
         await tab.locator('.backdrop-photo.is-ready').waitFor({ timeout: 10_000 });
+        expect((await tab.title()) === 'Senuma', `${round}: tab title “${await tab.title()}”`);
         const state = (await readStorage<any>(photoSession!, 'bos.state'))!;
         const source = state.prefs.background.source;
         const stored = await tab.evaluate(() => new Promise<string[]>(resolve => {
