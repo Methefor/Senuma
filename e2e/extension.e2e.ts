@@ -173,6 +173,11 @@ async function freshInstall(): Promise<void> {
     });
 
     await check('Persistence', 'a second new tab shows the same Spaces, theme and Mode', async () => {
+        // The page saves 250 ms after its last change. A tab opened inside that window starts from the
+        // previous save and catches up through the storage event a moment later; a hidden tab saves at
+        // once, but this headless page never becomes hidden. The check is about what was saved, so the
+        // second tab opens once the Dev switch is in storage. The assertion itself is unchanged.
+        await waitForState(session, s => s.activeModeId && s.modes[s.activeModeId].name === 'Dev');
         const second = await openNewTab(session);
         expect((await plateNames(second)).join() === 'Coding,AI', 'Mode not carried to a new tab');
         expect((await second.evaluate(() => document.documentElement.style.getPropertyValue('--accent'))) === '#E6B450', 'theme not carried');
@@ -797,7 +802,11 @@ async function personalization(): Promise<void> {
         expect(state.prefs.themeId === 'atelier' && state.prefs.background.source.kind === 'upload', 'the default look was changed too');
         await page.locator('#mode-switch').click();
         await page.locator('.menu button', { hasText: 'Chill' }).click();
-        expect((await cssVar(page, '--bg-color')) === '#1c1a17' && (await page.locator('.backdrop-photo').count()) === 1, 'Chill did not return to the default look');
+        // The theme applies at once; an uploaded photo is read from IndexedDB first. Wait for it as the
+        // restart check below does, then assert exactly the same look.
+        await page.locator('.backdrop-photo').waitFor({ timeout: 10_000 }).catch(() => undefined);
+        const chill = { bg: await cssVar(page, '--bg-color'), photos: await page.locator('.backdrop-photo').count() };
+        expect(chill.bg === '#1c1a17' && chill.photos === 1, `Chill did not return to the default look: ${JSON.stringify(chill)}`);
         await page.locator('#mode-switch').click();
         await page.locator('.menu button', { hasText: 'Dev' }).click();
         expect((await cssVar(page, '--bg-color')) === '#050a07' && (await page.locator('.backdrop-photo').count()) === 0, 'Dev look not shown');
