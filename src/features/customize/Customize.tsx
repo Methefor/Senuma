@@ -18,6 +18,7 @@ import { Icon } from '../../ui/Icon';
 import { Overlay } from '../../ui/Overlay';
 import { photoUrl } from '../background/photos';
 import { ACCEPTED_IMAGE_TYPES, processImage } from '../background/processImage';
+import { HelpLink } from '../help/HelpLink';
 import { ThemePicker } from './ThemePicker';
 
 const MOTION_LEVELS: readonly MotionLevel[] = ['full', 'reduced', 'off'];
@@ -242,6 +243,7 @@ function BackgroundSection({ state, draft, onChange, onTheme }: {
                     {advanced
                         ? <Slider label={t('background.saturation')} value={background.saturation} max={BACKGROUND_LIMITS.saturation} step={0.05} onChange={saturation => onChange({ ...background, saturation })} />
                         : <button type="button" class="quiet-button" onClick={() => setAdvanced(true)}>{t('customize.more')}</button>}
+                    <HelpLink topic="backgrounds" label="learn.background" />
                 </div>
             )}
         </section>

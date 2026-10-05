@@ -112,6 +112,7 @@ export const en = {
     'settings.data': 'Data',
     'settings.privacy': 'Privacy',
     'settings.keyboard': 'Keyboard',
+    'settings.help': 'Help & Feedback',
     'settings.about': 'About',
     'settings.theme': 'Theme',
     'settings.behaviour': 'Behaviour',

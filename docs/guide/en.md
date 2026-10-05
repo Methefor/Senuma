@@ -3,7 +3,7 @@
 *Make the browser yours.* Senuma turns every new tab into your own workspace: the sites you use,
 gathered into Spaces, with one search bar and a look that is yours.
 
-This guide describes Senuma 2.0.1. Every section follows the same pattern: **What it does**,
+This guide describes the current Senuma release. Every section follows the same pattern: **What it does**,
 **How to use it**, **Example**, **Tip**. The Turkish guide (tr.md) has the same sections in the
 same order. Names in **bold** are the labels you see on screen.
 
@@ -33,6 +33,7 @@ same order. Names in **bold** are the labels you see on screen.
 24. [Keyboard Shortcuts](#24-keyboard-shortcuts)
 25. [Advanced Workflows](#25-advanced-workflows)
 26. [FAQ](#26-faq)
+27. [Help & Feedback](#27-help--feedback)
 
 ---
 
@@ -578,3 +579,29 @@ Removing a link or Space offers Undo. Bigger changes (replace, restore, reset) c
 
 **Senuma used to be New Tab Folders?**
 Yes. Upgrading keeps your data; your folders became Spaces.
+
+## 27. Help & Feedback
+
+**What it does**
+Brings this guide and a way to write to us into Senuma itself. The guide opens in a new tab and
+works offline; feedback is an email you read, change and send yourself.
+
+**How to use it**
+1. Open **Settings → Help & Feedback**.
+2. Choose a guide topic (**User Guide**, **Getting Started**, **Privacy & Permissions**,
+   **Import & Backup**) or **Keyboard Shortcuts**.
+3. To write to us, choose **Report a problem**, **Suggest an idea** or **Share feedback**, write
+   your message, then **Open in email app** or **Copy message**.
+
+Small “learn more” links also sit where questions come up: under search shortcuts, the background
+adjustments, recently closed tabs and restore points.
+
+**Example**
+Report a problem: describe it, add the steps, leave **Include technical details** ticked, and the
+preview shows exactly what will be in the email (Senuma version, browser, operating system,
+interface language). Untick it and those lines disappear.
+
+**Tip**
+Senuma sends nothing by itself: no report leaves until you press Send in your own email app. After
+a week of regular use Senuma may ask once for a short Chrome Web Store review; **Not now** is
+remembered.

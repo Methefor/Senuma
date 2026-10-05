@@ -128,7 +128,7 @@ export async function deleteSnapshot(id: ID): Promise<void> {
 
 // ---------- Labels and files ----------
 
-export const SETTINGS_SECTIONS = ['appearance', 'spaces', 'modes', 'search', 'data', 'privacy', 'keyboard', 'about'] as const;
+export const SETTINGS_SECTIONS = ['appearance', 'spaces', 'modes', 'search', 'data', 'privacy', 'keyboard', 'help', 'about'] as const;
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 
 export function setupNames(): SetupNames {

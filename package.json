@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:e2e": "npm run build && npm run build:e2e && vite-node e2e/extension.e2e.ts",
     "test:rc": "npm run build && vite-node e2e/rc.e2e.ts",
+    "test:help": "npm run build && vite-node e2e/help-feedback.ts",
     "rehearse": "npm run build && vite-node e2e/rehearsal.ts",
     "headed": "npm run build && vite-node e2e/headed.ts",
     "package": "npm run build && node scripts/package-rc.mjs",

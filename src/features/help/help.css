@@ -1,0 +1,70 @@
+/* Help, feedback and the review card. Loaded with the help chunk, never at startup. */
+
+.help-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.help-link { display: inline-block; margin: 6px 0 2px; color: var(--accent); font-size: 12.5px; font-weight: 500; text-underline-offset: 3px; }
+.help-link:not(:hover) { text-decoration: none; }
+
+.help-list { display: grid; gap: 6px; margin: 12px 0 18px; }
+.help-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-control);
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    text-align: left;
+    text-decoration: none;
+    transition: background var(--motion-fast), border-color var(--motion-fast);
+}
+.help-row:hover { background: var(--surface-secondary); border-color: var(--border-strong); }
+.help-row > .icon { flex: none; color: var(--text-tertiary); }
+.help-row-text { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.help-row-text strong { font-weight: 600; }
+.help-row-text span { font-size: 12.5px; color: var(--text-secondary); }
+
+.feedback-form { display: grid; gap: 14px; }
+.feedback-check { display: flex; gap: 10px; align-items: flex-start; }
+.feedback-check input { margin-top: 3px; accent-color: var(--accent); }
+.feedback-check em { display: block; font-style: normal; font-size: 12px; color: var(--text-secondary); }
+.feedback-preview {
+    margin: 0;
+    max-height: 220px;
+    overflow: auto;
+    padding: 12px 14px;
+    border: 1px solid var(--border-subtle);
+    border-radius: calc(var(--radius-control) * .7);
+    background: var(--surface-primary);
+    font: 12.5px/1.5 ui-monospace, "Cascadia Mono", Consolas, monospace;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    user-select: text;
+}
+.feedback-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.feedback-actions .is-disabled { opacity: .5; pointer-events: none; }
+.feedback-address { font-size: 12px; }
+
+.review-card {
+    position: fixed;
+    z-index: 800;
+    left: 20px;
+    bottom: 20px;
+    display: grid;
+    gap: 6px;
+    width: min(340px, calc(100vw - 40px));
+    padding: 16px;
+    border: 1px solid var(--palette-border);
+    border-radius: var(--radius-control);
+    background: var(--palette-surface);
+    backdrop-filter: blur(var(--blur-surface));
+    box-shadow: var(--shadow-card);
+    animation: rise var(--motion-standard) var(--ease-out);
+}
+.review-card p { margin: 0 0 6px; color: var(--text-secondary); font-size: 13px; line-height: 1.45; }
+.review-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.review-actions .button { height: 30px; padding: 0 11px; font-size: 13px; }
+/* On a narrow window the dock spans the bottom: sit above it. */
+@media (max-width: 760px) { .review-card { left: 16px; right: 16px; width: auto; bottom: 96px; } }

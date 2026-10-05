@@ -3,7 +3,7 @@
 *Tarayıcını kendine göre yap.* Senuma her yeni sekmeyi kendi çalışma alanına çevirir: kullandığın
 siteler Alanlarda toplanır; tek bir arama çubuğu ve sana ait bir görünüm.
 
-Bu kılavuz Senuma 2.0.1’i anlatır. Her bölüm aynı düzeni izler: **Ne işe yarar**, **Nasıl
+Bu kılavuz Senuma’nın güncel sürümünü anlatır. Her bölüm aynı düzeni izler: **Ne işe yarar**, **Nasıl
 kullanılır**, **Örnek**, **İpucu**. İngilizce kılavuz (en.md) aynı bölümleri aynı sırayla içerir.
 **Kalın** yazılan adlar ekranda gördüğün etiketlerdir (Türkçe arayüz).
 
@@ -33,6 +33,7 @@ kullanılır**, **Örnek**, **İpucu**. İngilizce kılavuz (en.md) aynı bölü
 24. [Klavye Kısayolları](#24-klavye-kısayolları)
 25. [İleri Kullanım](#25-ileri-kullanım)
 26. [SSS](#26-sss)
+27. [Yardım ve Geri Bildirim](#27-yardım-ve-geri-bildirim)
 
 ---
 
@@ -582,3 +583,30 @@ yükleme, sıfırlama) **Ayarlar → Veriler → Geri yükleme noktaları**’nd
 
 **Senuma eskiden New Tab Folders mıydı?**
 Evet. Güncelleme verilerini korur; klasörlerin Alanlara dönüştü.
+
+## 27. Yardım ve Geri Bildirim
+
+**Ne işe yarar**
+Bu kılavuzu ve bize yazmanın bir yolunu Senuma’nın içine getirir. Kılavuz yeni bir sekmede açılır
+ve çevrimdışı çalışır; geri bildirim, senin okuduğun, değiştirdiğin ve kendin gönderdiğin bir
+e-postadır.
+
+**Nasıl kullanılır**
+1. **Ayarlar → Yardım ve Geri Bildirim**’i aç.
+2. Bir kılavuz konusu seç (**Kullanım Kılavuzu**, **Başlarken**, **Gizlilik ve İzinler**,
+   **İçe Aktarma ve Yedekleme**) ya da **Klavye Kısayolları**.
+3. Bize yazmak için **Sorun bildir**, **Fikir öner** ya da **Geri bildirim gönder**’i seç,
+   mesajını yaz, ardından **E-posta uygulamasında aç** ya da **Mesajı kopyala**.
+
+Soruların çıktığı yerlerde küçük “daha fazlası” bağlantıları da var: arama kısayollarının, arka plan
+ayarlarının, az önce kapatılan sekmelerin ve geri yükleme noktalarının altında.
+
+**Örnek**
+Sorun bildir: sorunu anlat, adımları ekle, **Teknik bilgileri ekle** işaretli kalsın; önizleme
+e-postada tam olarak ne olacağını gösterir (Senuma sürümü, tarayıcı, işletim sistemi, arayüz dili).
+İşareti kaldırırsan bu satırlar kaybolur.
+
+**İpucu**
+Senuma kendiliğinden hiçbir şey göndermez: kendi e-posta uygulamanda Gönder’e basmadan hiçbir
+bildirim çıkmaz. Bir hafta düzenli kullanımdan sonra Senuma bir kez kısa bir Chrome Web Store yorumu
+isteyebilir; **Şimdi değil** hatırlanır.

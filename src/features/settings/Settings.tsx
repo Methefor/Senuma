@@ -22,10 +22,12 @@ import { MODIFIER_KEY } from '../command/Launcher';
 import { app, openMenuBelow, setUi, snapshots, toast, update, useStore } from '../../storage/store';
 import { Icon, SPACE_GLYPHS } from '../../ui/Icon';
 import { Overlay } from '../../ui/Overlay';
+import { HelpLink } from '../help/HelpLink';
+import { HelpSection } from '../help/HelpSection';
 import { ImportReview } from './ImportReview';
 
 const SECTION_GLYPHS: Record<SettingsSection, string> = {
-    appearance: 'swatch', spaces: 'grid', modes: 'layers', search: 'search', data: 'download', privacy: 'shield', keyboard: 'keyboard', about: 'info',
+    appearance: 'swatch', spaces: 'grid', modes: 'layers', search: 'search', data: 'download', privacy: 'shield', keyboard: 'keyboard', help: 'book', about: 'info',
 };
 
 // ---------- Small building blocks ----------
@@ -283,6 +285,7 @@ function Search({ state }: { state: AppState }) {
             </Row>
             <h3>{t('search.shortcuts')}</h3>
             <p class="note">{t('search.shortcutsHint')}</p>
+            <HelpLink topic="search-shortcuts" label="learn.shortcuts" />
             <ul class="list">
                 {state.providers.filter(p => !p.browserDefault).map(provider => (
                     <li class="list-row" key={provider.id}>
@@ -423,6 +426,7 @@ function Data({ state }: { state: AppState }) {
             </Row>
             <h3>{t('data.snapshots')}</h3>
             <p class="note">{t('data.snapshotsHint')}</p>
+            <HelpLink topic="import-export" label="learn.backup" />
             <Backups />
             <h3>{t('import.title')}</h3>
             <Row label={t('import.bookmarks')} hint={t('import.bookmarksHint')}>
@@ -477,6 +481,7 @@ function Privacy({ state }: { state: AppState }) {
             <Row label={t('privacy.closedTabs')} hint={t('privacy.closedTabsHint')}>
                 <Switch on={state.prefs.showClosedTabs} label={t('privacy.closedTabs')} onToggle={() => void toggleClosedTabs()} />
             </Row>
+            <HelpLink topic="privacy" label="learn.closedTabs" />
             <Row label={t('privacy.clearRecents')} hint={t('privacy.clearRecentsHint', { n: state.recents.length })}>
                 <button type="button" class="button" disabled={!state.recents.length && !Object.keys(state.usage).length}
                     onClick={() => update(s => ({ ...s, recents: [], usage: {} }))}>{t('clear')}</button>
@@ -571,6 +576,7 @@ export function Settings({ state, section }: { state: AppState; section: string 
                 {current === 'data' && <Data state={state} />}
                 {current === 'privacy' && <Privacy state={state} />}
                 {current === 'keyboard' && <Keyboard />}
+                {current === 'help' && <HelpSection state={state} />}
                 {current === 'about' && <About state={state} />}
             </div>
         </Overlay>

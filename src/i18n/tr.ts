@@ -108,6 +108,7 @@ export const tr: Partial<Record<keyof typeof en, string>> = {
     'settings.data': 'Veriler',
     'settings.privacy': 'Gizlilik',
     'settings.keyboard': 'Klavye',
+    'settings.help': 'Yardım ve Geri Bildirim',
     'settings.about': 'Hakkında',
     'settings.theme': 'Tema',
     'settings.behaviour': 'Davranış',

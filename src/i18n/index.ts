@@ -16,6 +16,10 @@ export function setLanguage(next: Language): void {
     language = next;
 }
 
+export function currentLanguage(): Language {
+    return language;
+}
+
 /** Resolves once the strings for `lang` are in memory. Until then English is shown. */
 export async function ensureLanguage(lang: Language): Promise<void> {
     if (lang === 'en' || dictionaries[lang]) return;

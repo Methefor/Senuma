@@ -9,7 +9,10 @@ const BUDGETS = [
     ['startup JS (newtab-*.js)', /^newtab-.*\.js$/, 44],
     ['CSS (newtab-*.css)', /^newtab-.*\.css$/, 9.5],
     // Screens loaded on demand (Space view, settings, customize, onboarding), language packs excluded.
-    ['on-demand JS', /^(?!newtab-|tr-).*\.js$/, 22],
+    ['on-demand JS', /^(?!newtab-|tr-|help).*\.js$/, 22],
+    // Help & Feedback and the review card (2.0.x next): their own chunk and stylesheet, Turkish text apart.
+    ['help & feedback (help-*)', /^help-(?!tr-).*\.(js|css)$/, 6],
+    ['help text, Turkish (help-tr-*)', /^help-tr-.*\.js$/, 2.5],
     ['language pack (tr)', /^tr-.*\.js$/, 8],
 ];
 
@@ -26,6 +29,7 @@ for (const [label, pattern, budget] of BUDGETS) {
 const ASSET_BUDGETS = [
     ['photographs (wallpapers/)', 'dist/wallpapers', 3584],
     ['brand marks (marks/)', 'dist/marks', 64],
+    ['user guide pages (help/)', 'dist/help', 96],
 ];
 for (const [label, folder, budget] of ASSET_BUDGETS) {
     const total = readdirSync(folder).reduce((sum, name) => sum + readFileSync(`${folder}/${name}`).length, 0) / 1024;

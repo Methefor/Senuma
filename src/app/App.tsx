@@ -1,5 +1,6 @@
 import type { ComponentType } from 'preact';
 import { useEffect, useLayoutEffect, useState } from 'preact/hooks';
+import { readLocal } from '../browser/kv';
 import { sourceKey } from '../core/background';
 import { relocalize } from '../core/names';
 import { visibleSpaces } from '../core/ops';
@@ -33,6 +34,13 @@ const loadCustomize = () => import('../features/customize/Customize').then(m => 
 // Opening a Space and editing are one chunk: they are needed a moment after Home, not for it.
 const loadSpaces = () => import('../features/spaces/SpaceView');
 const loadSpaceView = () => loadSpaces().then(m => m.SpaceView);
+const loadReview = () => import('../features/help/ReviewPrompt').then(m => m.ReviewPrompt);
+
+/** Whether the review card may be considered yet; its full rules load only then (features/help/review.ts). */
+function reviewDue(): boolean {
+    const record = readLocal('bos.review') as { next?: number; done?: boolean } | undefined;
+    return !record || (!record.done && (record.next ?? 0) <= Date.now());
+}
 const loadEditor = () => loadSpaces().then(m => m.Editor);
 
 /** Fetches the Space view while the browser is idle, so the first click on a Space is instant. */
@@ -116,6 +124,9 @@ export function App() {
     const space = view.spaceId ? state.spaces[view.spaceId] : undefined;
     const covered = !!(space || view.palette || view.settings !== null || view.editor || view.customize || !state.onboarded);
     const showSummary = state.onboarded && state.legacy && !state.legacy.acknowledged && !covered;
+    const [reviewWanted] = useState(reviewDue);
+    const showReview = reviewWanted && state.onboarded && !covered && !showSummary;
+    const ReviewPrompt = useLazy(showReview, loadReview);
 
     return (
         <>
@@ -129,6 +140,7 @@ export function App() {
             {view.palette && <CommandPalette />}
             {!state.onboarded && Onboarding && <Onboarding state={state} />}
             {showSummary && MigrationSummary && <MigrationSummary legacy={state.legacy!} />}
+            {showReview && ReviewPrompt && <ReviewPrompt />}
             <ContextMenu />
             <Toasts />
         </>
