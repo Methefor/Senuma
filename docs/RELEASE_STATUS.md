@@ -3,6 +3,24 @@
 The one status document. Nothing pushed, nothing published. Last updated 2026-10-05.
 Order of release: 2.0.0 (in review) → 2.0.1 → 2.0.2. Each needs the owner's go-ahead.
 
+## Next line — `senuma-2.0.3` (open, not versioned, not packaged)
+
+Branch `senuma-2.0.3`, from the frozen 2.0.2 (`senuma-2.0.2-rc`, `123bde0`). The source version
+is still 2.0.2; it is bumped only when 2.0.3 is prepared for release. No features.
+
+| Change | State |
+|---|---|
+| Browser tab title reads **Senuma** instead of “New Tab” (`newtab.html`) | done; checked in Chromium, Google Chrome 154, Edge 154, Brave; qa-201 asserts it after a fresh tab, reload, language change, Mode switch and restart |
+| Launch documents (landing, store conversion, content library, Product Hunt, GitHub, localization, measurement) | written; plans only |
+| `scripts/media-mp4.mjs` | tool for the MP4 and poster frames |
+
+Candidates for the same line, each needing approval: the store summary revision and a Turkish
+store listing through `_locales` (both manifest changes; STORE_CONVERSION.md,
+LOCALIZATION_ROADMAP.md).
+
+Since 2.0.2 supersedes 2.0.1, the expected store order is 2.0.0 (in review) → 2.0.2 → 2.0.3;
+2.0.1 is kept for history.
+
 ## Senuma 2.0.2 — release candidate, FROZEN (2026-10-05)
 
 Help & Feedback. Branch `senuma-help-growth`, built on the frozen 2.0.1 (`5ed7cec`), which is

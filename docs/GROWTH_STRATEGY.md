@@ -4,8 +4,9 @@ Internal plan; nothing here is published, bought or created. Cost rule: **no rec
 before a clear traction or monetization signal.** Everything below is organic and free.
 
 Inputs: PERSONAS.md (who), COMPETITOR_POSITIONING.md (against whom), MESSAGING_SYSTEM.md (words),
-MEDIA_PLAN.md (assets), LAUNCH_PLAN.md (content and calendar), HELP_FEEDBACK_SYSTEM.md (feedback
-and the review request).
+MEDIA_PLAN.md (assets), LAUNCH_PLAN.md (six-week calendar), CONTENT_LIBRARY.md (clips),
+STORE_CONVERSION.md (listing), LANDING_PLAN.md (site), PRODUCT_HUNT.md, GITHUB_PRESENCE.md,
+LOCALIZATION_ROADMAP.md, HELP_FEEDBACK_SYSTEM.md (feedback and the review request).
 
 ## 1. Position
 
@@ -53,74 +54,103 @@ reviews), cross-posting the same text everywhere.
 
 ## 4. Store conversion
 
-- Title stays “Senuma — New Tab Workspace”; summary says what it does in plain words.
-- First screenshot: Home with real Spaces and a photo, captioned “Make the browser yours.”
-- Order the rest by the reason to stay: Spaces → search shortcuts → Modes → Customize → privacy.
-- Description opens with the five-part combination and “Free. No Senuma account. No analytics.”
-  before any feature list. Never claim that Senuma makes no network requests
-  (MESSAGING_SYSTEM.md, “Privacy claims”).
-- Video: the 28-second silent cut (MEDIA_PLAN.md) on YouTube, linked in the listing.
-- Respond to every review within a week; fix and say so.
-- The “Featured” badge is being retired in 2026 and ratings now weigh recent reviews; recency and
-  relevance matter more than badges.
-- A Turkish listing needs `_locales` (HELP_FEEDBACK_SYSTEM.md § 2.3); plan it for the update after
-  next if Turkish traffic shows up.
+The next listing revision (the 5–10 second test, summary, screenshot order, description, trust)
+is STORE_CONVERSION.md. Nothing about the listing under review changes.
 
-## 5. Landing page (plan only; nothing built or deployed)
+## 5. Landing page
 
-Domain: none yet; the privacy page lives at methefor.github.io/Senuma. A landing page can live
-there too (free) until a domain is bought.
-
-| # | Section | Content | Asset |
-|---|---|---|---|
-| 1 | Hero | **Make the browser yours.** · *Your place on the web.* · “Add to Chrome — free, no account” | screenshot-1-home, looping |
-| 2 | Real UI demo | the 28-second video, muted autoplay with a play button fallback | video |
-| 3 | Spaces | Everything you use, organized. (medium + long copy) | gif-1 create Space |
-| 4 | Search | One search bar. Your rules. `y lofi mix` | gif-3 search shortcut |
-| 5 | Command center | Everything, one shortcut away. | gif-2 command center |
-| 6 | Modes | A workspace for every mode. Work → Chill | gif-5 Modes |
-| 7 | Customization | Make every new tab feel like yours. | gif-4 background |
-| 8 | Privacy | Personal by design. The five privacy facts, the permission table, link to the privacy policy | none (text) |
-| 9 | Guide | “Read the guide” (EN/TR), Getting Started first | link |
-| 10 | Feedback | Report a problem · Suggest an idea · Share feedback (same three cards as the product) | — |
-| 11 | CTA | Add to Chrome · Previously New Tab Folders? Your data is kept. | — |
-
-Rules: no reviews, ratings or user counts until real; no competitor names; Turkish version mirrors
-the English one (`/tr/`); page weight under 1.5 MB before the video; no analytics script; fonts
-self-hosted or system.
+Architecture, copy deck (EN/TR), visual direction, asset map and implementation plan:
+LANDING_PLAN.md. Not built, not deployed.
 
 ## 6. Measurement without product analytics
 
 Senuma has no analytics and this plan adds none. Any future in-product measurement is a separate
-proposal needing explicit approval.
+proposal that needs explicit approval. Everything below comes from outside the product.
 
-Sources available for free:
+### 6.1 What the sources really give
 
-| Source | Gives |
+**Chrome Web Store developer dashboard** (the fields it has today; all graphs export to CSV):
+
+| Tab | Metrics |
 |---|---|
-| Chrome Web Store developer dashboard | impressions, page views, installs, uninstalls, weekly users, ratings, by country/language |
-| Store reviews | rating, themes, recency |
-| Feedback inbox (Gmail labels) | volume and themes by category |
-| Social / community posts | views, replies, saves; link clicks via the platform's own stats |
-| GitHub | stars, traffic, referrers (repo insights) |
-| Store listing links with a `utm_source` per channel | which channel sent store visits (the store dashboard reports UTM sources) |
+| Installs & Uninstalls | installs and uninstalls over time; installs by region, by language, by operating system |
+| Impressions | impressions in store placements; **page views** of the listing; page views by `utm_source`, `utm_medium`, `utm_campaign` |
+| Weekly Users | weekly users; by region, language, OS, **item version**; enabled vs disabled |
+| Ratings | ratings over time; the reviews themselves |
 
-Weekly sheet (one row per week):
+Not available there: retention cohorts, time in product, feature use, per-user anything. Do not
+invent them; the proxies below are the honest substitute.
 
-| Metric | Definition | Early target (weeks 1–6) |
+| Other source | Gives |
+|---|---|
+| Feedback inbox (Gmail labels) | count per week, per category; themes (the board, HELP_FEEDBACK_SYSTEM.md § 4) |
+| GitHub Insights → Traffic | views, unique visitors, referrers, popular content (last 14 days only: copy weekly), stars |
+| YouTube Studio / TikTok / Instagram insights | views, watch time, average view duration or completion, likes/saves/shares, link or profile clicks where offered |
+| X / Threads / Bluesky | impressions, replies, reposts, link clicks (X analytics); Bluesky gives counts only |
+| Reddit / DEV.to / Hacker News | score, comments, article reads (DEV.to) |
+| Landing page (later) | **server-side page counts from the host only, if any**; no analytics script. GitHub Pages gives none: the store's UTM page views are the measure |
+
+Every outbound store link carries `utm_source` (channel), `utm_medium` (format) and
+`utm_campaign` (`launch-w1`…), so store page views can be split by channel in the dashboard.
+
+### 6.2 The weekly sheet
+
+One spreadsheet, one row per week, filled every Friday (30 minutes):
+
+| Column | Source | Definition |
 |---|---|---|
-| Store conversion | installs ÷ store page views | ≥ 15 % (category listings with few reviews often sit lower; track the trend) |
-| Weekly users trend | dashboard weekly users | growing week over week |
-| Retention proxy | weekly users ÷ cumulative installs | ≥ 40 % after week 4 |
-| Uninstall rate | uninstalls ÷ installs | falling |
-| Review rate | new reviews ÷ new installs | ≥ 1 % |
-| Rating | average of last 30 days | ≥ 4.5 |
-| Feedback | messages per week by category | read, classified, answered |
-| Channel response | views → store visits per channel (UTM) | double down on the best two |
+| Impressions | store | store placements |
+| Page views | store | listing views |
+| Tagged visits by channel | store (UTM) | page views per `utm_source` |
+| Installs / Uninstalls | store | in the week |
+| Store conversion | computed | installs ÷ page views |
+| Weekly users | store | end-of-week value |
+| Users per install | computed | weekly users ÷ cumulative installs (a retention proxy) |
+| Uninstall ratio | computed | uninstalls ÷ installs in the week |
+| New ratings / average | store | count; average of the last 30 days |
+| Review rate | computed | new reviews ÷ new installs |
+| Feedback count by category | inbox | Bug, UX, Feature, Catalog, Localization, Performance, Privacy, Compatibility |
+| Top three feedback themes | board | text |
+| GitHub views / unique / stars | GitHub | weekly |
+| Video views, average view %, shares | platforms | per clip, best and worst noted |
+| Link clicks | platforms / UTM | per channel |
+| Hours spent per channel | own log | for “per hour” comparisons |
 
-Decision rules: after 4 weeks, keep the two channels with the best store visits per hour spent;
-drop the rest. If conversion is low but visits are high, fix the listing first. If retention is low,
-look at feedback themes before adding features.
+### 6.3 Baseline, weekly review, decision point
+
+- **Week 0 baseline:** fill one row before the first post (impressions, page views, installs,
+  weekly users, rating count), so every later number has something to stand against. For a new
+  listing most cells are near zero; record them anyway.
+- **Weekly review (Friday):** fill the row; note the best and worst post and why; move feedback
+  into the board; pick next week's concept for each kept channel; answer every open review and
+  email.
+- **Week-4 decision:** rank channels by **tagged store visits per hour spent**, then by installs
+  where the dashboard lets you tell. Keep the top two. Continue a channel only if it produced
+  store visits in at least two of its posts. Stop a channel that produced none after three posts,
+  or that costs replies without visits. Fix order when numbers disagree: low impressions →
+  listing relevance and posting; high page views but low conversion → listing (STORE_CONVERSION.md);
+  good installs but falling users per install → product and onboarding, read the feedback first.
+- **Six-week review:** same sheet; Product Hunt go/no-go against PRODUCT_HUNT.md § 1.
+
+Early targets are directions, not promises: conversion and review rate rising week over week,
+users per install holding above roughly 40 % after week 4, a 30-day rating of 4.5 or better.
+There is no Senuma history to benchmark against yet; replace these with real baselines after
+week 4.
+
+### 6.4 Evidence required before spending any money
+
+No recurring spend until **all** of these hold for four consecutive weeks:
+
+1. weekly users grow week over week without a new post driving them (organic store discovery);
+2. users per install stays at or above the week-4 level (people keep it);
+3. at least one channel shows a repeatable cost in hours per install, so a paid test has a
+   number to beat;
+4. the rating is ≥ 4.5 with ≥ 20 reviews;
+5. the feedback board has no open P0/P1.
+
+Even then the first spend should be a small, capped, one-off test (a domain; one boosted post
+measured through its own UTM tag), decided by the owner. Paid influencers, paid reviews and
+giveaways for reviews stay out (store policy and our own rules).
 
 ## 7. Monetization (not now)
 

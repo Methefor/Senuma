@@ -121,4 +121,23 @@ down on that evidence, not on taste.
 | Students | One search bar. Your rules. | `w`, `y`, custom engines |
 | All | Make the browser yours. · Personal by design. | no Senuma account, no analytics, data stays local |
 
+## 5. Acquisition matrix
+
+Headlines are from MESSAGING_SYSTEM.md; demos are concepts in CONTENT_LIBRARY.md (#).
+
+| | Developers / AI power users | Knowledge workers | Creators / designers | Students / researchers | Gamers (hook only) |
+|---|---|---|---|---|---|
+| Tier | Primary | Primary | Secondary | Secondary | Later |
+| Core pain | the same dev and AI sites opened by hand all day; bookmarks bar chaos; context switches | work scattered over Gmail, Drive, Calendar, Slack, Notion, Figma; work and personal mixed | an ugly or generic new tab; wants their own image without paying | sources spread over Wikipedia, YouTube, Reddit, portals | wants a different space after work |
+| Senuma solution | Coding and AI Spaces, Ctrl+K, `gh`/`mdn`/`npm`/`c`/`cl`, custom engines, Dev Mode | Work Space with groups, dock for daily tools, Work/Chill Modes, search over own links | own images, Fill/Fit, position, dim, blur, atmosphere, themes, per-Mode looks | Research/Study Spaces, `w`/`y`/`r` shortcuts, paste-a-list import, backup file | Gaming Space and Mode, dark looks |
+| Best demo | #12 developer new tab; #13 AI tools; #4 Ctrl+K | #14 the same ten sites; #7 three lives; #15 paste a list | #8 plain → cinematic; #9 own photo; #10 dim/blur/atmosphere | #16 research setup; #1 `y lofi mix` | #6 Work → Gaming |
+| Strongest headline | Everything, one shortcut away. | Everything you use, organized. | Make every new tab feel like yours. | One search bar. Your rules. | A workspace for every mode. |
+| Best channel | GitHub, X, Bluesky, DEV.to, r/SideProject, developer and AI communities | Threads, LinkedIn, the store listing itself | Reels, TikTok, Shorts | TikTok, Reels, Turkish student communities | TikTok, Reels |
+| Likely objections | “Another new tab?” · “What does it send?” · “Is it open source?” · “No sync?” | “I already use bookmarks/tab groups.” · “Will it slow my browser?” · “Does my company allow it?” | “Is the photo uploaded somewhere?” · “Can I use a video or a URL?” | “Is it free?” · “Do I need an account?” | “Why not just bookmarks?” |
+| Honest answers | a workspace, not a feed or a pretty page; Settings → Privacy lists what goes out; source is public, not open-source licensed; backup file today, sync explored separately | Spaces + Modes do what the bookmarks bar cannot; it is the new tab page plus a small service worker, with no content scripts on other sites; two required permissions | images stay on the device; no video or image URLs today | free; no account | one key changes the whole page |
+| Ideal CTA | View on GitHub · Add to Chrome | Add to Chrome — free, no account | Add to Chrome and make it yours | Chrome’a ekle — ücretsiz / Add to Chrome — free | Add to Chrome |
+
+Use of the matrix: one persona per post. The hook is that persona's headline or pain; the demo is
+its best concept; the CTA is its own. Posts that try to address two personas address none.
+
 Sources: see COMPETITOR_POSITIONING.md.

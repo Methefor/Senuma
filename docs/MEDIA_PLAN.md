@@ -222,3 +222,28 @@ Not produced: an MP4/H.264 file (the available ffmpeg encodes VP8/WebM only; con
 full ffmpeg: `ffmpeg -i senuma-28s-silent.webm -c:v libx264 -crf 18 -pix_fmt yuv420p senuma-28s.mp4`),
 square and vertical cuts, the music-only version (needs a licensed track) and the voice-over
 (needs a recorded voice). The silent version is complete on its own.
+
+## 6. Launch asset gap audit (2026-10-05)
+
+Existing and still good: 5 store screenshots, 5 extras, icon, tile, marquee/hero, six GIFs, the
+28.9-second silent WebM. None of these needs regenerating.
+
+| Item | Rank | Why | State |
+|---|---|---|---|
+| MP4 (H.264) of the 28.9 s video | **Required** | TikTok, Reels, Shorts, X, LinkedIn, Product Hunt (via YouTube) and Safari do not take WebM | **made**: `release/Senuma-launch-media/senuma-28s-silent.mp4`, 1920×1080, 28.9 s, 23 MB |
+| Poster / thumbnail frames | **Required** | video poster on the landing page, YouTube thumbnail, link previews | **made**: `poster-home.png`, `poster-customize.png`, `poster-endcard.png` (1920×1080) |
+| 9:16 vertical clips | **Required for weeks 1–6, not producible from existing footage** | the three short-video channels are vertical; scaling the 16:9 footage to 1080 px wide makes the interface unreadable | needs a portrait capture per concept (week 0 of LAUNCH_PLAN.md): record the real build in a tall window with `e2e/media-capture.ts` set to a portrait viewport, or by hand; then `scripts/media-mp4.mjs` |
+| English overlay text | Required per clip | each clip's hook and overlay (CONTENT_LIBRARY.md) | made with each clip; the 28.9 s video already has English lines |
+| Turkish overlay text | High-value | Turkish posts (concepts marked TR) | with each Turkish clip; needs a TR text table in `scripts/media-compose.py` |
+| Lighter web encode of the video (~3 Mbit/s) | High-value | landing page weight | one run of `scripts/media-mp4.mjs` with a lower bitrate, when the page is built |
+| Optimized background GIF (gif-4, 3.6 MB) | High-value | under 3 MB for GitHub/README; on the site it becomes a video loop instead | re-export at 10 fps or trim to 8 s |
+| Turkish screenshots (5) | High-value | `/tr/` landing page and a Turkish store listing | `npm run store:assets` with the Turkish interface |
+| Open Graph image 1200×630 | High-value | link previews for the landing page and GitHub | a crop of the hero |
+| 1:1 square demo | Nice-to-have | LinkedIn and Instagram feed only | crop from 16:9 only if those channels earn it by week 4 |
+| Music-only version | Skip for now | needs a licensed track; platforms' own sound libraries cover Shorts/TikTok/Reels | no paid music |
+| Voice-over | Skip | no need shown | — |
+
+How the MP4 was made: `node scripts/media-mp4.mjs <source.webm> <output folder>` plays the finished
+WebM in the installed Google Chrome and records it with Chrome's own H.264 encoder (the ffmpeg that
+Playwright installs writes VP8 only). Real time, local, nothing downloaded. It re-encodes an
+already encoded video, so keep the WebM as the master.

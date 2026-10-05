@@ -14,17 +14,33 @@ Rules for every line:
 
 ### Privacy claims (owner decision, 2026-10-05)
 
-Marketing may say: **no Senuma account · no analytics · no Senuma cloud required · workspace data
-remains local in this release.**
+Allowed, in these words or close to them:
 
-Never say, show or imply that Senuma makes no network requests (no “empty Network panel”, no
-“nothing leaves your device”, no “works fully offline”). Senuma may make requests to:
+- Free.
+- No Senuma account.
+- No analytics.
+- No Senuma cloud required in this release.
+- Workspace data remains local in this release.
 
-- the search provider the person chose (their searches);
-- websites, for site icons;
-- Google’s icon service, if the person selected it.
+Network requests may still occur, and copy must never contradict that:
 
-“Nothing is sent to us” (the developer) remains true and may be used with that meaning only.
+- to the search provider the person chose (their searches);
+- to websites, for site icons;
+- to Google’s icon service, when the person selected it.
+
+Never claim, show or imply:
+
+- that Senuma makes zero network requests (no “empty Network panel”, no “works fully offline”);
+- that nothing ever leaves the device;
+- “zero knowledge”;
+- total anonymity;
+- that the name or trademark is legally cleared (SENUMA_BRAND.md).
+
+“Nothing is sent to us” may be used only to mean that workspace data is not sent to the Senuma
+developer or a Senuma backend.
+
+Turkish: Ücretsiz · Senuma hesabı yok · Analitik yok · Bu sürümde Senuma bulutu gerekmez · Çalışma
+alanı verileri bu sürümde cihazında kalır.
 
 ## 1. Brand level
 

@@ -65,6 +65,9 @@ Data → Paste a list of links (`#import-links`), Space suggestions (`#spaces`).
 Languages now: English, Turkish. Planned order (owner decision, 2026-10-05): **Spanish and
 French first, then German and Portuguese**, then others. Nothing beyond EN/TR is translated now.
 
+The roadmap for Spanish and French, then German and Portuguese (workflow, store `_locales`,
+triggers) is LOCALIZATION_ROADMAP.md; this section describes the mechanics in the code.
+
 ### 2.1 How text is organised
 
 | Layer | Where | Loaded | Adding a language |
@@ -200,7 +203,41 @@ Rules: P0/P1 from RELEASE_STATUS.md's severity model bypass the score. A feature
 a yes to “Does it fit the single purpose (organize + search + personalize the new tab)?” — the store
 policy and the product both depend on it. Review the board every two weeks; ship small.
 
-### 4.4 Public side (later, free)
+### 4.4 The board (ready to use when feedback starts)
+
+A GitHub Project (private, free) or a spreadsheet with exactly these columns. One row per
+underlying problem or idea, never one row per message.
+
+| Column | Values |
+|---|---|
+| ID | F-001… |
+| Title | the problem or idea in the person's words, one line |
+| Category | Bug · UX · Feature request · Content/catalog · Localization · Performance · Privacy · Browser compatibility |
+| Kind | Problem · Idea · Feedback (the card it came from) |
+| First seen / Last seen | dates |
+| Count | number of separate people |
+| Sources | Email · Store review · Reddit · X · … (links or message ids; **no personal data copied**) |
+| Version / Browser / OS | from the technical lines when the person included them |
+| Severity/value · Reach · Confidence · Effort | the § 4.3 scales |
+| Priority | computed |
+| Status | New → Triaged → Planned → In progress → Shipped → Told (or Won't do, with a reason) |
+| Release | the version that carried it |
+| Reply sent | yes/no (“Shipped in 2.0.x” to the people who asked) |
+
+Views: *This week* (New, Triaged), *Backlog* by Priority, *Shipped* by Release (this view is the
+changelog draft).
+
+Triage, twice a week, 15 minutes: label the email, find or create the row, add one to Count, set
+the scales, reply. Canned first replies (EN/TR) live with the board: problem received / idea
+received / thank you.
+
+Spreadsheet header (CSV), if GitHub Projects is not used:
+
+```
+ID,Title,Category,Kind,First seen,Last seen,Count,Sources,Version,Browser,OS,Severity,Reach,Confidence,Effort,Priority,Status,Release,Reply sent,Notes
+```
+
+### 4.5 Public side (later, free)
 
 When there are enough ideas to vote on: GitHub Discussions (Ideas category) or a pinned issue
 list; link from Help & Feedback as “See what others asked for”. Not before there is traffic.
@@ -276,3 +313,27 @@ dismissal).
   gives the address (selectable). Checked on a machine whose `mailto:` handler is not a mail app.
 - One short walk by a person, including a machine that has a mail app.
 - Update the review URL if the store ID ever changes (`REVIEW_URL`).
+
+## 8. The guide everywhere (one source, several doors)
+
+**Source of truth: `docs/guide/en.md` and `docs/guide/tr.md`.** Everything else is generated from
+them or links to them. Nobody writes guide text anywhere else.
+
+| Door | What is shown | How it is produced | State |
+|---|---|---|---|
+| Inside Senuma: Settings → Help & Feedback | the whole guide, by topic | packaged `help/<lang>.html` built from the Markdown | shipped in 2.0.2 |
+| Inside Senuma: “Learn more” links | one section | same pages, stable anchors | 2.0.2 (four links) |
+| Inside Senuma: Ctrl+K → “help” | the Help & Feedback section | every Settings section is a command | 2.0.2 |
+| Inside Senuma: onboarding | no guide text; at most one line later (“The guide is in Settings → Help & Feedback”) on the last step | a string, not a copy of the guide | not added: the startup budget has no room and onboarding is already one minute; reconsider only if feedback shows people cannot find help |
+| Landing site | `/guide/`, `/tr/guide/` plus section cards for Getting Started, Search shortcuts, Customization, Modes, Privacy & permissions, Backup/import | the same converter (`guidePage()`), same anchors | planned (LANDING_PLAN.md § 6) |
+| Chrome Web Store | not the manual: screenshots and the description surface the features; one line says the guide is inside | STORE_CONVERSION.md | proposed |
+| GitHub | README links to `docs/guide/en.md` and `tr.md`, which GitHub renders | the Markdown itself | proposed (GITHUB_PRESENCE.md) |
+| Support replies | a link to the section on the site (or the section's name in Settings until the site exists) | anchors | — |
+
+Rules that keep it one source:
+
+- A guide change is a change to the Markdown, and it reaches the extension at the next release
+  (the guide is a package input) and the site at its next build.
+- The site's Help Center articles (HELP_CENTER.md) are cuts of guide sections, word for word.
+- Marketing summaries come from MESSAGING_SYSTEM.md, not from rewriting the guide.
+- A new language adds `docs/guide/<lang>.md`; until it exists every door falls back to English.
