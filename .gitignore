@@ -31,3 +31,4 @@ proto/
 # Local store-listing images (regenerate with npm run store:assets)
 drafts/store/*.png
 drafts/store/raw/
+drafts/media/

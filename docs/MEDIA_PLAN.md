@@ -1,6 +1,6 @@
 # Senuma 2.0.1 media plan: store screenshots, GIFs, product video
 
-Capture plans only; nothing is published. Copy comes from MESSAGING_SYSTEM.md. Everything is real
+Plans and the record of what was produced (§5); nothing is published. Copy comes from MESSAGING_SYSTEM.md. Everything is real
 Senuma UI from a 2.0.1 build: no mock-ups, no fake data panels, no effects that hide the product.
 
 ## 0. Common setup (all captures)
@@ -13,8 +13,10 @@ Senuma UI from a 2.0.1 build: no mock-ups, no fake data panels, no effects that 
   Dock: GitHub, Vercel, Letterboxd. A few links opened beforehand so **Continue** is filled.
   Mode looks set beforehand with **Settings → Modes → Change look…** (starter Modes have none):
   Work → Atelier, Dev → Phosphor, Chill → photograph **toronto-night**.
-- **Icons:** **Letters only** (Settings → Privacy), as for the 2.0.0 store set: no third-party logo
-  becomes the subject of a Senuma image. (Owner decision if this should change; see Open risks.)
+- **Icons:** real site icons (the product default, **From each site**), loaded live during capture.
+  Sites that refuse a script’s request keep their letter, exactly as in the product. The product
+  is unchanged: letters remain the fallback and **Letters only** remains a setting. (Changed from
+  the 2.0.0 set, which used letters only; owner direction 2026-10-05.)
 - **Never on screen:** real names, e-mail addresses, file paths or user folders, the OS file
   dialog, Chrome’s download bubble, other tabs or extensions, notifications, real personal
   photographs, a clock showing an odd hour (set the time to 19:15 if the greeting matters).
@@ -90,9 +92,10 @@ regenerated, use “Make the browser yours.” + “Your place on the web.”.
 
 ## 2. GIFs (six)
 
-Common: 1280×800 capture, exported at **960×600, 15 fps**, ≤ 8 s, palette-optimized (≤ 3 MB for
-GitHub/README). Cursor visible and moved at a human pace; pause 0.6 s before and after each
-action. No zoom effects. Each loops back to its first frame, so the last frame must match it.
+Common: 1280×800 capture, exported at **960×600 plus a 52 px caption bar, 12 fps**, one palette
+per GIF, no dithering (≤ 3 MB where possible). The caption and the key being pressed sit in the bar,
+never on the product. Pointer moved at a human pace (headless Chrome draws no cursor, so a plain
+dot is added for the recording only). No zoom effects. The last frame holds 1.2 s, then loops.
 
 ### GIF 1 — Create a Space, add a link (≈7 s)
 - Start: Home, All Spaces, no panel.
@@ -105,7 +108,7 @@ action. No zoom effects. Each loops back to its first frame, so the last frame m
 
 ### GIF 2 — Ctrl/⌘+K command center (≈6 s)
 - Start: Home.
-- Actions: Ctrl+K (show a small key overlay “Ctrl K”) → type `coding` → **Open Coding** highlighted
+- Actions: Ctrl+K (key shown in the bar) → type `coding` → **Open Coding** highlighted
   → Enter → the Coding Space opens → Esc.
 - Caption: “Everything, one shortcut away.”
 - Loop: Home after Esc. Crop: centre 960×600.
@@ -113,8 +116,9 @@ action. No zoom effects. Each loops back to its first frame, so the last frame m
 ### GIF 3 — `y lofi mix` (≈6 s)
 - Start: Home; search box empty (shortcut not used yet in this profile, so the tip shows).
 - Actions: click the search box (the placeholder shows the tip) → type `y lofi mix` (the
-  **YouTube** chip appears) → Enter → cut on the YouTube results page loading.
-- Keep on screen: the route chip; the first frame of YouTube’s results (address bar cropped out).
+  **YouTube** chip appears) → Enter, shown in the bar; the GIF cuts as YouTube starts loading
+  (no third-party page, no cookie banner).
+- Keep on screen: the tip, the route chip, the result row.
 - Caption: “One search bar. Your rules.”
 - Loop: cut back to the empty box. Crop: search area and a strip of Home, 960×600.
 
@@ -142,6 +146,8 @@ action. No zoom effects. Each loops back to its first frame, so the last frame m
   file) → **Merge into my setup** →
   toast “Merged: …” → Restore points list shows the newest entry.
 - Never show: the download bubble, the file dialog, the file name if it contains a user name.
+  (Captured headless: neither the bubble nor a dialog is drawn; the file is handed to the page’s own
+  file chooser.) A merge also saves a restore point, which the GIF shows: “Before an import”.
 - Caption: “Your setup, in one file.”
 - Loop: cut to start. Crop: Settings panel, 960×600.
 
@@ -185,6 +191,34 @@ Turkish voice-over (same timing):
 
 ## 4. Open decisions
 
-- Letters-only icons keep third-party logos out but make Spaces look plain; site icons look
-  richer but put other brands’ logos in Senuma marketing. Owner to decide per surface.
-- The video and GIFs need a 2.0.1 build; captures from 2.0.0 would miss suggestions and the new tip.
+- Marketing captures now show other brands’ site icons (YouTube, Netflix, GitHub…) as they appear
+  in the product. Nominative use in a real screenshot is normal for the store, but the owner should
+  confirm it for paid or social placements.
+
+## 5. Produced (2026-10-05, from `senuma-2.0.1`)
+
+Pipeline, all local: `npm run store:assets` (screenshots), `vite-node e2e/media-capture.ts`
+(recordings, Chrome screencast of the real build, fixed 7:15 PM clock, demo setup in
+`e2e/demo-state.ts`), `python scripts/media-compose.py` (GIFs and video; Pillow, and the ffmpeg that
+Playwright installs). Outputs (git-ignored): `drafts/store/`, `drafts/media/`; copies in
+`release/Senuma-2.0.1-media/`.
+
+| Item | Result |
+|---|---|
+| Store screenshots | 5 final (1-home, 2-spaces, 3-search, 4-customize, 5-modes) + 5 extras, 1280×800; hero 1400×560, tile 440×280, icon 128 |
+| GIF 1 create Space | 8.1 s, 1.9 MB |
+| GIF 2 command center | 4.4 s, 1.9 MB |
+| GIF 3 `y lofi mix` | 5.2 s, 0.5 MB |
+| GIF 4 background | 10.5 s, 3.6 MB (seven controls; over the 3 MB aim) |
+| GIF 5 Modes | 8.2 s, 2.3 MB |
+| GIF 6 backup | 9.4 s, 1.2 MB |
+| Video | `senuma-28s-silent.webm`, 1920×1080, 30 fps, VP8, 28.9 s, 11.8 MB: Home 3.0 · Spaces 4.5 · shortcut 3.5 · command 4.0 · background 8.5 · Modes 3.4 · end card 2.0 |
+
+Video notes: real-time footage throughout (the video shots were recorded at a brisker hand; the
+product’s animations are not sped up); only the idle hold at the end of a shot is trimmed. Captions
+sit in a soft top dim; the key being pressed shows between the top bar and the greeting.
+
+Not produced: an MP4/H.264 file (the available ffmpeg encodes VP8/WebM only; convert with any
+full ffmpeg: `ffmpeg -i senuma-28s-silent.webm -c:v libx264 -crf 18 -pix_fmt yuv420p senuma-28s.mp4`),
+square and vertical cuts, the music-only version (needs a licensed track) and the voice-over
+(needs a recorded voice). The silent version is complete on its own.

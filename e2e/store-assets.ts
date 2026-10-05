@@ -3,19 +3,22 @@
  *
  *   npm run store:assets
  *
- * Output (drafts/store/, images git-ignored): icon-128.png, eight captioned 1280×800
- * screenshots, a 1400×560 hero and a 440×280 small tile. Copy lives in docs/STORE_LISTING.md.
+ * Output (drafts/store/, images git-ignored): icon-128.png, the five captioned 1280×800 store
+ * screenshots, extra captioned screens for docs and the landing page (extra-*), a 1400×560 hero
+ * and a 440×280 small tile. Scenes and copy: docs/MEDIA_PLAN.md §1, docs/MESSAGING_SYSTEM.md.
+ *
+ * Marketing captures show real site icons, loaded from each site as the product does by default
+ * (needs a network connection). The product itself is unchanged: letters remain the fallback,
+ * and “Letters only” stays a setting.
  */
 import { copyFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { chromium, type Page } from 'playwright';
 import { BRAND } from '../src/brand';
 import { DEFAULT_BACKGROUND } from '../src/core/background';
-import { emptyState } from '../src/core/defaults';
 import * as ops from '../src/core/ops';
-import { applyStarter } from '../src/core/setup';
 import type { AppState } from '../src/core/types';
-import { en } from '../src/i18n/en';
+import { CAPTURE_TIME, demo, nextStamp } from './demo-state';
 import { DIST, launch, newProfile, openNewTab, removeProfile, writeStorage } from './harness';
 
 const OUT = resolve('drafts/store');
@@ -24,37 +27,19 @@ mkdirSync(RAW, { recursive: true });
 const SIZE = { width: 1280, height: 800 };
 const STACK = `'Segoe UI Variable Display','Segoe UI',-apple-system,system-ui,sans-serif`;
 
-const names = {
-    category: (id: string) => en[`cat.${id}` as keyof typeof en] as string,
-    mode: (key: string) => en[`modePreset.${key}` as keyof typeof en] as string,
-    otherSpace: 'Bookmarks', importedGroup: 'Imported',
-};
-function demo(): AppState {
-    let state = applyStarter(emptyState(), ['ai', 'dev', 'work', 'entertainment', 'design'], names);
-    const now = Date.now();
-    // Dock and Continue use entries whose marks are packaged; everything else shows a letter.
-    ['GitHub', 'Vercel', 'Letterboxd'].forEach((title, index) => {
-        const item = Object.values(state.items).find(i => i.title === title);
-        if (!item) return;
-        state = ops.toggleDock(state, { kind: 'item', id: item.id });
-        state = ops.recordRecent(state, { url: item.url, title: item.title });
-        state = { ...state, recents: state.recents.map(r => (r.url === item.url ? { ...r, at: now - (index * 47 + 3) * 60_000 } : r)) };
-    });
-    for (const id of state.modeOrder) {
-        if (state.modes[id]!.name === 'Dev') state = ops.updateMode(state, id, { themeId: 'phosphor', background: { ...DEFAULT_BACKGROUND, source: { kind: 'preset', id: 'ink' }, dim: 0.06 } });
-    }
-    return { ...state, onboarded: true, updatedAt: now, prefs: { ...state.prefs, iconSource: 'none', themeId: 'dusk', background: { ...DEFAULT_BACKGROUND, source: { kind: 'preset', id: 'mountain-mirror' }, dim: 0.43 } } };
-}
-
 const profile = newProfile();
 const session = await launch(DIST, profile, SIZE);
+await session.context.clock.setFixedTime(CAPTURE_TIME);
+/** Every site icon on screen has loaded or given up (a monogram then stays, as in the product). */
+const iconsSettled = (page: Page) => page.waitForFunction(() => [...document.querySelectorAll('.app-icon img')].every(img => (img as HTMLImageElement).complete), null, { timeout: 15_000 }).catch(() => undefined);
 const raw = async (page: Page, name: string) => {
     await page.addStyleTag({ content: '.toasts{display:none}' }).catch(() => undefined);
+    await iconsSettled(page);
     await page.waitForTimeout(900);
     await page.screenshot({ path: join(RAW, `${name}.png`) });
 };
 const open = async (state: AppState) => {
-    await writeStorage(session, { 'bos.state': { ...state, updatedAt: Date.now() } });
+    await writeStorage(session, { 'bos.state': { ...state, updatedAt: nextStamp() } });
     return openNewTab(session);
 };
 
@@ -63,12 +48,15 @@ let page = await open(state);
 await page.waitForSelector('.backdrop-photo.is-ready');
 await raw(page, 'home');
 
-await page.locator('.plate', { hasText: 'Coding' }).click();
+await page.locator('.plate', { hasText: 'Media' }).click();
 await page.waitForSelector('.overlay-space');
+await page.locator('.suggestions summary').click();
+// Watch and Listen above the open suggestions; the header stays in place.
+await page.locator('.suggestions').evaluate(el => el.scrollIntoView({ block: 'end' }));
 await raw(page, 'space');
 await page.keyboard.press('Escape');
 
-await page.locator('#home-search').fill('y lofi');
+await page.locator('#home-search').fill('y lofi mix');
 await raw(page, 'search');
 await page.locator('#home-search').fill('');
 
@@ -76,12 +64,18 @@ await page.locator('body').click({ position: { x: 6, y: 400 } });
 await page.keyboard.press('Control+k');
 await page.waitForFunction(() => document.activeElement?.closest('.overlay-palette'));
 await page.keyboard.type('git');
+await raw(page, 'command-general');
+await page.keyboard.press('Control+a');
+await page.keyboard.type('y lofi mix');
 await raw(page, 'command');
 await page.keyboard.press('Escape');
 await page.keyboard.press('Escape');
 
 await page.locator('.topbar button[aria-label="Customize"]').click();
 await page.waitForSelector('.overlay-customize');
+await raw(page, 'customize-pickers');
+await page.locator('.overlay-customize .segmented button', { hasText: 'Cinematic' }).click();
+await page.locator('.overlay-customize .tune').evaluate(el => el.scrollIntoView({ block: 'center' }));
 await raw(page, 'customize');
 await page.keyboard.press('Escape');
 
@@ -104,14 +98,18 @@ removeProfile(profile);
 
 // ---------- Compose: one short line over each real screen ----------
 const SHOTS: [file: string, source: string, headline: string, sub: string][] = [
-    ['screenshot-1-home', 'home', BRAND.tagline, 'A personal new-tab workspace.'],
-    ['screenshot-2-spaces', 'space', 'Spaces', 'Everything you use, organized around you.'],
-    ['screenshot-3-modes', 'mode', 'Modes', 'A different new tab for each part of your day.'],
-    ['screenshot-4-search', 'search', 'Search', 'The web through your own search engine, or a site you choose.'],
-    ['screenshot-5-command-center', 'command', 'Command center', 'Everything is a command away.'],
-    ['screenshot-6-personalization', 'customize', 'Personalization', 'Make every new tab feel like yours.'],
-    ['screenshot-7-themes', 'theme', 'Themes and photographs', 'Six themes, built-in photographs, or your own images.'],
-    ['screenshot-8-privacy', 'privacy', 'Personal by design', 'On your device. No account, no analytics.'],
+    // The five store screenshots (MEDIA_PLAN.md §1), in store order.
+    ['screenshot-1-home', 'home', BRAND.tagline, 'Your place on the web.'],
+    ['screenshot-2-spaces', 'space', 'Everything you use, organized.', 'Add only what you use, one at a time.'],
+    ['screenshot-3-search', 'command', 'One search bar. Your rules.', '“y lofi mix” searches YouTube. Make your own shortcuts.'],
+    ['screenshot-4-customize', 'customize', 'Make every new tab yours.', 'Fit, position, dim, blur and add atmosphere.'],
+    ['screenshot-5-modes', 'mode', 'A workspace for every mode.', 'Its own Spaces, look, search and dock.'],
+    // Extras for docs and the landing page.
+    ['extra-search-box', 'search', 'One search bar. Your rules.', 'Type a shortcut, a space, then your search.'],
+    ['extra-command-center', 'command-general', 'Everything, one shortcut away.', 'Ctrl+K opens links, Spaces, Modes and settings.'],
+    ['extra-customize-pickers', 'customize-pickers', 'Make every new tab feel like yours.', 'Six themes, built-in photographs, or your own images.'],
+    ['extra-themes', 'theme', 'Six themes.', 'Each with its own colours, type and backdrop.'],
+    ['extra-privacy', 'privacy', 'Personal by design.', 'On your device. No account, no analytics, no tracking.'],
 ];
 const tools = await chromium.launch();
 const canvas = await tools.newPage();
@@ -136,7 +134,7 @@ await canvas.setViewportSize({ width: 1400, height: 560 });
 await canvas.setContent(`<body style="margin:0;width:1400px;height:560px;overflow:hidden;background:${backdrop};color:#EEF0F7;font-family:${STACK};display:flex;align-items:center">
   <div style="padding-left:84px;width:560px;flex:none"><div style="display:flex;align-items:center;gap:16px"><img src="${icon}" width="60" height="60">${word(46)}</div>
     <div style="font:600 40px/1.12 ${STACK};letter-spacing:-.02em;margin-top:30px">${BRAND.tagline}</div>
-    <div style="font:400 19px/1.45 ${STACK};color:#B9BDCF;margin-top:14px">${BRAND.descriptor}. Spaces, search and a look that is yours.</div></div>
+    <div style="font:400 19px/1.45 ${STACK};color:#B9BDCF;margin-top:14px">Your place on the web.</div></div>
   <img src="${data(join(RAW, 'home.png'))}" style="height:470px;border-radius:14px;box-shadow:0 30px 90px #000b;margin-left:20px"></body>`);
 await canvas.screenshot({ path: join(OUT, 'hero-1400x560.png') });
 await canvas.setViewportSize({ width: 440, height: 280 });
