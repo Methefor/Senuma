@@ -1,7 +1,7 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
 
-const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
 
 interface Props {
     label: string;
@@ -35,7 +35,9 @@ export function Overlay({ label, class: className = '', style, onClose, children
             return;
         }
         if (event.key !== 'Tab') return;
-        const nodes = [...ref.current!.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(n => n.offsetParent !== null);
+        // A closed <details> hides its content without taking it out of layout, so skip that content by hand.
+        const nodes = [...ref.current!.querySelectorAll<HTMLElement>(FOCUSABLE)]
+            .filter(n => n.offsetParent !== null && (n.tagName === 'SUMMARY' || !n.closest('details:not([open])')));
         const first = nodes[0];
         const last = nodes.at(-1);
         if (!first || !last) return;

@@ -128,6 +128,7 @@ async function icons(): Promise<void> {
 
 const names = {
     category: (id: string) => en[`cat.${id}` as keyof typeof en] as string,
+    group: (key: string) => en[`catgroup.${key}` as keyof typeof en] as string,
     mode: (key: string) => en[`modePreset.${key}` as keyof typeof en] as string,
     otherSpace: 'Bookmarks', importedGroup: 'Imported',
 };
