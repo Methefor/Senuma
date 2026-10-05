@@ -61,6 +61,15 @@ Your place on the web.
 Previously New Tab Folders: same extension, same developer. Your folders became Spaces and everything you saved was kept.
 ```
 
+## What's new in 2.0.2 (update notes)
+
+```
+• Help & Feedback in Settings: the user guide now comes with Senuma, in English and Turkish.
+• "Learn more" links where questions come up: search shortcuts, backgrounds, recently closed tabs, backups.
+• Report a problem, suggest an idea or share feedback by email. You see the whole message first; Senuma sends nothing itself.
+• Fixed: a key pressed just as a panel opened could be missed.
+```
+
 ## What's new in 2.0.1 (update notes)
 
 ```

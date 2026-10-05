@@ -1,6 +1,76 @@
-# Release status — Senuma 2.0.1 release candidate (frozen, not uploaded)
+# Release status — Senuma 2.0.2 and 2.0.1 release candidates (frozen, not uploaded)
 
 The one status document. Nothing pushed, nothing published. Last updated 2026-10-05.
+Order of release: 2.0.0 (in review) → 2.0.1 → 2.0.2. Each needs the owner's go-ahead.
+
+## Senuma 2.0.2 — release candidate, FROZEN (2026-10-05)
+
+Help & Feedback. Branch `senuma-help-growth`, built on the frozen 2.0.1 (`5ed7cec`), which is
+unchanged. The release-candidate commit is tagged `senuma-2.0.2-rc` (local tag). Not submitted.
+
+| | |
+|---|---|
+| File | `release/Senuma-2.0.2.zip` (49 files, 3403.0 kB; unpacked 3624.6 kB) |
+| SHA-256 | `f1159c92203e6ac2fb5c06804b81d3af93503083747c03f4b252753c01a8df76` |
+| Built from | `senuma-help-growth`, last package-input commit `7d4c6c7`; later docs-only commits outside `docs/guide` do not change the zip |
+| Reproduced | two fresh LF worktrees of `7d4c6c7`, each `npm ci` + `npm run package`, and a third build after the gates: the same SHA-256 |
+| Version | manifest `version` 2.0.2, `version_name` 2.0.2, package.json 2.0.2 |
+| Permissions | unchanged: required `storage`, `search`; optional `bookmarks`, `tabs`, `sessions`; no host permissions |
+
+Build from an LF checkout (`git -c core.autocrlf=false worktree add …`), as for 2.0.1. The guide
+(`docs/guide/`) is now a package input: the help pages are built from it.
+
+**Against 2.0.1** (41 files → 49): two guide pages (`help/en.html`, `help/tr.html`, no script), the
+help chunks and their stylesheet (`assets/help-*`), and the changed Settings, Customize and startup
+chunks. No new permission, no backend, no analytics, no remote code.
+
+**What changed for people** (store update notes: STORE_LISTING.md):
+
+- Settings → Help & Feedback: the user guide (EN/TR) comes with Senuma and opens in a new tab.
+- “Learn more” links under search shortcuts, background adjustments, recently closed tabs and
+  restore points.
+- Report a problem, suggest an idea or share feedback by email: the whole message is shown first;
+  technical details only if the box stays ticked; Senuma sends nothing itself. If no email app
+  opens, the form says to copy the message and gives the address.
+- A review request after a week of real use: review and feedback side by side, “Not now” remembered.
+- Fix: a key pressed just as a panel opens (Escape, Tab) is no longer missed.
+
+**Package inspection.** All `npm run package` checks pass. In the zip: no sync code, no Firebase
+SDK or config, no OAuth client, no keys, no `.env`, no source maps, no tests, no script in the
+help pages. The only address in the package is the feedback address.
+
+**Gates on `7d4c6c7`** (clean worktree):
+
+| Command | Result |
+|---|---|
+| `npm run check` (types, lint, unit, build, budgets) | pass; unit 241 |
+| `npm run test:help` | 13 pass |
+| `vite-node e2e/qa-201.ts` | 7 pass |
+| `npm run test:e2e` | 65 pass |
+| `npm run test:rc` | 33 pass |
+| `vite-node e2e/rehearsal.ts` | 16 pass |
+| `npm run package` | clean |
+
+Budgets: startup JS 43.8 kB (44, not to be raised), CSS 9.2 (9.5), on-demand JS 20.1 (22), help
+5.6 (6), Turkish help 1.3 (2.5), Turkish pack 6.8 (8), guide pages 70 kB (96), photographs 3284 kB
+(3584).
+
+**Help & Feedback QA (2026-10-05).** Walked in a visible Google Chrome 154 on Windows 11, English
+and Turkish, by the automated pass with its screenshots read afterwards; not a person's session.
+Passed: the section and its rows; each guide row opens the packaged page at its section in the
+right language; Keyboard Shortcuts and About open their Settings sections; the three feedback
+forms; the four contextual links; Ctrl+K “help” / “yardım”; the review card's three actions.
+Privacy wording on screen: no account, no analytics, data stored on this device, searches and site
+icons disclosed; nothing claims that Senuma makes no network requests.
+
+Mail fallback: this machine's `mailto:` handler is not a mail app. After **Open in email app** the
+form stayed as it was and nothing was launched, so the line under the buttons was changed to “If
+no email app opens, copy the message and send it to …” (EN/TR), selectable; **Copy message** puts
+the whole message on the clipboard. What Chrome itself displays for an unhandled `mailto:` could
+not be captured here and is worth one look by a person.
+
+Still to do by a person before submitting: the same walk by hand (10 minutes), on a machine with
+a mail app as well, to see the prepared email arrive in the app.
 
 ## Senuma 2.0.1 — release candidate, FROZEN (2026-10-05)
 

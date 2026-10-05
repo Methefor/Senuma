@@ -1,8 +1,8 @@
 # Help, feedback and review request
 
 Built on branch `senuma-help-growth` (from the frozen 2.0.1 release candidate `5ed7cec`, which is
-unchanged). This branch is the basis for the future **2.0.2** update. Not released, not packaged,
-not submitted; the source version is still 2.0.1 until the 2.0.2 bump.
+unchanged). This branch is **2.0.2**: versioned, packaged and frozen as a release candidate on 2026-10-05
+(RELEASE_STATUS.md), not submitted.
 
 Companion documents: HELP_CENTER.md (a future help website), MESSAGING_SYSTEM.md (wording),
 GROWTH_STRATEGY.md (how help and feedback feed growth).
@@ -271,7 +271,8 @@ dismissal).
 
 ## 7. Before this ships
 
-- Version and release notes (“Help & Feedback in Settings”), STORE_LISTING.md update notes.
+- Done: version 2.0.2, release notes (STORE_LISTING.md), package and hash (RELEASE_STATUS.md).
+- Mail fallback: when no email app opens, the line under the buttons says to copy the message and
+  gives the address (selectable). Checked on a machine whose `mailto:` handler is not a mail app.
+- One short walk by a person, including a machine that has a mail app.
 - Update the review URL if the store ID ever changes (`REVIEW_URL`).
-- Hands-on check: mailto on a machine with no mail app (Chrome shows nothing; **Copy message** is
-  the fallback, and the address is printed under the buttons).
