@@ -1,7 +1,73 @@
-# Release status — Senuma 2.0.0 (final package built, not uploaded)
+# Release status — Senuma 2.0.1 release candidate (frozen, not uploaded)
 
-The one status document. Branch `rebuild/browser-os`; nothing pushed, nothing published.
-Last updated 2026-10-03.
+The one status document. Nothing pushed, nothing published. Last updated 2026-10-05.
+
+## Senuma 2.0.1 — release candidate, FROZEN (2026-10-05)
+
+Waiting for the result of the 2.0.0 Chrome Web Store review. Not submitted; the 2.0.0 review
+is untouched. Branch `senuma-2.0.1`; the release-candidate commit is tagged `senuma-2.0.1-rc`
+(local tag).
+
+| | |
+|---|---|
+| File | `release/Senuma-2.0.1.zip` (41 files, 3374.1 kB; unpacked 3537.6 kB) |
+| SHA-256 | `172c4a8cf2efd6015f6a200267a38dbb91576c6e52692d4b0218f5c603bc7a11` |
+| Built from | `senuma-2.0.1`, last package-input commit `efd96fb` (version 2.0.1); later docs-only commits do not change the zip |
+| Reproduced | two fresh worktrees of `efd96fb`, each `npm ci` + `npm run package`, and the working tree: the same SHA-256 three times |
+| Version | manifest `version` 2.0.1, `version_name` 2.0.1, package.json 2.0.1 (single source `src/brand.ts`, test-enforced) |
+| Name / description | unchanged from 2.0.0 |
+| Permissions | required `storage`, `search`; optional `bookmarks`, `tabs`, `sessions`; no host permissions, no content scripts |
+
+**Building it again.** Check out with LF line endings (`git -c core.autocrlf=false worktree add …`):
+the build copies `background.js` and `marks/*.svg` byte for byte, so a CRLF checkout (Windows'
+`core.autocrlf=true`) gives a different zip. The 2.0.0 package and the QA build were LF builds.
+
+**Against the QA build that passed hands-on QA** (`release/Senuma-2.0.1-qa/`, `8523e01`): the
+same 41 files. Only `manifest.json`, `newtab.html` and the 12 JS chunks differ, and each is
+identical once the version string (2.0.0 → 2.0.1) and the chunk file names it changes are
+accounted for. No product code changed after QA; `8523e01..efd96fb` adds a test, docs and the
+version.
+
+**Package inspection.** `npm run package` checks pass: no source maps, no tests or fixtures,
+no dev configuration, no local paths, no secrets or keys, no debug logging, no remote code, no
+unsafe HTML sinks, no manifest `key`, MV3 with a strict CSP, exactly the permissions above, no
+unused files. Also checked by hand in the zip: no Senuma 2.1 sync code, no Firebase SDK or
+config (the only “Firebase” is the console link in the catalog), no OAuth client or
+`chrome.identity`, no `.env` or `import.meta.env`, no dotfiles. Contents: `manifest.json`,
+`newtab.html`, `background.js`, 15 JS/CSS files in `assets/`, 4 icons, 3 brand marks,
+16 photograph files.
+
+**Gates on `efd96fb`** (clean worktree):
+
+| Command | Result |
+|---|---|
+| `npm run check` (types, lint, unit, build, budgets) | pass; unit 225 |
+| `vite-node e2e/qa-201.ts` | 7 pass (incl. uploaded background across two browser restarts) |
+| `npm run test:e2e` | 65 pass |
+| `npm run test:rc` | 33 pass |
+| `vite-node e2e/rehearsal.ts` (published 1.80 → Senuma) | 16 pass |
+| `npm run package` | clean |
+
+Budgets: startup JS 43.5 kB gzip (44), CSS 9.2 (9.5), on-demand JS 20.0 (22), Turkish pack
+6.8 (8), photographs 3284 kB (3584), brand marks 2 kB (64).
+
+**Hands-on QA: passed** (MANUAL_QA_2.0.1.md, Result). The reported loss of an uploaded
+background after a restart is closed: not reproducible; the picture had been previewed and not
+applied; the repeat with Apply passed.
+
+**Release assets** (`release/Senuma-2.0.1-media/`, git-ignored): 5 screenshots and 5 extras
+(1280×800), icon 128, tile 440×280, hero 1400×560, six GIFs, `senuma-28s-silent.webm`
+(1920×1080, 28.9 s). Not produced, not blockers: MP4, music and voice-over versions, square
+and vertical cuts. The store listing stays English only (no `_locales` in the package).
+
+**Documentation:** guide/en.md and guide/tr.md (26 sections each), HELP_CENTER.md (no domain
+chosen), MESSAGING_SYSTEM.md, MEDIA_PLAN.md, STORE_LISTING.md (2.0.1 notes), MANUAL_QA_2.0.1.md.
+
+---
+
+# Senuma 2.0.0 (submitted for review)
+
+Branch `rebuild/browser-os`. Record as of 2026-10-03.
 
 ## READY
 

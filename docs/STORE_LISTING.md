@@ -82,10 +82,11 @@ Data collected: none. Remote code: none. Details: PRIVACY_FACTS.md.
 ## Assets
 
 Selection, captions and recapture instructions: MEDIA_PLAN.md (§1). Current images are generated
-by `npm run store:assets` into `drafts/store/` (git-ignored); the 2.0.0 set is kept in
-`release/Senuma-2.0.0-store/`. Screenshots use the “letters only” icon setting and a dock of
-GitHub, Vercel and Letterboxd, so no third-party logo is shown larger than the product itself
-allows. The landing-page draft is `drafts/site/index.html`; it carries no reviews, ratings or
+by `npm run store:assets` into `drafts/store/` (git-ignored); the 2.0.1 set (5 screenshots,
+5 extras, icon, tile, hero, six GIFs, the 28-second silent video) is kept in
+`release/Senuma-2.0.1-media/`, the 2.0.0 set in `release/Senuma-2.0.0-store/`. The 2.0.0
+screenshots used the “letters only” icon setting; the 2.0.1 set shows real site icons as the
+product does by default (MEDIA_PLAN.md §1 and §4). The landing-page draft is `drafts/site/index.html`; it carries no reviews, ratings or
 user counts.
 
 ## Single purpose

@@ -57,6 +57,32 @@ this list covers what needs eyes, real OS dialogs and real Chrome behaviour. Abo
 
 Anything that differs from “Expected” is a bug; note the step, the screen and what happened.
 
+## Result (2026-10-05): PASSED
+
+Hands-on session by the owner in Google Chrome 154 on Windows 11, with the QA build above
+(`8523e01`, manifest still 2.0.0). Passed:
+
+- onboarding and the general interface;
+- Turkish ↔ English, both ways;
+- default Space names follow the language;
+- a user-created Space **Projelerim** keeps its name across language switches;
+- the active Mode carries into Ctrl+T / a new tab;
+- keyboard and focus with Suggestions collapsed (Tab stays in the panel);
+- Recently Closed;
+- Chrome restart: Spaces, names, language, Mode and settings kept;
+- an uploaded background survives a Chrome restart after Apply;
+- the customization controls;
+- the import and export checks.
+
+**Background after restart — closed, not a bug.** The first report (“the uploaded background
+is lost after restarting Chrome”) could not be reproduced: in Chromium and Google Chrome,
+headless and visible, with immediate quits and the startup tab, the image came back every time,
+on 2.0.1 and on 2.0.0 alike. The tester's profile records showed that no image had been stored
+and no background had been applied: the picture had been previewed in Customize and Chrome was
+closed without Apply, which by design keeps the previous look. A repeat by hand,
+**Add image → Apply → “Look applied” → restart Chrome**, passed. A regression check for this
+path is in `e2e/qa-201.ts` (commit `64765e5`).
+
 ## Known non-blockers (do not file as bugs)
 
 - Some sites refuse icon requests (for example ChatGPT, Claude, Notion); they show a letter.
