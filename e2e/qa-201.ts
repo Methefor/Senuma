@@ -1,14 +1,15 @@
 /**
  * 2.0.1 checks in the real extension: names that follow the language, the person's names left
  * alone, suggestions added one at a time without icon requests, the search-shortcut tip, the
- * import field's wording, and backup round trip.
+ * import field's wording, backup round trip, and an uploaded background across a browser restart.
  *
  *   npm run build && vite-node e2e/qa-201.ts
  */
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { Page } from 'playwright';
 import { emptyState } from '../src/core/defaults';
-import { DIST, check, expect, launch, newProfile, openNewTab, readStorage, removeProfile, report, waitForState, writeStorage } from './harness';
+import { DIST, check, expect, launch, newProfile, openNewTab, readStorage, removeProfile, report, waitForState, writeStorage, type Session } from './harness';
 
 mkdirSync('e2e/.out', { recursive: true });
 const profile = newProfile();
@@ -152,5 +153,77 @@ try {
 } finally {
     await session.context.close();
     removeProfile(profile);
+}
+
+// An uploaded background must come back after the whole browser is quit and started again (hands-on
+// QA report, 2026-10-05). Quit straight after Apply, with a Mode active, as a person might.
+const photoProfile = newProfile();
+let photoSession: Session | undefined;
+try {
+    photoSession = await launch(DIST, photoProfile);
+    let tab = await openNewTab(photoSession);
+    await tab.waitForSelector('.onboarding');
+    for (const name of ['Finance', 'Media', 'Work']) await tab.locator('.interest', { hasText: name }).first().click();
+    await tab.locator('.onboarding .button.is-primary').click();
+    await tab.locator('.onboarding .button.is-primary').click();
+    await tab.locator('.onboarding .choice').last().click();
+    await tab.waitForSelector('.onboarding', { state: 'detached' });
+    await tab.locator('#mode-switch').click();
+    await tab.locator('.menu button', { hasText: 'Work' }).click();
+    const file = join(photoProfile, 'my-photo.jpg');
+    writeFileSync(file, Buffer.from((await tab.evaluate(() => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 2400;
+        canvas.height = 1500;
+        const context = canvas.getContext('2d')!;
+        const gradient = context.createLinearGradient(0, 0, 2400, 1500);
+        gradient.addColorStop(0, '#2a4f7a');
+        gradient.addColorStop(1, '#d9824b');
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, 2400, 1500);
+        return canvas.toDataURL('image/jpeg', 0.9);
+    })).split(',')[1]!, 'base64'));
+    await tab.locator('.topbar button[aria-label="Customize"]').click();
+    await tab.locator('.overlay-customize input[type=file]').setInputFiles(file);
+    await tab.locator('.backdrop-photo.is-ready').waitFor({ timeout: 15_000 });
+    await tab.locator('.customize-foot .button.is-primary').click();
+    // No waiting for the debounced save: the browser is quit at once.
+    await photoSession.context.close();
+
+    const restored = async (round: string) => {
+        tab = await openNewTab(photoSession!);
+        await tab.locator('.backdrop-photo.is-ready').waitFor({ timeout: 10_000 });
+        const state = (await readStorage<any>(photoSession!, 'bos.state'))!;
+        const source = state.prefs.background.source;
+        const stored = await tab.evaluate(() => new Promise<string[]>(resolve => {
+            const open = indexedDB.open('bos-assets', 1);
+            open.onsuccess = () => {
+                const request = open.result.transaction('wallpapers').objectStore('wallpapers').getAllKeys();
+                request.onsuccess = () => resolve(request.result.map(String));
+            };
+        }));
+        expect(source.kind === 'upload' && Object.hasOwn(state.wallpapers, source.assetId), `${round}: saved background ${JSON.stringify(source)}`);
+        expect(stored.length === 1 && stored[0] === source.assetId, `${round}: image store holds ${JSON.stringify(stored)}`);
+        expect((await tab.locator('.toast', { hasText: 'could not be loaded' }).count()) === 0, `${round}: “could not be loaded” shown`);
+        return source.assetId as string;
+    };
+
+    await check('Background', 'an uploaded background is shown again after quitting and restarting the browser', async () => {
+        photoSession = await launch(DIST, photoProfile);
+        const id = await restored('first start');
+        // Opening Customize tidies the image library; it must keep the image in use.
+        await tab.locator('.topbar button[aria-label="Customize"]').click();
+        await tab.waitForSelector('.overlay-customize');
+        await tab.waitForTimeout(1500);
+        await tab.keyboard.press('Escape');
+        await tab.waitForTimeout(500);
+        await photoSession.context.close();
+        photoSession = await launch(DIST, photoProfile);
+        expect((await restored('second start')) === id, 'a different image after the second start');
+        return `image ${id} on screen after two full restarts`;
+    });
+} finally {
+    await photoSession?.context.close().catch(() => undefined);
+    removeProfile(photoProfile);
 }
 process.exit(report());
