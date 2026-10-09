@@ -91,11 +91,23 @@ check('manifest: permissions are exactly storage + search; optional bookmarks, t
     JSON.stringify(manifest.permissions) !== '["storage","search"]' && `permissions ${manifest.permissions}`,
     JSON.stringify(manifest.optional_permissions) !== '["bookmarks","tabs","sessions"]' && `optional ${manifest.optional_permissions}`,
 ]);
+// Store localization: the description comes from _locales; every declared locale must be complete.
+const locales = files.filter(f => f.path.startsWith('_locales/')).map(f => ({ code: f.path.split('/')[1], messages: JSON.parse(readFileSync(f.full, 'utf8')) }));
+const defaultMessages = locales.find(l => l.code === manifest.default_locale)?.messages ?? {};
+const used = [...JSON.stringify(manifest).matchAll(/__MSG_(\w+)__/g)].map(m => m[1]);
+check('store locales: default present, every locale has every message, descriptions within 132 characters', [
+    !manifest.default_locale && 'default_locale',
+    !locales.some(l => l.code === manifest.default_locale) && `_locales/${manifest.default_locale}`,
+    ...used.filter(key => !defaultMessages[key]).map(key => `default locale lacks ${key}`),
+    ...locales.flatMap(l => Object.keys(defaultMessages).filter(key => !l.messages[key]?.message?.trim()).map(key => `${l.code} lacks ${key}`)),
+    ...locales.filter(l => [...(l.messages.extDescription?.message ?? '')].length > 132).map(l => `${l.code} description too long`),
+    /__MSG_/.test(manifest.name) && 'the name must stay literal',
+]);
 const referenced = new Set(text.flatMap(f => [...f.content.matchAll(/(?:wallpapers|marks|assets|icons)\/[\w.-]+/g)].map(m => m[0])));
 const html = text.find(f => f.path === 'newtab.html')?.content ?? '';
 const lazy = text.filter(f => f.path.endsWith('.js')).map(f => f.content).join('\n');
 check('no unused bundled files', files.filter(f => {
-    if (['manifest.json', 'newtab.html', 'background.js'].includes(f.path)) return false;
+    if (['manifest.json', 'newtab.html', 'background.js'].includes(f.path) || f.path.startsWith('_locales/')) return false;
     if (f.path.startsWith('marks/') || f.path.startsWith('wallpapers/')) return !lazy.includes(f.path.replace(/^(marks|wallpapers)\//, '').replace(/(\.thumb)?\.(svg|webp)$/, ''));
     const base = f.path.split('/').pop();
     return !referenced.has(f.path) && !html.includes(base) && !lazy.includes(base) && !JSON.stringify(manifest).includes(f.path);
@@ -111,6 +123,7 @@ display version    ${manifest.version_name}
 name               ${manifest.name}
 permissions        ${manifest.permissions.join(', ')}
 optional           ${manifest.optional_permissions.join(', ')}
+store locales      ${locales.map(l => l.code).sort().join(', ')} (default ${manifest.default_locale})
 files              ${files.length}
 JavaScript         ${kb(sum(js))} (${kb(gz(js))} gzip) in ${files.filter(js).length} files; startup file ${kb(gz(f => /^assets\/newtab-.*\.js$/.test(f.path)))} gzip
 CSS                ${kb(sum(f => f.path.endsWith('.css')))} (${kb(gz(f => f.path.endsWith('.css')))} gzip)
