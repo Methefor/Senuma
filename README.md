@@ -1,112 +1,145 @@
-# 📁 New Tab Folders - Professional Bookmark Manager
+<div align="center">
 
-**Organize your digital life with a premium, tabme-inspired bookmark manager for Chrome.**
+# Senuma
 
-![New Tab Folders Dashboard](assets/screenshots/dashboard.png)
+**Make the browser yours.**
 
----
+A personal workspace on every new tab.
 
-> ## V2 rebuild in progress (branch `rebuild/browser-os`)
->
-> This repository currently holds two products:
->
-> | | Legacy 1.x — **live in the Chrome Web Store** | V2 — release candidate, not published |
-> |---|---|---|
-> | Entry point | `index.html` | `newtab.html` → `src/` |
-> | How to run | load the repo root as an unpacked extension | `npm run build`, then load `dist/` unpacked |
->
-> The rest of this README describes 1.x. For V2:
->
-> ```
-> npm install
-> npm run dev        # preview at http://localhost:5173/newtab.html
-> npm run check      # typecheck, lint, unit tests, build, bundle budget
-> npm run build      # → dist/
-> npm run test:e2e   # runs the built extension in real Chromium
-> ```
->
-> Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). What must change before V2 ships:
-> [docs/RELAUNCH_CHECKLIST.md](docs/RELAUNCH_CHECKLIST.md).
+[Chrome Web Store](https://chromewebstore.google.com/detail/oghlifenjhpbebcdeboejbmemelkfobe) · [User Guide](docs/guide/en.md) · [Kullanım Kılavuzu](docs/guide/tr.md) · [Privacy](https://methefor.github.io/Senuma/privacy.html) · [Feedback](#feedback)
 
----
+</div>
 
-## 🎯 Elevate Your Productivity
+![Senuma on a new tab: a greeting, the search bar and Spaces over a photograph](docs/media/readme/senuma-hero.png)
 
-New Tab Folders transforms your "New Tab" page into a powerful workstation. Say goodbye to bookmark clutter and hello to a structured, aesthetic, and lightning-fast workspace.
+Senuma is a Chrome extension that turns every new tab into your own workspace: the sites you use
+organized into Spaces, one search bar with your shortcuts, Modes for each part of your day, and a
+look that is yours. It is free and has no account.
 
-### ✨ Core Features
+> **Install.** Senuma 2.0.0 is in Chrome Web Store review. Until it is approved, the
+> [store listing](https://chromewebstore.google.com/detail/oghlifenjhpbebcdeboejbmemelkfobe) still
+> serves the previous version (New Tab Folders); the update arrives there, on the same listing.
+> To try the current code now, [build it yourself](#build-it-yourself).
 
-*   **📂 Multi-Folder Organization**: Group your links into beautiful, color-coded cards.
-*   **🖱️ Native Drag-and-Drop**: Save open tabs instantly by dragging them from the sidebar into any folder.
-*   **🌓 Premium Themes**: Choose between Dark (Default), Light, Cyberpunk, and Nord themes.
-*   **🌍 Global Localization**: Full support for Turkish, English, German, French, Portuguese, and Spanish.
-*   **⚡ Smart Sidebar**: Search open tabs, view recently closed sessions, and manage your current window in one place.
-*   **🛡️ Privacy First**: Your data stays on your device (Free) or syncs securely (Pro).
+## What it does
 
----
+- **Spaces**: the sites you use, grouped by what you use them for. Start from a ready-made set and
+  add only the suggestions you want.
+- **Search**: one bar for the web and your own links. Shortcuts such as `y lofi mix` (YouTube),
+  `gh`, `w`, `r`, and any site you add with its own search address.
+- **Command center**: Ctrl+K (⌘K) opens links and Spaces, switches Mode, changes theme.
+- **Modes**: one key changes the whole page: its Spaces and, if you like, its look, search engine
+  and dock.
+- **Your look**: six themes, built-in photographs or your own image, with fit, position, dim,
+  blur and atmosphere.
+- **Backup**: your setup in one JSON file, with restore points.
+- **English and Turkish**, interface and guide.
 
-## 📸 Interactive Showcase
+<div align="center">
+  <img src="docs/media/readme/senuma-product-tour.gif" alt="Animated tour of Senuma: Spaces, search and personalization" width="800">
+</div>
 
-### 🛠️ Advanced Settings & Customization
-Take full control of your workspace with our intuitive settings menu. Import/Export backups or clear data with one click.
-![Settings Menu](assets/screenshots/settings_menu.png)
+<p align="center"><sub>Real Senuma interface with demonstration data.</sub></p>
 
-### ❓ Comprehensive Documentation
-Never get lost with our built-in Guide, featuring smooth navigation and detailed installation steps.
-![Guide Page](assets/screenshots/guide_page.png)
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/media/readme/spaces.png" alt="A Senuma Space with grouped links">
+      <br><strong>Spaces</strong><br>
+      Everything you use, organized.
+    </td>
+    <td width="50%">
+      <img src="docs/media/readme/search.png" alt="The Senuma search bar">
+      <br><strong>Search</strong><br>
+      One search bar. Your rules.
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/media/readme/command-center.png" alt="The Senuma command center">
+      <br><strong>Command center</strong><br>
+      Everything, one shortcut away.
+    </td>
+    <td width="50%">
+      <img src="docs/media/readme/personalization.png" alt="The Senuma Customize panel">
+      <br><strong>Your look</strong><br>
+      Make every new tab feel like yours.
+    </td>
+  </tr>
+</table>
 
----
+## Privacy facts
 
-## 🚀 Recent Updates (v1.54)
+- Free. No Senuma account. No analytics.
+- Your Spaces, links and settings are stored in your browser. This release needs no Senuma cloud.
+- What does go out: your searches, to the search engine you choose; icon requests, to the sites
+  you saved (or to Google's icon service if you select it, or none at all with “Letters only”).
+- Required permissions: `storage`, `search`. Optional, asked only when you use the feature:
+  `bookmarks` (import, read once), `tabs` and `sessions` (recently closed tabs).
+- No content scripts, no host permissions, no remote code.
 
-We've completely overhauled the interface to be cleaner and more powerful:
-- **Tabme-Style Header**: Redesigned navigation with dropdown menus for Profile, Help, and Settings.
-- **3D Workspace Depth**: Added glassmorphism and inset shadows for a premium visual feel.
-- **Improved Sidebar**: Collapse the sidebar to focus on your folders, or use the new sorting logic (Recent, Position, Reverse).
-- **Session Recovery**: Fixed bugs in Recently Closed tabs; now parses entire session windows efficiently.
+Details: [privacy facts](docs/PRIVACY_FACTS.md) · [privacy policy](https://methefor.github.io/Senuma/privacy.html).
 
----
+## Guide and help
 
-## 📦 Installation
+- [User Guide (English)](docs/guide/en.md) · [Kullanım Kılavuzu (Türkçe)](docs/guide/tr.md)
+- From 2.0.2 the same guide is inside the extension: **Settings → Help & Feedback**, with
+  “learn more” links where questions come up.
 
-### For Users
-1. Download the extension from the [Chrome Web Store](#) (Coming Soon).
-2. Click **Add to Chrome**.
-3. Open a new tab and start organizing!
+## Feedback
 
-### For Developers (Local Load)
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/Methefor/New-Tab-Folders.git
-   ```
-2. Open `chrome://extensions/` in your browser.
-3. Enable **Developer mode** (top right).
-4. Click **Load unpacked** and select the project folder.
+Report a problem, suggest an idea or share feedback:
 
----
+- in the extension (from 2.0.2): **Settings → Help & Feedback**, which prepares an email you read
+  and send yourself;
+- or write to **rumeliskelesi+senuma@gmail.com**.
 
-## 📖 How to Use
+Senuma collects nothing automatically; a report contains only what you write and, if you leave the
+box ticked, four lines you can see first (Senuma version, browser, operating system, language).
 
-1.  **Add a Folder**: Click the `+` icon on the dashboard or in the sidebar.
-2.  **Save a Link**: Use the `Click to add` button within a folder, or simply **drag an open tab** from the left sidebar.
-3.  **Customize**: Click the `Settings` icon to switch themes or the `Profile` icon to see Pro benefits.
-4.  **Right-Click Actions**: Use right-click on the dashboard empty space to quickly add folders or sticky notes.
+## Status
 
----
+| Version | State |
+|---|---|
+| 2.0.0 | submitted; in Chrome Web Store review |
+| 2.0.2 | release candidate, frozen: Help & Feedback, the guide inside the extension |
+| 2.0.3 | in preparation: small fixes (the browser tab reads “Senuma”), Turkish store listing support |
 
-## 🔧 Tech Stack
+2.0.1 was an intermediate release candidate and is superseded by 2.0.2. Release record, package
+hashes and test results: [docs/RELEASE_STATUS.md](docs/RELEASE_STATUS.md). Update notes:
+[docs/STORE_LISTING.md](docs/STORE_LISTING.md).
 
-- **Frontend**: Vanilla JavaScript (ES6+) - High performance, zero bloat.
-- **Styling**: Modern CSS3 (Grid, Flexbox, Variable-based theming).
-- **API**: Chrome Extension Manifest V3 (Latest standard).
-- **Storage**: Chrome Storage sync/local & LocalStorage.
+Not in these versions: sync between computers (use the backup file), saved tab sessions, widgets.
 
----
+## Build it yourself
 
-## 🤝 Contributing & Support
+```bash
+npm ci
+npm run build
+```
 
-We welcome feedback and bug reports! 
-- **Report Bug**: Use the "Feedback" link in the Help menu.
-- **Project Link**: [https://github.com/Methefor/New-Tab-Folders](https://github.com/Methefor/New-Tab-Folders)
+Then open `chrome://extensions`, turn on Developer mode, choose **Load unpacked** and select the
+generated `dist/` folder (not the repository root).
 
-Made with 💚 by **METHEFOR**
+```bash
+npm run check      # types, lint, unit tests, build, bundle budgets
+npm run test:e2e   # the built extension in a real browser
+```
+
+Release packages are reproducible: the same commit gives a byte-identical zip
+([how](docs/RELEASE_STATUS.md)).
+
+## Source and licence
+
+**Source available, but not currently licensed as open source.** The code is published so that
+anyone can see what the extension does. No licence is granted for reuse or redistribution; all
+rights are reserved unless a `LICENSE` file in this repository says otherwise.
+
+## For contributors
+
+[Architecture](docs/ARCHITECTURE.md) · [Messaging and wording](docs/MESSAGING_SYSTEM.md) ·
+[Help & Feedback design](docs/HELP_FEEDBACK_SYSTEM.md) · [Localization roadmap](docs/LOCALIZATION_ROADMAP.md) ·
+[Release status](docs/RELEASE_STATUS.md)
+
+Storage keys and the extension ID keep their original spelling on purpose: renaming them would
+orphan existing users' data.

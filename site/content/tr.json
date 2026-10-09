@@ -95,7 +95,7 @@
       { "q": "Senuma ücretsiz mi?", "a": "Evet. Hiçbir şey kilitli değil." },
       { "q": "Hesap gerekiyor mu?", "a": "Hayır. Senuma hesabı diye bir şey yok." },
       { "q": "Verilerim nerede?", "a": "Tarayıcında. Alanların, bağlantıların ve ayarların kullandığın tarayıcı profilinde saklanır; başka bir bilgisayara taşımak için bir yedek dosyası dışa aktar." },
-      { "q": "Bilgisayarlar arasında eşitleniyor mu?", "a": "Bu sürümde hayır. Ayarlar → Veriler’deki Dışa aktar ve İçe aktar’ı kullan." },
+      { "q": "Bilgisayarlar arasında eşitleniyor mu?", "a": "Bu sürümde hayır. Ayarlar → Veriler’deki “Dışa aktar” ve “Yedek dosyası içe aktar”ı kullan." },
       { "q": "Senuma ağ üzerinden ne gönderir?", "a": "Aramaların seçtiğin arama motoruna gider. Simge istekleri kaydettiğin sitelere, seçersen Google’ın simge servisine gider. Çalışma alanınla ilgili hiçbir şey bize gönderilmez." },
       { "q": "Neden izin istiyor?", "a": "Senuma’nın yalnızca depolama ve arama iznine ihtiyacı var. Yer imlerini ve az önce kapatılan sekmeleri okumak isteğe bağlıdır ve yalnızca o özellikleri kullandığında istenir." },
       { "q": "Hangi tarayıcılarda çalışır?", "a": "Chrome. Microsoft Edge ve Brave’de de yüklenir." },
