@@ -1,6 +1,6 @@
 # Landing page plan
 
-A plan and copy deck. **Nothing is built, deployed or bought.** Copy comes from
+Plan and copy deck. **Built locally on 2026-10-09 (`site/`, § 8); not deployed, nothing bought.** Copy comes from
 MESSAGING_SYSTEM.md (change a line there first); assets from MEDIA_PLAN.md; privacy claims only
 as allowed in MESSAGING_SYSTEM.md (“Privacy claims”).
 
@@ -169,3 +169,24 @@ site, GitHub). Details: HELP_FEEDBACK_SYSTEM.md § 8.
 
 Open decisions for the owner: approve building it; GitHub Pages vs waiting for a domain; whether
 the page goes live before or after 2.0.2 is public.
+
+## 8. Built (2026-10-09, local only)
+
+| | |
+|---|---|
+| Source | `site/content/en.json`, `site/content/tr.json` (copy), `site/build.ts` (template), `site/styles.css`, `site/media.py` (media), `site/site.test.ts` (checks) |
+| Build | `npm run site:media` (once; needs the hand-off media folder and Pillow), then `npm run site:build` → `dist-site/` (git-ignored) |
+| Pages | `/`, `/tr/`, `/guide/`, `/tr/guide/` (the guide pages come from `docs/guide/*.md` through the extension's own converter) |
+| Weight | HTML 13–14 kB per language, CSS 8 kB, script 0.3 kB; hero image 47 kB; loops 61–519 kB each (animated WebP made from the product GIFs, caption bar removed); demo video 11.5 MB WebM / 9.6 MB MP4, loaded only when played |
+| Requests to other hosts | none (checked in the browser and by test); no analytics, no web fonts |
+| Indexing | `robots.txt` disallows everything until someone deploys on purpose |
+
+What differs from the plan above: stills are the uncaptioned raw captures (the store screenshots
+carry their own captions and frame, which repeated the page's headlines); GIFs became animated
+WebP instead of video loops (one tool, about 85 % smaller than the GIFs).
+
+Known gaps before it can go live: the screenshots, loops and video show the **English** interface
+on the Turkish page too (Turkish captures are still to be made; the Turkish page says so under
+the video); the FAQ and guide mention Help & Feedback, which is public only from 2.0.2; the store
+button leads to a listing that serves the previous version until 2.0.0 passes review; the real
+`robots.txt`, canonical URLs and an absolute link-preview image URL need the final address.

@@ -60,16 +60,25 @@ tooling exists; what is missing for new languages is people, not code.
 Requirement (Chrome docs): a listing can be translated only for locales the package declares,
 one `_locales/<code>/` directory each; the small tile and marquee cannot be localized.
 
-To ship (a manifest change → a normal update, never a rebuild of a frozen package):
+**Implemented on `senuma-2.0.3` (2026-10-09), not packaged:**
 
-- `default_locale: "en"`;
-- `_locales/en/messages.json`, `_locales/tr/messages.json`, later `es`, `fr`, `de`, `pt_BR`
-  and/or `pt_PT`: at least `extName`, `extShortName`, `extDescription` (≤ 132 characters each);
-- manifest `name`, `short_name`, `description`, `action.default_title` → `__MSG_…__`;
-- `src/manifest.ts` generates the files from `src/brand.ts` plus a per-language table;
-  `scripts/package-rc.mjs` checks every locale has every message and the length limits;
-- the unit test that ties manifest, package and display versions together gains a check that the
-  default-locale name is still “Senuma — New Tab Workspace”.
+- `default_locale: "en"`; `description: "__MSG_extDescription__"`; `_locales/en/messages.json`
+  and `_locales/tr/messages.json`, generated from `STORE_DESCRIPTIONS` in `src/manifest.ts`.
+- **Only the description is localized.** `name`, `short_name` and the toolbar title stay literal
+  (“Senuma — New Tab Workspace”, “Senuma”): the brand is the same in every language, and nothing
+  in the tooling has to resolve a message to know the product's name.
+- Build-time only: no bytes in the page's bundle, no permission change. It is independent of the
+  interface language chosen in Settings and never touches anything a person typed.
+- Tests: `src/manifest.test.ts` (one complete file per language, 132-character limit, the
+  description is the only message, permissions unchanged); `npm run test:locales` (a Turkish
+  browser shows the Turkish description, an English one the English, a German one falls back to
+  English; a typed Space name survives a language switch). `scripts/package-rc.mjs` checks every
+  locale and lists them.
+- Adding Spanish, French, German or Portuguese later: one line each in `STORE_DESCRIPTIONS`
+  (`es`, `fr`, `de`, `pt_BR` and/or `pt_PT`), written by a native speaker. None is added now.
+
+What the store then needs, in the dashboard (a person's step, with the 2.0.3 package): choose
+Turkish in the listing's language picker and enter the Turkish description and screenshots.
 
 Listing strategy:
 

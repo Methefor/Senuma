@@ -247,3 +247,126 @@ How the MP4 was made: `node scripts/media-mp4.mjs <source.webm> <output folder>`
 WebM in the installed Google Chrome and records it with Chrome's own H.264 encoder (the ffmpeg that
 Playwright installs writes VP8 only). Real time, local, nothing downloaded. It re-encodes an
 already encoded video, so keep the WebM as the master.
+
+## 7. Vertical capture specs (9:16, English and Turkish)
+
+For YouTube Shorts, TikTok and Instagram Reels. **Captured natively in a portrait window, never
+cropped or scaled from the 16:9 footage.** Specs only: nothing below has been recorded yet.
+
+### 7.1 Frame
+
+Probed on 2026-10-09 with the real build and the demo setup (three window sizes, five screens each):
+
+| Window (CSS px) | Scale | Records as | Result |
+|---|---|---|---|
+| **432 × 768** | **2.5** | **1080 × 1920** | **chosen**: Home shows the greeting, search, Continue and Spaces in two columns with the dock; text is large enough for a phone |
+| 540 × 960 | 2 | 1080 × 1920 | works (three columns) but the interface is 20 % smaller on screen |
+| 432 × 576 (a 3:4 “safe” band) | 2.5 | 1080 × 1440 | rejected: the greeting drops out and only two Spaces fit |
+
+- Launch: `launch(DIST, profile, { width: 432, height: 768 }, 2.5)` (e2e/harness.ts now takes the
+  scale). Chrome's screencast then delivers 1080×1920 frames to the existing recorder.
+- 30 fps, 6–15 s, H.264 MP4 through `scripts/media-mp4.mjs` (the WebM stays the master).
+- Fixed clock 7:15 PM and the demo setup from `e2e/demo-state.ts`, as for every other capture;
+  real site icons; pointer dot as in the 16:9 recordings.
+- **With five Spaces the fifth sits under the dock** at this size: use four Spaces in the portrait
+  demo setup (AI, Coding, Work, Media), or five when the clip is about a Mode that shows fewer.
+- **Customize covers the whole page in a portrait window**, so the live preview behind the panel
+  is not visible while adjusting. Background clips therefore cut between the panel (the control
+  being moved) and Home after **Apply** (the result); see 7.4.
+
+### 7.2 Platform safe areas (inside 1080 × 1920)
+
+| Zone | Pixels | Use |
+|---|---|---|
+| Top | 0–220 | platform header on some surfaces; Senuma's own top bar sits here: fine, nothing essential |
+| Hook text | 230–420, centred, max two lines, 64 px bold, soft dark band behind | shown for the first 1.5 s, then fades so the search bar underneath is clear |
+| Action | 300–1400 | the search bar, results, Spaces: everything the clip is about happens here |
+| Overlay text | 1180–1380, max two lines, 52 px | captions during the action, never over the control in use |
+| Bottom | 1500–1920 | platform caption, buttons and music line cover this; Senuma's dock sits here: fine, but no overlay text and no essential action |
+| Right edge | 920–1080 between 900 and 1500 | platform buttons; keep overlay text left of it |
+
+End card (last 1.2 s): the icon, “Senuma”, and “Free on the Chrome Web Store” / “Chrome Web
+Store’da ücretsiz”, centred in the action zone on the product's dark base.
+
+### 7.3 Languages
+
+| | English version | Turkish version |
+|---|---|---|
+| Interface | English (`prefs.language: 'en'`) | Turkish (`prefs.language: 'tr'`): default Space, group and Mode names follow it through their name keys; verify on the first frame before recording |
+| Hook, overlays, end card | from CONTENT_LIBRARY.md (EN lines) | from CONTENT_LIBRARY.md (TR lines); `scripts/media-compose.py` needs a per-language text table |
+| Typed text | `y lofi mix`, `coding`, `switch to work mode` | `y lofi mix`, `kodlama`; command phrases are English in both languages today, so the Turkish Ctrl+K clip opens Spaces and Modes by name instead of typing a phrase |
+| File names | `v-<n>-<slug>-en.mp4` | `v-<n>-<slug>-tr.mp4` |
+
+Two recordings per concept (one per interface language), not one recording with swapped overlays:
+the interface itself is visible in every shot.
+
+### 7.4 Shot lists (priority order)
+
+Times in seconds. “Hook” and “Overlay” texts are the concept's lines in CONTENT_LIBRARY.md (#).
+
+**V1 — `y lofi mix` (#1), 8 s**
+
+| t | Screen | Action | Text |
+|---|---|---|---|
+| 0.0–1.5 | Home | hold | Hook |
+| 1.5–2.2 | Home | click the search bar (the tip placeholder shows) | — |
+| 2.2–4.8 | Search bar | type `y lofi mix`; the **YouTube** chip appears | Overlay 1 |
+| 4.8–6.3 | Search bar | hold on the result row, press Enter (keycap) | Overlay 2 |
+| 6.3–8.0 | — | cut to the end card as YouTube starts loading (no third-party page shown) | End card |
+
+**V2 — Ctrl+K (#4), 9 s**
+
+| t | Screen | Action | Text |
+|---|---|---|---|
+| 0.0–1.5 | Home | hold | Hook |
+| 1.5–2.0 | Command center | Ctrl+K (keycap) | — |
+| 2.0–4.5 | Command center | type `coding` (TR: `kodlama`) → **Open Coding** highlighted → Enter | “open” |
+| 4.5–6.0 | Coding Space | the Space opens; Esc | — |
+| 6.0–8.0 | Command center → Home | Ctrl+K, type `work` → **Switch to Work Mode**, Enter: the page changes | “switch” |
+| 8.0–9.0 | — | end card | End card |
+
+**V3 — Work → Gaming (#6), 8 s** (demo setup needs a Gaming Space and Mode with its own dark look)
+
+| t | Screen | Action | Text |
+|---|---|---|---|
+| 0.0–2.5 | Home, Work Mode | hold: work Spaces, calm look | “Work” (TR: “İş”) + Hook |
+| 2.5–3.5 | Mode menu | press M (keycap), choose Gaming | — |
+| 3.5–7.0 | Home, Gaming Mode | Spaces, theme, background and dock have changed; hold | “Gaming” (TR: “Oyun”) → “Same tab.” |
+| 7.0–8.0 | — | end card | End card |
+
+**V4 — Customization (#8 + #10), 12 s**
+
+| t | Screen | Action | Text |
+|---|---|---|---|
+| 0.0–1.5 | Home, theme default | hold | Hook |
+| 1.5–3.5 | Customize | open; choose a photograph | — |
+| 3.5–4.5 | Home | **Apply** → the photograph behind Home | “Your photo” |
+| 4.5–6.5 | Customize | Fit → Fill; a position point | “Fill / Fit · Position” |
+| 6.5–8.5 | Customize | Dim, then Blur sliders | “Dim · Blur” |
+| 8.5–9.5 | Customize | Atmosphere → Cinematic; **Apply** | “Atmosphere” |
+| 9.5–11.0 | Home | hold on the finished look | “Make every new tab feel like yours.” |
+| 11.0–12.0 | — | end card | End card |
+
+The “plain Chrome tab” opening of concept #8 is a separate 1.5 s shot of Chrome's own new tab at
+the same window size, used only as it is.
+
+**V5 — AI / Dev Space (#12 + #13), 12 s**
+
+| t | Screen | Action | Text |
+|---|---|---|---|
+| 0.0–1.5 | Home | hold | Hook |
+| 1.5–4.0 | AI Space | press `1`: ChatGPT, Claude, Gemini, Perplexity, Copilot | “One Space” |
+| 4.0–6.0 | Home | Esc; type `cl explain closures` → **Claude** chip | “cl = Claude” |
+| 6.0–8.5 | Coding Space | clear; press `2`: GitHub, Vercel, Supabase, MDN | “Coding” |
+| 8.5–10.5 | Home | Esc; type `gh senuma` → **GitHub** chip | “gh = GitHub” |
+| 10.5–12.0 | — | end card | End card |
+
+### 7.5 Before recording
+
+- Add a portrait scene set to `e2e/media-capture.ts` (same recorder, `PACE` 0.6–0.8) and a
+  portrait compose path to `scripts/media-compose.py` (hook band, overlay zone, end card, the
+  per-language text table). Neither exists yet.
+- Check each first frame in both languages for clipped labels (Turkish runs longer: “Yardım ve
+  Geri Bildirim” already wraps in the Settings list).
+- Privacy-claims check on every overlay and caption (MESSAGING_SYSTEM.md); no Network-panel shots.
+- Music: none in the files; the platform's own library at posting time.

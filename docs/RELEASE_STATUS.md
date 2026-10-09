@@ -13,10 +13,11 @@ is still 2.0.2; it is bumped only when 2.0.3 is prepared for release. No feature
 | Browser tab title reads **Senuma** instead of “New Tab” (`newtab.html`) | done; checked in Chromium, Google Chrome 154, Edge 154, Brave; qa-201 asserts it after a fresh tab, reload, language change, Mode switch and restart |
 | Launch documents (landing, store conversion, content library, Product Hunt, GitHub, localization, measurement) | written; plans only |
 | `scripts/media-mp4.mjs` | tool for the MP4 and poster frames |
+| Store localization: `_locales/en`, `_locales/tr`, description only | done and tested (`npm run test:locales`); a manifest change, so it ships only inside a 2.0.3 package |
+| Landing page, English and Turkish (`site/`) | built locally (`npm run site:build`), not deployed |
+| README | rewritten on this branch (install link, privacy facts, guide, feedback, accurate status, “source available, not open source”) |
 
-Candidates for the same line, each needing approval: the store summary revision and a Turkish
-store listing through `_locales` (both manifest changes; STORE_CONVERSION.md,
-LOCALIZATION_ROADMAP.md).
+Still a candidate needing approval: the store summary revision (STORE_CONVERSION.md).
 
 Since 2.0.2 supersedes 2.0.1, the expected store order is 2.0.0 (in review) → 2.0.2 → 2.0.3;
 2.0.1 is kept for history.

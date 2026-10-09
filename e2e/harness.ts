@@ -31,12 +31,14 @@ export function removeProfile(dir: string): void {
     }
 }
 
-export async function launch(extensionDir: string, profileDir: string, viewport = { width: 1440, height: 900 }): Promise<Session> {
+/** `deviceScaleFactor` is for captures: a 432×768 window at 2.5 records as 1080×1920 (docs/MEDIA_PLAN.md § 7). */
+export async function launch(extensionDir: string, profileDir: string, viewport = { width: 1440, height: 900 }, deviceScaleFactor?: number): Promise<Session> {
     const context = await chromium.launchPersistentContext(profileDir, {
         channel: 'chromium',
         headless: true,
         locale: 'en-US',
         viewport,
+        ...(deviceScaleFactor ? { deviceScaleFactor } : {}),
         args: [`--disable-extensions-except=${extensionDir}`, `--load-extension=${extensionDir}`],
     });
     const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker', { timeout: 20_000 }));

@@ -69,7 +69,7 @@ p { margin: 0; }
 /* ---------- Hero ---------- */
 .hero { max-width: var(--wide); margin: 0 auto; padding: 84px 20px 40px; text-align: center; }
 .eyebrow, .kicker { color: var(--accent); font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
-.hero h1 { font-size: clamp(44px, 8vw, 92px); margin: 18px auto 0; max-width: 12ch; }
+.hero h1 { font-size: clamp(44px, 8vw, 92px); margin: 18px auto 0; max-width: 15ch; }
 .lede { max-width: 60ch; margin: 22px auto 0; color: var(--muted); font-size: clamp(17px, 2vw, 20px); }
 .actions { margin-top: 30px; display: flex; justify-content: center; }
 .hero .cta, .final .cta { min-height: 52px; padding: 0 30px; font-size: 17px; }

@@ -1,8 +1,9 @@
 # GitHub presence — README strategy
 
-A proposal. **README.md is not changed by this document**: the README on `main` belongs to the
-repository-presentation workstream, and the release branches have diverged from `main`. Apply the
-proposal there when the owner approves.
+Approved and applied on `senuma-2.0.3` (2026-10-09): `README.md` there follows § 3, with the
+images the README on `main` already uses (`docs/media/readme/`, taken from `origin/main`
+unchanged). The README on `main` itself is not touched: `main` and the release branches have
+diverged, and bringing this README there is part of reconciling them.
 
 Repository: `github.com/Methefor/Senuma` (public). Read on 2026-10-05.
 
