@@ -20,6 +20,14 @@ export const STORE_URL = 'https://chromewebstore.google.com/detail/oghlifenjhpbe
 export const PRIVACY_URL = 'https://methefor.github.io/Senuma/privacy.html';
 /** The temporary support contact (docs/STORE_LISTING.md), the same address the product shows. */
 export const FEEDBACK_ADDRESS = 'rumeliskelesi+senuma@gmail.com';
+/**
+ * The public address of the site, without a trailing slash. Unknown until someone decides where it
+ * is deployed, so the build writes this marker wherever an absolute URL is required (canonical
+ * link, language alternates, link-preview image). Deploying means building with
+ * SENUMA_SITE_URL=https://… set; see DEPLOY.txt in the output.
+ */
+export const SITE_URL_PLACEHOLDER = '__SENUMA_SITE_URL__';
+const SITE_URL = (process.env.SENUMA_SITE_URL ?? SITE_URL_PLACEHOLDER).replace(/\/$/, '');
 
 interface Feature {
     id: string; kicker: string; title: string; body: string; points: string[]; media: string; still: string; alt: string;
@@ -51,21 +59,26 @@ export function loadContent(lang: SiteLanguage): Content {
 
 /** Where a language's pages live, and how they reach the shared files. */
 const folder = (lang: SiteLanguage) => (lang === DEFAULT_LANGUAGE ? '' : `${lang}/`);
+/** Captures of the interface in that language (stills, loops, poster); the icon and the video are shared. */
+const shots = (lang: SiteLanguage) => (lang === DEFAULT_LANGUAGE ? 'assets/' : `assets/${lang}/`);
 const up = (lang: SiteLanguage) => (lang === DEFAULT_LANGUAGE ? '' : '../');
 const storeLink = (lang: SiteLanguage, place: string) => `${STORE_URL}?utm_source=landing&amp;utm_medium=${lang}&amp;utm_campaign=${place}`;
 
 /** A looping clip of the real product; people who ask for less motion get the still instead. */
-function media(feature: Feature, root: string): string {
+function media(feature: Feature, root: string, lang: SiteLanguage): string {
     return `<picture>
-          <source media="(prefers-reduced-motion: reduce)" srcset="${root}assets/${feature.still}.webp">
-          <img src="${root}assets/${feature.media}.webp" width="960" height="600" loading="lazy" decoding="async" alt="${e(feature.alt)}">
+          <source media="(prefers-reduced-motion: reduce)" srcset="${root}${shots(lang)}${feature.still}.webp">
+          <img src="${root}${shots(lang)}${feature.media}.webp" width="960" height="600" loading="lazy" decoding="async" alt="${e(feature.alt)}">
         </picture>`;
 }
 
 export function landingPage(c: Content): string {
     const root = up(c.lang);
     const others = SITE_LANGUAGES.filter(lang => lang !== c.lang);
-    const guide = `${root}${folder(c.lang)}guide/`;
+    // Explicit file names: the pages work opened from a folder as well as from any static host.
+    const guide = `${root}${folder(c.lang)}guide/index.html`;
+    const home = (lang: SiteLanguage) => `${root}${folder(lang)}index.html`;
+    const absolute = (path: string) => `${SITE_URL}/${path}`;
     const cta = (place: string, label: string) => `<a class="cta" href="${storeLink(c.lang, place)}" rel="noopener">${e(label)}</a>`;
     const names: Record<SiteLanguage, string> = { en: 'English', tr: 'Türkçe' };
 
@@ -80,9 +93,12 @@ export function landingPage(c: Content): string {
 <meta property="og:type" content="website">
 <meta property="og:title" content="${e(c.title)}">
 <meta property="og:description" content="${e(c.metaDescription)}">
-<meta property="og:image" content="${root}assets/og.png">
+<!-- DEPLOY: ${SITE_URL_PLACEHOLDER} marks the site's public address. Build with SENUMA_SITE_URL set before publishing (DEPLOY.txt). -->
+<link rel="canonical" href="${absolute(folder(c.lang))}">
+<meta property="og:url" content="${absolute(folder(c.lang))}">
+<meta property="og:image" content="${absolute(`${shots(c.lang)}og.png`)}">
 <meta name="twitter:card" content="summary_large_image">
-${SITE_LANGUAGES.map(lang => `<link rel="alternate" hreflang="${lang}" href="${root}${folder(lang)}">`).join('\n')}
+${SITE_LANGUAGES.map(lang => `<link rel="alternate" hreflang="${lang}" href="${absolute(folder(lang))}">`).join('\n')}
 <link rel="icon" href="${root}assets/icon.png">
 <link rel="stylesheet" href="${root}styles.css">
 </head>
@@ -97,7 +113,7 @@ ${SITE_LANGUAGES.map(lang => `<link rel="alternate" hreflang="${lang}" href="${r
     <a href="#faq">${e(c.nav.faq)}</a>
   </nav>
   <div class="bar-end">
-    ${others.map(lang => `<a class="lang" href="${root}${folder(lang)}" lang="${lang}" hreflang="${lang}">${names[lang]}</a>`).join('')}
+    ${others.map(lang => `<a class="lang" href="${home(lang)}" lang="${lang}" hreflang="${lang}">${names[lang]}</a>`).join('')}
     ${cta('header', c.nav.cta)}
   </div>
 </header>
@@ -109,7 +125,7 @@ ${SITE_LANGUAGES.map(lang => `<link rel="alternate" hreflang="${lang}" href="${r
   <p class="lede">${e(c.hero.sub)}</p>
   <div class="actions">${cta('hero', c.hero.cta)}</div>
   <ul class="trust">${c.hero.trust.map(item => `<li>${e(item)}</li>`).join('')}</ul>
-  <figure class="frame frame-hero"><img src="${root}assets/home.webp" width="1280" height="800" fetchpriority="high" alt="${e(c.hero.alt)}"></figure>
+  <figure class="frame frame-hero"><img src="${root}${shots(c.lang)}home.webp" width="1280" height="800" fetchpriority="high" alt="${e(c.hero.alt)}"></figure>
 </section>
 
 <section class="band" id="demo">
@@ -118,7 +134,7 @@ ${SITE_LANGUAGES.map(lang => `<link rel="alternate" hreflang="${lang}" href="${r
     <p>${e(c.demo.sub)}</p>
   </div>
   <figure class="frame">
-    <video controls muted playsinline preload="none" width="1920" height="1080" poster="${root}assets/poster-home.webp" aria-label="${e(c.demo.play)}">
+    <video controls muted playsinline preload="none" width="1920" height="1080" poster="${root}${shots(c.lang)}poster-home.webp" aria-label="${e(c.demo.play)}">
       <source src="${root}assets/senuma-demo.webm" type="video/webm">
       <source src="${root}assets/senuma-demo.mp4" type="video/mp4">
     </video>
@@ -135,7 +151,7 @@ ${c.features.map((feature, index) => `<section class="feature${index % 2 ? ' is-
     <ul class="points">${feature.points.map(point => `<li>${e(point)}</li>`).join('')}</ul>
   </div>
   <figure class="frame">
-        ${media(feature, root)}
+        ${media(feature, root, c.lang)}
   </figure>
 </section>`).join('\n\n')}
 
@@ -147,7 +163,7 @@ ${c.features.map((feature, index) => `<section class="feature${index % 2 ? ' is-
   </div>
   <div class="privacy-grid">
     <dl class="facts">${c.privacy.facts.map(fact => `<div><dt>${e(fact.title)}</dt><dd>${e(fact.text)}</dd></div>`).join('')}</dl>
-    <figure class="frame"><img src="${root}assets/privacy.webp" width="1280" height="800" loading="lazy" decoding="async" alt="${e(c.privacy.alt)}"></figure>
+    <figure class="frame"><img src="${root}${shots(c.lang)}privacy.webp" width="1280" height="800" loading="lazy" decoding="async" alt="${e(c.privacy.alt)}"></figure>
   </div>
   <p class="more"><a href="${PRIVACY_URL}" rel="noopener">${e(c.privacy.policy)} →</a></p>
 </section>
@@ -193,7 +209,7 @@ ${c.features.map((feature, index) => `<section class="feature${index % 2 ? ' is-
     <a href="${PRIVACY_URL}" rel="noopener">${e(c.footer.privacy)}</a>
     <a href="${guide}">${e(c.footer.guide)}</a>
     <a href="#feedback">${e(c.footer.feedback)}</a>
-    ${others.map(lang => `<a href="${root}${folder(lang)}" lang="${lang}" hreflang="${lang}">${names[lang]}</a>`).join('')}
+    ${others.map(lang => `<a href="${home(lang)}" lang="${lang}" hreflang="${lang}">${names[lang]}</a>`).join('')}
   </div>
   <p>${e(c.footer.previously)} ${e(c.footer.note)}</p>
 </footer>
@@ -210,9 +226,9 @@ function siteGuide(lang: SiteLanguage, title: string, top: string): string {
     // From <lang>/guide/ to the other language's guide.
     const toRoot = lang === DEFAULT_LANGUAGE ? '../' : '../../';
     const page = guidePage(readFileSync(`docs/guide/${lang}.md`, 'utf8'), {
-        lang, title, top, other: { href: `${toRoot}${folder(other)}guide/`, label: names[other], lang: other },
+        lang, title, top, other: { href: `${toRoot}${folder(other)}guide/index.html`, label: names[other], lang: other },
     });
-    return page.replace('<header><strong>Senuma</strong>', `<header><a href="${toRoot}${folder(lang)}" style="color:inherit;text-decoration:none"><strong>Senuma</strong></a>`);
+    return page.replace('<header><strong>Senuma</strong>', `<header><a href="${toRoot}${folder(lang)}index.html" style="color:inherit;text-decoration:none"><strong>Senuma</strong></a>`);
 }
 
 const GUIDE_WORDS: Record<SiteLanguage, { title: string; top: string }> = {
@@ -230,6 +246,30 @@ const SITE_JS = `(() => {
 })();
 `;
 
+const DEPLOY_NOTES = `Senuma landing page: before this folder is published
+
+This build is complete and works as it is from a folder or any static host, but it is NOT ready to
+be public until a person has done the following. Nothing here was deployed.
+
+1. Public address. Pages contain the marker ${SITE_URL_PLACEHOLDER} in the canonical link, the
+   language alternates, og:url and og:image${SITE_URL === SITE_URL_PLACEHOLDER ? '' : ' (this build was made with SENUMA_SITE_URL set, so the marker is already replaced)'}.
+   Rebuild with the real address:   SENUMA_SITE_URL=https://example.org/senuma npm run site:build
+   Link previews need the absolute og:image URL; check it with the platform's preview tool.
+
+2. robots.txt. It disallows everything on purpose. Replace it with the real one only when the page
+   should be found:   User-agent: *  /  Allow: /
+
+3. Store button. It points at the Chrome Web Store listing. Publish the page only when a current
+   Senuma version is live there (the listing served the previous version while 2.0.0 was in review).
+
+4. Help & Feedback is mentioned in the FAQ and the guide; it is public from Senuma 2.0.2.
+
+5. The demo video shows the English interface on both pages (the Turkish page says so). Every still
+   and loop on the Turkish page is the Turkish interface.
+
+6. Claims. Any edit to the copy must pass docs/MESSAGING_SYSTEM.md, "Privacy claims".
+`;
+
 /** Every generated text file, keyed by its path inside dist-site/. Media files come from site/media.py. */
 export function buildSite(): Record<string, string> {
     const files: Record<string, string> = {
@@ -237,6 +277,7 @@ export function buildSite(): Record<string, string> {
         'site.js': SITE_JS,
         // Never indexed from a local or preview copy; the real robots file is written at deploy time, by a person.
         'robots.txt': 'User-agent: *\nDisallow: /\n',
+        'DEPLOY.txt': DEPLOY_NOTES,
     };
     for (const lang of SITE_LANGUAGES) {
         files[`${folder(lang)}index.html`] = landingPage(loadContent(lang));

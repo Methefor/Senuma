@@ -78,7 +78,8 @@ one `_locales/<code>/` directory each; the small tile and marquee cannot be loca
   (`es`, `fr`, `de`, `pt_BR` and/or `pt_PT`), written by a native speaker. None is added now.
 
 What the store then needs, in the dashboard (a person's step, with the 2.0.3 package): choose
-Turkish in the listing's language picker and enter the Turkish description and screenshots.
+Turkish in the listing's language picker and enter the Turkish description and screenshots. The
+five Turkish screenshots exist (`release/Senuma-launch-media/tr/store/`, MEDIA_PLAN.md § 7.7).
 
 Listing strategy:
 

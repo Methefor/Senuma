@@ -251,7 +251,7 @@ already encoded video, so keep the WebM as the master.
 ## 7. Vertical capture specs (9:16, English and Turkish)
 
 For YouTube Shorts, TikTok and Instagram Reels. **Captured natively in a portrait window, never
-cropped or scaled from the 16:9 footage.** Specs only: nothing below has been recorded yet.
+cropped or scaled from the 16:9 footage.** Recorded on 2026-10-09 (§ 7.6).
 
 ### 7.1 Frame
 
@@ -263,8 +263,12 @@ Probed on 2026-10-09 with the real build and the demo setup (three window sizes,
 | 540 × 960 | 2 | 1080 × 1920 | works (three columns) but the interface is 20 % smaller on screen |
 | 432 × 576 (a 3:4 “safe” band) | 2.5 | 1080 × 1440 | rejected: the greeting drops out and only two Spaces fit |
 
-- Launch: `launch(DIST, profile, { width: 432, height: 768 }, 2.5)` (e2e/harness.ts now takes the
-  scale). Chrome's screencast then delivers 1080×1920 frames to the existing recorder.
+- Launch: `launch(DIST, profile, { width: 432, height: 768 }, 2.5)`. The window itself runs at 2.5×
+  and is larger than the page; each page is set to exactly 432×768 at 2.5× with
+  `Emulation.setDeviceMetricsOverride`. Chrome's screencast records the window's own pixels (an
+  emulated scale alone gives small frames), so each frame holds the 1080×1920 page in its top-left
+  corner and empty window around it, which the composer trims. That is the page's own pixels,
+  not a crop of other footage.
 - 30 fps, 6–15 s, H.264 MP4 through `scripts/media-mp4.mjs` (the WebM stays the master).
 - Fixed clock 7:15 PM and the demo setup from `e2e/demo-state.ts`, as for every other capture;
   real site icons; pointer dot as in the 16:9 recordings.
@@ -278,15 +282,18 @@ Probed on 2026-10-09 with the real build and the demo setup (three window sizes,
 
 | Zone | Pixels | Use |
 |---|---|---|
-| Top | 0–220 | platform header on some surfaces; Senuma's own top bar sits here: fine, nothing essential |
-| Hook text | 230–420, centred, max two lines, 64 px bold, soft dark band behind | shown for the first 1.5 s, then fades so the search bar underneath is clear |
-| Action | 300–1400 | the search bar, results, Spaces: everything the clip is about happens here |
-| Overlay text | 1180–1380, max two lines, 52 px | captions during the action, never over the control in use |
-| Bottom | 1500–1920 | platform caption, buttons and music line cover this; Senuma's dock sits here: fine, but no overlay text and no essential action |
-| Right edge | 920–1080 between 900 and 1500 | platform buttons; keep overlay text left of it |
+| Top | 0–220 | platform header on some surfaces; Senuma's own top bar sits here: nothing essential |
+| Hook, then overlay lines | 230–360, centred, max two lines, on a soft dark plate | the hook for the first 1.5 s; after it, one short line per step (each at most 2.8 s). This is where the greeting is: the only area inside the safe zone that holds nothing a clip is about |
+| Action | 380–1580 | the search bar, results, Spaces, panels: never covered by text |
+| Keys | 1612–1696, centred | the key being pressed, for under a second, in the gap between the Spaces and the dock |
+| Bottom | 1700–1920 | platform caption, buttons and music line; Senuma's dock sits here: fine, no text added |
+| Right edge | 920–1080 between 900 and 1500 | platform buttons; text is centred and stays clear of it |
 
-End card (last 1.2 s): the icon, “Senuma”, and “Free on the Chrome Web Store” / “Chrome Web
-Store’da ücretsiz”, centred in the action zone on the product's dark base.
+Tried and dropped: overlay lines under the Spaces (they covered the second row of Space cards at
+this size).
+
+End card (last 1.3 s): the icon, “senuma”, and “Free on the Chrome Web Store” / “Chrome Web
+Store’da ücretsiz”, on the product's dark base.
 
 ### 7.3 Languages
 
@@ -361,12 +368,39 @@ the same window size, used only as it is.
 | 8.5–10.5 | Home | Esc; type `gh senuma` → **GitHub** chip | “gh = GitHub” |
 | 10.5–12.0 | — | end card | End card |
 
-### 7.5 Before recording
+### 7.5 Tools
 
-- Add a portrait scene set to `e2e/media-capture.ts` (same recorder, `PACE` 0.6–0.8) and a
-  portrait compose path to `scripts/media-compose.py` (hook band, overlay zone, end card, the
-  per-language text table). Neither exists yet.
-- Check each first frame in both languages for clipped labels (Turkish runs longer: “Yardım ve
-  Geri Bildirim” already wraps in the Settings list).
-- Privacy-claims check on every overlay and caption (MESSAGING_SYSTEM.md); no Network-panel shots.
+- `e2e/media-portrait.ts`: the five scenes in each language (`CAPTURE_LANG`, `CAPTURE_SCENE` to
+  narrow), demo setup with four Spaces (AI, Coding, Work, Gaming) and Mode looks.
+- `scripts/media-portrait.py`: trims to the page, adds hook, lines, keys and end card, writes WebM.
+- `scripts/media-mp4.mjs <file.webm> <folder> 6000000 <name>.mp4 noposters`: MP4 (H.264).
 - Music: none in the files; the platform's own library at posting time.
+
+### 7.6 Recorded (2026-10-09)
+
+`release/Senuma-launch-media/vertical/<lang>/`, all 1080×1920, 30 fps, MP4 (H.264), silent:
+
+| Clip | English | Turkish |
+|---|---|---|
+| V1 `y lofi mix` | `v1-y-lofi-mix-en.mp4`, 8.4 s | `v1-y-lofi-mix-tr.mp4`, 8.5 s |
+| V2 Ctrl+K | `v2-ctrl-k-en.mp4`, 12.7 s | `v2-ctrl-k-tr.mp4`, 12.0 s |
+| V3 Work → Gaming | `v3-work-to-gaming-en.mp4`, 9.1 s | `v3-work-to-gaming-tr.mp4`, 9.3 s |
+| V4 Customization | `v4-customization-en.mp4`, 19.1 s | `v4-customization-tr.mp4`, 19.5 s |
+| V5 AI / Dev Space | `v5-ai-dev-space-en.mp4`, 16.1 s | `v5-ai-dev-space-tr.mp4`, 16.2 s |
+
+Each language is its own recording of the interface in that language (Turkish: “İyi akşamlar”,
+Yapay zekâ, Kodlama, İş, Oyun, “Geliştirme moduna geç”, Özelleştir…). Differences from the shot
+lists above: V2 switches to the Dev Mode by typing its name (the first result is checked before
+Enter); V4 and V5 run past the 15-second aim because every step is shown at real speed. Trim V4
+to its second half (Fill/Fit onwards) if a platform needs it shorter.
+
+Reviewed as contact sheets of five frames per clip in both languages; not yet watched end to end
+by a person on a phone.
+
+### 7.7 Turkish stills and loops (2026-10-09)
+
+`release/Senuma-launch-media/tr/`: `store/` (five captioned store screenshots, five extras, hero,
+tile, with Turkish captions from MESSAGING_SYSTEM.md), `raw/` (the same screens without captions),
+`loops/` (the five landing loops as animated WebP). Made with `CAPTURE_LANG=tr npm run
+store:assets`, `CAPTURE_LANG=tr CAPTURE_ONLY=loops vite-node e2e/media-capture.ts` and `python
+scripts/media-loops.py`. Every one shows the real Turkish interface.

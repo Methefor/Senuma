@@ -1,7 +1,8 @@
 /**
  * Store-listing images, taken from the real build. Nothing is uploaded.
  *
- *   npm run store:assets
+ *   npm run store:assets            (English → drafts/store/)
+ *   CAPTURE_LANG=tr npm run store:assets   (the Turkish interface → drafts/store-tr/)
  *
  * Output (drafts/store/, images git-ignored): icon-128.png, the five captioned 1280×800 store
  * screenshots, extra captioned screens for docs and the landing page (extra-*), a 1400×560 hero
@@ -17,11 +18,14 @@ import { chromium, type Page } from 'playwright';
 import { BRAND } from '../src/brand';
 import { DEFAULT_BACKGROUND } from '../src/core/background';
 import * as ops from '../src/core/ops';
-import type { AppState } from '../src/core/types';
-import { CAPTURE_TIME, demo, nextStamp } from './demo-state';
+import type { AppState, Language } from '../src/core/types';
+import { CAPTURE_TIME, demo, modeId, nextStamp, words } from './demo-state';
 import { DIST, launch, newProfile, openNewTab, removeProfile, writeStorage } from './harness';
 
-const OUT = resolve('drafts/store');
+const LANG: Language = process.env.CAPTURE_LANG === 'tr' ? 'tr' : 'en';
+/** The interface's own labels in the capture language: scripts click what is on screen. */
+const t = words(LANG);
+const OUT = resolve(LANG === 'en' ? 'drafts/store' : `drafts/store-${LANG}`);
 const RAW = join(OUT, 'raw');
 mkdirSync(RAW, { recursive: true });
 const SIZE = { width: 1280, height: 800 };
@@ -43,12 +47,12 @@ const open = async (state: AppState) => {
     return openNewTab(session);
 };
 
-const state = demo();
+const state = demo({ language: LANG });
 let page = await open(state);
 await page.waitForSelector('.backdrop-photo.is-ready');
 await raw(page, 'home');
 
-await page.locator('.plate', { hasText: 'Media' }).click();
+await page.locator('.plate', { hasText: t('cat.entertainment') }).click();
 await page.waitForSelector('.overlay-space');
 await page.locator('.suggestions summary').click();
 // Watch and Listen above the open suggestions; the header stays in place.
@@ -71,21 +75,20 @@ await raw(page, 'command');
 await page.keyboard.press('Escape');
 await page.keyboard.press('Escape');
 
-await page.locator('.topbar button[aria-label="Customize"]').click();
+await page.locator(`.topbar button[aria-label="${t('customize.title')}"]`).click();
 await page.waitForSelector('.overlay-customize');
 await raw(page, 'customize-pickers');
-await page.locator('.overlay-customize .segmented button', { hasText: 'Cinematic' }).click();
+await page.locator('.overlay-customize .segmented button', { hasText: t('atmosphere.cinematic') }).click();
 await page.locator('.overlay-customize .tune').evaluate(el => el.scrollIntoView({ block: 'center' }));
 await raw(page, 'customize');
 await page.keyboard.press('Escape');
 
-await page.locator('.topbar button[aria-label="Settings"]').click();
-await page.locator('.settings-nav button', { hasText: 'Privacy' }).click();
+await page.locator(`.topbar button[aria-label="${t('settings.title')}"]`).click();
+await page.locator('.settings-nav button', { hasText: t('settings.privacy') }).click();
 await raw(page, 'privacy');
 await page.close();
 
-const dev = state.modeOrder.find(id => state.modes[id]!.name === 'Dev')!;
-page = await open(ops.setActiveMode(state, dev));
+page = await open(ops.setActiveMode(state, modeId(state, 'dev')));
 await raw(page, 'mode');
 await page.close();
 
@@ -97,20 +100,42 @@ await session.context.close();
 removeProfile(profile);
 
 // ---------- Compose: one short line over each real screen ----------
-const SHOTS: [file: string, source: string, headline: string, sub: string][] = [
+// Captions are the lines of docs/MESSAGING_SYSTEM.md, in the capture language.
+const TAGLINE = LANG === 'tr' ? 'Tarayıcını kendine göre yap.' : BRAND.tagline;
+const SECOND = LANG === 'tr' ? 'Web’deki yerin.' : 'Your place on the web.';
+const CAPTIONS: Record<Language, [headline: string, sub: string][]> = {
+    en: [
+        [TAGLINE, SECOND],
+        ['Everything you use, organized.', 'Add only what you use, one at a time.'],
+        ['One search bar. Your rules.', '“y lofi mix” searches YouTube. Make your own shortcuts.'],
+        ['Make every new tab yours.', 'Fit, position, dim, blur and add atmosphere.'],
+        ['A workspace for every mode.', 'Its own Spaces, look, search and dock.'],
+        ['One search bar. Your rules.', 'Type a shortcut, a space, then your search.'],
+        ['Everything, one shortcut away.', 'Ctrl+K opens links, Spaces, Modes and settings.'],
+        ['Make every new tab feel like yours.', 'Six themes, built-in photographs, or your own images.'],
+        ['Six themes.', 'Each with its own colours, type and backdrop.'],
+        ['Personal by design.', 'No Senuma account. No analytics. Stored in your browser.'],
+    ],
+    tr: [
+        [TAGLINE, SECOND],
+        ['Kullandığın her şey, düzenli.', 'Yalnızca kullandığını ekle, birer birer.'],
+        ['Tek arama çubuğu. Senin kuralların.', '“y lofi mix” YouTube’da arar. Kendi kısayollarını oluştur.'],
+        ['Her yeni sekme senin olsun.', 'Sığdır, konumlandır, karart, bulanıklaştır, atmosfer kat.'],
+        ['Her hâl için bir çalışma alanı.', 'Kendi Alanları, görünümü, araması ve dock’u.'],
+        ['Tek arama çubuğu. Senin kuralların.', 'Bir kısayol, bir boşluk, sonra araman.'],
+        ['Her şey tek kısayol uzağında.', 'Ctrl+K bağlantıları, Alanları, Modları ve ayarları açar.'],
+        ['Her yeni sekme sana ait hissettirsin.', 'Altı tema, hazır fotoğraflar ya da kendi görsellerin.'],
+        ['Altı tema.', 'Her birinin kendi renkleri, yazı tipi ve arka planı.'],
+        ['Doğası gereği kişisel.', 'Senuma hesabı yok. Analitik yok. Tarayıcında saklanır.'],
+    ],
+};
+const SOURCES: [file: string, source: string][] = [
     // The five store screenshots (MEDIA_PLAN.md §1), in store order.
-    ['screenshot-1-home', 'home', BRAND.tagline, 'Your place on the web.'],
-    ['screenshot-2-spaces', 'space', 'Everything you use, organized.', 'Add only what you use, one at a time.'],
-    ['screenshot-3-search', 'command', 'One search bar. Your rules.', '“y lofi mix” searches YouTube. Make your own shortcuts.'],
-    ['screenshot-4-customize', 'customize', 'Make every new tab yours.', 'Fit, position, dim, blur and add atmosphere.'],
-    ['screenshot-5-modes', 'mode', 'A workspace for every mode.', 'Its own Spaces, look, search and dock.'],
+    ['screenshot-1-home', 'home'], ['screenshot-2-spaces', 'space'], ['screenshot-3-search', 'command'], ['screenshot-4-customize', 'customize'], ['screenshot-5-modes', 'mode'],
     // Extras for docs and the landing page.
-    ['extra-search-box', 'search', 'One search bar. Your rules.', 'Type a shortcut, a space, then your search.'],
-    ['extra-command-center', 'command-general', 'Everything, one shortcut away.', 'Ctrl+K opens links, Spaces, Modes and settings.'],
-    ['extra-customize-pickers', 'customize-pickers', 'Make every new tab feel like yours.', 'Six themes, built-in photographs, or your own images.'],
-    ['extra-themes', 'theme', 'Six themes.', 'Each with its own colours, type and backdrop.'],
-    ['extra-privacy', 'privacy', 'Personal by design.', 'On your device. No account, no analytics, no tracking.'],
+    ['extra-search-box', 'search'], ['extra-command-center', 'command-general'], ['extra-customize-pickers', 'customize-pickers'], ['extra-themes', 'theme'], ['extra-privacy', 'privacy'],
 ];
+const SHOTS = SOURCES.map(([file, source], index) => [file, source, ...CAPTIONS[LANG][index]!] as const);
 const tools = await chromium.launch();
 const canvas = await tools.newPage();
 const icon = `data:image/svg+xml;base64,${Buffer.from(readFileSync('src/assets/brand/icon.svg')).toString('base64')}`;
@@ -133,12 +158,12 @@ copyFileSync('src/assets/brand/icon128.png', join(OUT, 'icon-128.png'));
 await canvas.setViewportSize({ width: 1400, height: 560 });
 await canvas.setContent(`<body style="margin:0;width:1400px;height:560px;overflow:hidden;background:${backdrop};color:#EEF0F7;font-family:${STACK};display:flex;align-items:center">
   <div style="padding-left:84px;width:560px;flex:none"><div style="display:flex;align-items:center;gap:16px"><img src="${icon}" width="60" height="60">${word(46)}</div>
-    <div style="font:600 40px/1.12 ${STACK};letter-spacing:-.02em;margin-top:30px">${BRAND.tagline}</div>
-    <div style="font:400 19px/1.45 ${STACK};color:#B9BDCF;margin-top:14px">Your place on the web.</div></div>
+    <div style="font:600 40px/1.12 ${STACK};letter-spacing:-.02em;margin-top:30px">${TAGLINE}</div>
+    <div style="font:400 19px/1.45 ${STACK};color:#B9BDCF;margin-top:14px">${SECOND}</div></div>
   <img src="${data(join(RAW, 'home.png'))}" style="height:470px;border-radius:14px;box-shadow:0 30px 90px #000b;margin-left:20px"></body>`);
 await canvas.screenshot({ path: join(OUT, 'hero-1400x560.png') });
 await canvas.setViewportSize({ width: 440, height: 280 });
-await canvas.setContent(`<body style="margin:0;width:440px;height:280px;background:${backdrop};color:#EEF0F7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:${STACK}"><div style="display:flex;align-items:center;gap:12px"><img src="${icon}" width="48" height="48">${word(36)}</div><div style="font:400 15px ${STACK};color:#B9BDCF">${BRAND.tagline}</div></body>`);
+await canvas.setContent(`<body style="margin:0;width:440px;height:280px;background:${backdrop};color:#EEF0F7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:${STACK}"><div style="display:flex;align-items:center;gap:12px"><img src="${icon}" width="48" height="48">${word(36)}</div><div style="font:400 15px ${STACK};color:#B9BDCF">${TAGLINE}</div></body>`);
 await canvas.screenshot({ path: join(OUT, 'tile-440x280.png') });
 console.log('hero-1400x560.png, tile-440x280.png, icon-128.png');
 await tools.close();

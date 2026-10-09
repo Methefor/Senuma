@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSite, FEEDBACK_ADDRESS, loadContent, PRIVACY_URL, SECTIONS, SITE_LANGUAGES, STORE_URL } from './build';
+import { buildSite, FEEDBACK_ADDRESS, loadContent, PRIVACY_URL, SECTIONS, SITE_LANGUAGES, SITE_URL_PLACEHOLDER, STORE_URL } from './build';
 
 const files = buildSite();
 const pages = { en: files['index.html']!, tr: files['tr/index.html']! };
@@ -13,7 +13,7 @@ function shape(value: unknown, path = ''): string[] {
 
 describe('landing page', () => {
     it('is built in English and Turkish, with a guide page for each', () => {
-        expect(Object.keys(files).sort()).toEqual(['guide/index.html', 'index.html', 'robots.txt', 'site.js', 'styles.css', 'tr/guide/index.html', 'tr/index.html']);
+        expect(Object.keys(files).sort()).toEqual(['DEPLOY.txt', 'guide/index.html', 'index.html', 'robots.txt', 'site.js', 'styles.css', 'tr/guide/index.html', 'tr/index.html']);
         expect(pages.en).toContain('<html lang="en">');
         expect(pages.tr).toContain('<html lang="tr">');
     });
@@ -42,7 +42,8 @@ describe('landing page', () => {
 
     it('loads nothing from anyone else: no analytics, fonts, scripts or images from other hosts', () => {
         for (const html of [...Object.values(pages), files['guide/index.html']!, files['tr/guide/index.html']!]) {
-            const sources = [...html.matchAll(/\s(?:src|srcset|poster)="([^"]+)"/g), ...html.matchAll(/<link[^>]+href="([^"]+)"/g)].map(match => match[1]!);
+            // Canonical and language-alternate links name the site's own address; they load nothing.
+            const sources = [...html.matchAll(/\s(?:src|srcset|poster)="([^"]+)"/g), ...html.matchAll(/<link rel="(?:icon|stylesheet)"[^>]+href="([^"]+)"/g)].map(match => match[1]!);
             expect(sources.filter(source => /^(https?:)?\/\//.test(source))).toEqual([]);
             expect(html).not.toMatch(/gtag|googletagmanager|google-analytics|analytics\.js|plausible|hotjar|segment\.com|fonts\.googleapis/i);
         }
@@ -89,5 +90,38 @@ describe('landing page', () => {
 
     it('is not indexable until someone deploys it on purpose', () => {
         expect(files['robots.txt']).toContain('Disallow: /');
+    });
+
+    it('marks every place that needs the public address, and says so in DEPLOY.txt', () => {
+        // Built without SENUMA_SITE_URL, as every local build is.
+        for (const [lang, html] of Object.entries(pages)) {
+            const where = lang === 'en' ? '' : `${lang}/`;
+            expect(html).toContain(`<link rel="canonical" href="${SITE_URL_PLACEHOLDER}/${where}">`);
+            expect(html).toContain(`<meta property="og:url" content="${SITE_URL_PLACEHOLDER}/${where}">`);
+            expect(html).toContain(`<meta property="og:image" content="${SITE_URL_PLACEHOLDER}/assets/${where}og.png">`);
+            expect([...html.matchAll(/rel="alternate" hreflang="(\w+)" href="([^"]+)"/g)].map(match => `${match[1]}=${match[2]}`))
+                .toEqual([`en=${SITE_URL_PLACEHOLDER}/`, `tr=${SITE_URL_PLACEHOLDER}/tr/`]);
+            // The marker appears only in those tags, never in a link a visitor can click.
+            expect(html.match(/<a[^>]+__SENUMA_SITE_URL__/)).toBeNull();
+        }
+        expect(files['DEPLOY.txt']).toContain(SITE_URL_PLACEHOLDER);
+        expect(files['DEPLOY.txt']).toContain('robots.txt');
+    });
+
+    it('links between its own pages by file name, so it works from a folder and from any host', () => {
+        expect(pages.en).toContain('href="tr/index.html"');
+        expect(pages.en).toContain('href="guide/index.html#getting-started"');
+        expect(pages.tr).toContain('href="../index.html"');
+        expect(pages.tr).toContain('href="../tr/guide/index.html#search-shortcuts"');
+        expect(files['guide/index.html']).toContain('href="../tr/guide/index.html"');
+        expect(files['tr/guide/index.html']).toContain('href="../../guide/index.html"');
+        expect(files['tr/guide/index.html']).toContain('href="../../tr/index.html"');
+    });
+
+    it('shows each language its own interface: Turkish stills, loops and poster on the Turkish page', () => {
+        const pictures = (html: string) => [...html.matchAll(/(?:src|srcset|poster)="([^"]+\.webp)"/g)].map(match => match[1]!);
+        expect(pictures(pages.en).every(path => path.startsWith('assets/') && !path.includes('/tr/'))).toBe(true);
+        expect(pictures(pages.tr).length).toBe(pictures(pages.en).length);
+        expect(pictures(pages.tr).every(path => path.startsWith('../assets/tr/'))).toBe(true);
     });
 });

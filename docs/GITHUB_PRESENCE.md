@@ -116,6 +116,6 @@ demonstration data (the current README already does).
 - No “zero network requests”, “nothing leaves your device”, “anonymous”, “zero knowledge”.
 - Nothing about the name being legally cleared (SENUMA_BRAND.md).
 - No install or user counts until the store shows them, and then quoted with a date.
-- Branch reality: `main` and the release branches (`senuma-2.0.1`, `senuma-help-growth`,
-  `senuma-2.0.3`) have diverged; the README must not claim `main` is what ships until they are
+- Branch reality: the release branches (`senuma-2.0.1`, `senuma-help-growth`, `senuma-2.0.3`) and
+  both release-candidate tags are on GitHub (verified 2026-10-09), but they and `main` have diverged; the README must not claim `main` is what ships until they are
   reconciled (a separate, approved step).

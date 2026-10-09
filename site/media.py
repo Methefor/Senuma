@@ -6,7 +6,8 @@ captures are used; nothing is generated, cropped out of context or retouched.
     python site/media.py [media folder]
 
 The media folder is the hand-off folder that holds Senuma-2.0.1-media/ (GIFs, video, hero, icon)
-and Senuma-launch-media/ (raw captures, poster frames, MP4); default: release/. Output: dist-site/assets/. Needs Pillow. Local only.
+and Senuma-launch-media/ (raw captures, poster frames, MP4, and tr/ with the Turkish captures and
+loops); default: release/. Output: dist-site/assets/. Needs Pillow. Local only.
 """
 import os
 import shutil
@@ -66,24 +67,45 @@ def loop(name, source):
     print(size(out), os.path.basename(out), f'({len(frames)} frames, from {os.path.getsize(os.path.join(GIFS, source)) / 1024:.0f} kB GIF)')
 
 
+def turkish():
+    """The Turkish page shows the Turkish interface: its own stills, loops, poster and link preview."""
+    source = os.path.join(LAUNCH, 'tr')
+    out = os.path.join(OUT, 'tr')
+    os.makedirs(out, exist_ok=True)
+    for name, file in STILLS.items():
+        target = os.path.join(out, f'{name}.webp')
+        Image.open(os.path.join(source, 'raw', file)).convert('RGB').save(target, 'WEBP', quality=88, method=6)
+        print(size(target), f'tr/{name}.webp')
+    for name in LOOPS:
+        shutil.copyfile(os.path.join(source, 'loops', f'{name}.webp'), os.path.join(out, f'{name}.webp'))
+        print(size(os.path.join(out, f'{name}.webp')), f'tr/{name}.webp')
+    poster = os.path.join(out, 'poster-home.webp')
+    Image.open(os.path.join(source, 'raw', 'home.png')).convert('RGB').save(poster, 'WEBP', quality=84, method=6)
+    preview(os.path.join(source, 'store', 'hero-1400x560.png'), os.path.join(out, 'og.png'))
+
+
+def preview(hero_path, target):
+    """Link preview, 1200×630: the store hero scaled to that height and cropped around its centre."""
+    hero = Image.open(hero_path).convert('RGB')
+    scaled = hero.resize((round(hero.width * 630 / hero.height), 630), Image.LANCZOS)
+    left = (scaled.width - 1200) // 2
+    scaled.crop((left, 0, left + 1200, 630)).save(target, optimize=True)
+    print(size(target), os.path.relpath(target, OUT).replace(os.sep, '/'))
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     for name, source in STILLS.items():
         still(name, source)
     for name, source in LOOPS.items():
         loop(name, source)
+    turkish()
 
     poster = os.path.join(OUT, 'poster-home.webp')
     Image.open(os.path.join(LAUNCH, 'poster-home.png')).convert('RGB').save(poster, 'WEBP', quality=84, method=6)
     print(size(poster), 'poster-home.webp')
 
-    # Link preview, 1200×630: the store hero scaled to that height and cropped around its centre.
-    hero = Image.open(os.path.join(STORE, 'hero-1400x560.png')).convert('RGB')
-    scaled = hero.resize((round(hero.width * 630 / hero.height), 630), Image.LANCZOS)
-    left = (scaled.width - 1200) // 2
-    og = os.path.join(OUT, 'og.png')
-    scaled.crop((left, 0, left + 1200, 630)).save(og, optimize=True)
-    print(size(og), 'og.png')
+    preview(os.path.join(STORE, 'hero-1400x560.png'), os.path.join(OUT, 'og.png'))
 
     shutil.copyfile(os.path.join(STORE, 'icon-128.png'), os.path.join(OUT, 'icon.png'))
     shutil.copyfile(os.path.join(VIDEO, 'senuma-28s-silent.webm'), os.path.join(OUT, 'senuma-demo.webm'))
@@ -94,7 +116,7 @@ def main():
     shutil.copyfile(mp4, os.path.join(OUT, 'senuma-demo.mp4'))
     print(size(os.path.join(OUT, 'senuma-demo.mp4')), 'senuma-demo.mp4', f'(from {os.path.basename(mp4)})')
 
-    total = sum(os.path.getsize(os.path.join(OUT, f)) for f in os.listdir(OUT))
+    total = sum(os.path.getsize(os.path.join(folder, f)) for folder, _, names in os.walk(OUT) for f in names)
     first = sum(os.path.getsize(os.path.join(OUT, f)) for f in ('home.webp', 'icon.png'))
     print(f'\nassets total {total / 1e6:.1f} MB; needed before scrolling: {first / 1024:.0f} kB (hero image and icon)')
 

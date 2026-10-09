@@ -185,8 +185,16 @@ What differs from the plan above: stills are the uncaptioned raw captures (the s
 carry their own captions and frame, which repeated the page's headlines); GIFs became animated
 WebP instead of video loops (one tool, about 85 % smaller than the GIFs).
 
-Known gaps before it can go live: the screenshots, loops and video show the **English** interface
-on the Turkish page too (Turkish captures are still to be made; the Turkish page says so under
-the video); the FAQ and guide mention Help & Feedback, which is public only from 2.0.2; the store
-button leads to a listing that serves the previous version until 2.0.0 passes review; the real
-`robots.txt`, canonical URLs and an absolute link-preview image URL need the final address.
+**Turkish page (2026-10-09):** every still, loop and the video poster is the Turkish interface
+(`assets/tr/`). The demo video itself is still the English recording, and the page says so.
+
+**Deploy-ready output:** links between pages use file names (`index.html`), so the folder works
+opened directly and on any static host. The public address is not known yet: the canonical link,
+language alternates, `og:url` and `og:image` carry the marker `__SENUMA_SITE_URL__`, and
+`dist-site/DEPLOY.txt` lists what a person does before publishing (build with
+`SENUMA_SITE_URL=https://…`, replace `robots.txt`, check the store button). `robots.txt` still
+disallows everything.
+
+Before it goes live: a Turkish cut of the demo video (optional); Help & Feedback is public only
+from 2.0.2; the store button leads to a listing that serves the previous version until 2.0.0
+passes review.

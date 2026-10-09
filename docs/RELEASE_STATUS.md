@@ -1,6 +1,12 @@
 # Release status — Senuma 2.0.2 and 2.0.1 release candidates (frozen, not uploaded)
 
-The one status document. Nothing pushed, nothing published. Last updated 2026-10-05.
+The one status document. Nothing published, deployed or submitted. Last updated 2026-10-09.
+
+**Remote backup (verified 2026-10-09 with `git ls-remote origin`, github.com/Methefor/Senuma):**
+branches `senuma-2.0.1` (`5ed7cec`), `senuma-help-growth` (`123bde0`) and `senuma-2.0.3`, and tags
+`senuma-2.0.1-rc` and `senuma-2.0.2-rc`, are on the remote at the commits recorded below. The
+release history no longer exists only on one machine. (`senuma-2.0.3` on the remote is behind the
+local branch by the commits made after it was pushed; push again when convenient.)
 Order of release: 2.0.0 (in review) → 2.0.1 → 2.0.2. Each needs the owner's go-ahead.
 
 ## Next line — `senuma-2.0.3` (open, not versioned, not packaged)
@@ -14,7 +20,9 @@ is still 2.0.2; it is bumped only when 2.0.3 is prepared for release. No feature
 | Launch documents (landing, store conversion, content library, Product Hunt, GitHub, localization, measurement) | written; plans only |
 | `scripts/media-mp4.mjs` | tool for the MP4 and poster frames |
 | Store localization: `_locales/en`, `_locales/tr`, description only | done and tested (`npm run test:locales`); a manifest change, so it ships only inside a 2.0.3 package |
-| Landing page, English and Turkish (`site/`) | built locally (`npm run site:build`), not deployed |
+| Landing page, English and Turkish (`site/`) | built locally (`npm run site:build`), deploy-ready output with the public address marked as a placeholder; not deployed |
+| Turkish captures | 5 store screenshots + 5 extras, hero and tile (`CAPTURE_LANG=tr npm run store:assets`), five landing loops, all the real Turkish interface |
+| Vertical clips | five 1080×1920 clips in English and five in Turkish, recorded in a real portrait window (MEDIA_PLAN.md § 7) |
 | README | rewritten on this branch (install link, privacy facts, guide, feedback, accurate status, “source available, not open source”) |
 
 Still a candidate needing approval: the store summary revision (STORE_CONVERSION.md).
@@ -25,7 +33,7 @@ Since 2.0.2 supersedes 2.0.1, the expected store order is 2.0.0 (in review) → 
 ## Senuma 2.0.2 — release candidate, FROZEN (2026-10-05)
 
 Help & Feedback. Branch `senuma-help-growth`, built on the frozen 2.0.1 (`5ed7cec`), which is
-unchanged. The release-candidate commit is tagged `senuma-2.0.2-rc` (local tag). Not submitted.
+unchanged. The release-candidate commit is tagged `senuma-2.0.2-rc` (pushed). Not submitted.
 
 | | |
 |---|---|
@@ -95,7 +103,7 @@ a mail app as well, to see the prepared email arrive in the app.
 
 Waiting for the result of the 2.0.0 Chrome Web Store review. Not submitted; the 2.0.0 review
 is untouched. Branch `senuma-2.0.1`; the release-candidate commit is tagged `senuma-2.0.1-rc`
-(local tag).
+(tag pushed).
 
 | | |
 |---|---|

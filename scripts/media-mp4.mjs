@@ -2,7 +2,7 @@
 // saves poster frames, using the installed Google Chrome's own encoder: the ffmpeg that Playwright
 // installs writes VP8 only. Real time, so about as long as the video. Local only.
 //
-//   node scripts/media-mp4.mjs [source.webm] [output folder] [bits per second] [file name]
+//   node scripts/media-mp4.mjs [source.webm] [output folder] [bits per second] [file name] [noposters]
 //
 // A lower bitrate (3000000) and a name ending in -web give the page-weight copy for the landing page.
 import { mkdirSync, writeFileSync, copyFileSync, statSync } from 'node:fs';
@@ -14,10 +14,12 @@ const SOURCE = resolve(process.argv[2] ?? 'drafts/media/video/senuma-28s-silent.
 const OUT = resolve(process.argv[3] ?? 'drafts/media/video');
 const BITRATE = Number(process.argv[4] ?? 8_000_000);
 const NAME = process.argv[5] ?? 'senuma-28s-silent.mp4';
+/** Poster frames are taken at moments of the 28-second product video; other clips skip them. */
+const POSTERS = process.argv[6] !== 'noposters';
 mkdirSync(HERE, { recursive: true });
 mkdirSync(OUT, { recursive: true });
 copyFileSync(SOURCE, join(HERE, 'source.webm'));
-writeFileSync(join(HERE, 'page.html'), '<!doctype html><meta charset="utf-8"><body style="margin:0;background:#000"><video id="v" src="source.webm" muted playsinline style="width:1280px"></video>');
+writeFileSync(join(HERE, 'page.html'), '<!doctype html><meta charset="utf-8"><body style="margin:0;background:#000"><video id="v" src="source.webm" muted playsinline style="max-width:1280px;max-height:760px"></video>');
 
 // A local-only server: pages opened from file:// cannot read video frames back.
 import { createServer } from 'node:http';
@@ -55,7 +57,7 @@ server.close();
 }
 
 // Poster frames first (exact frames, PNG).
-for (const [name, time] of [['poster-home', 2.2], ['poster-customize', 20.5], ['poster-endcard', 27.6]]) {
+for (const [name, time] of POSTERS ? [['poster-home', 2.2], ['poster-customize', 20.5], ['poster-endcard', 27.6]] : []) {
     const png = await page.evaluate(async t => {
         const v = document.getElementById('v');
         await new Promise(done => { v.onseeked = done; v.currentTime = t; });

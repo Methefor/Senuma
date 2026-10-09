@@ -3,6 +3,7 @@
  * Nothing is uploaded or published.
  *
  *   npm run build && vite-node e2e/media-capture.ts && python scripts/media-compose.py
+ *   CAPTURE_LANG=tr CAPTURE_ONLY=loops vite-node e2e/media-capture.ts   (the five landing loops, Turkish interface → e2e/.out/media-tr/)
  *
  * Each scene is a scripted, human-paced run of a real flow, recorded with Chrome's screencast
  * (frames with timestamps) into e2e/.out/media/<scene>/. Keys pressed are logged so the
@@ -14,11 +15,16 @@ import { join, resolve } from 'node:path';
 import type { Locator, Page } from 'playwright';
 import { exportBackup } from '../src/core/backup';
 import * as ops from '../src/core/ops';
-import type { AppState } from '../src/core/types';
-import { CAPTURE_TIME, demo, nextStamp } from './demo-state';
+import type { AppState, Language } from '../src/core/types';
+import { CAPTURE_TIME, demo, modeId, nextStamp, words } from './demo-state';
 import { DIST, launch, newProfile, openNewTab, removeProfile, writeStorage, type Session } from './harness';
 
-const OUT = resolve('e2e/.out/media');
+const LANG: Language = process.env.CAPTURE_LANG === 'tr' ? 'tr' : 'en';
+/** The interface's own labels in the capture language. */
+const t = words(LANG);
+/** `loops`: only the five scenes the landing page shows as loops (no backup GIF, no video). */
+const ONLY_LOOPS = process.env.CAPTURE_ONLY === 'loops';
+const OUT = resolve(LANG === 'en' ? 'e2e/.out/media' : `e2e/.out/media-${LANG}`);
 mkdirSync(OUT, { recursive: true });
 
 /** A visible pointer for the recording only. */
@@ -105,36 +111,35 @@ async function fresh(session: Session, page: Page | null, state: AppState): Prom
     return next;
 }
 
-const modeId = (state: AppState, name: string) => state.modeOrder.find(id => state.modes[id]!.name === name)!;
 
 async function customizeFlow(page: Page, key: Mark): Promise<void> {
     const pause = (ms: number) => wait(page, ms);
-    await tap(page, page.locator('.topbar button[aria-label="Customize"]'));
+    await tap(page, page.locator(`.topbar button[aria-label="${t('customize.title')}"]`));
     await page.waitForSelector('.overlay-customize');
     await pause(700);
     await tap(page, page.locator('.swatch-tile[aria-label="Forest Fog"]'));
     await pause(1100);
     await page.locator('.overlay-customize .tune').evaluate(el => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
     await pause(800);
-    await tap(page, page.locator('.overlay-customize .tune .segmented button', { hasText: 'Fit' }));
+    await tap(page, page.locator('.overlay-customize .tune .segmented button', { hasText: t('background.fit.contain') }));
     await pause(900);
-    await tap(page, page.locator('.overlay-customize .tune .segmented button', { hasText: 'Fill' }));
+    await tap(page, page.locator('.overlay-customize .tune .segmented button', { hasText: t('background.fit.cover') }));
     await pause(600);
-    await tap(page, page.locator('.position-grid button[aria-label="Position 50% 0%"]'));
+    await tap(page, page.locator(`.position-grid button[aria-label="${t('background.position')} 50% 0%"]`));
     await pause(700);
-    await slide(page, page.locator('.slider', { hasText: 'Dim' }).locator('input'), 0.6);
+    await slide(page, page.locator('.slider', { hasText: t('background.dim') }).locator('input'), 0.6);
     await pause(500);
-    await slide(page, page.locator('.slider', { hasText: 'Blur' }).locator('input'), 16);
+    await slide(page, page.locator('.slider', { hasText: t('background.blur') }).locator('input'), 16);
     await pause(700);
-    await tap(page, page.locator('.overlay-customize .segmented button', { hasText: 'Cinematic' }));
+    await tap(page, page.locator('.overlay-customize .segmented button', { hasText: t('atmosphere.cinematic') }));
     await pause(1000);
     await tap(page, page.locator('.customize-foot .button.is-primary'));
     key('');
     await pause(1100);
 }
 
-async function modeFlow(page: Page, key: Mark, order: string[]): Promise<void> {
-    for (const name of order) {
+async function modeFlow(page: Page, key: Mark, order: ('work' | 'dev' | 'chill' | 'gaming')[]): Promise<void> {
+    for (const name of order.map(mode => t(`modePreset.${mode}`))) {
         key('M');
         await page.keyboard.press('m');
         await page.waitForSelector('.menu');
@@ -151,14 +156,14 @@ async function modeFlow(page: Page, key: Mark, order: string[]): Promise<void> {
     const session = await launch(DIST, profile, { width: 1280, height: 800 });
     await session.context.clock.setFixedTime(CAPTURE_TIME);
     await session.context.addInitScript(POINTER);
-    const base = demo({ modeLooks: true });
+    const base = demo({ modeLooks: true, language: LANG });
     let page = await fresh(session, null, base);
 
     await record(page, 'gif-1-space', async key => {
         await tap(page, page.locator('.deck-head .quiet-button'));
         await page.waitForSelector('.overlay-form');
         await page.waitForTimeout(400);
-        await type(page, 'Travel');
+        await type(page, LANG === 'tr' ? 'Seyahat' : 'Travel');
         await page.waitForTimeout(350);
         await tap(page, page.locator('.overlay-form button[type=submit]'));
         await page.waitForSelector('.overlay-space');
@@ -181,7 +186,7 @@ async function modeFlow(page: Page, key: Mark, order: string[]): Promise<void> {
         await page.keyboard.press('Control+k');
         await page.waitForFunction(() => document.activeElement?.closest('.overlay-palette'));
         await page.waitForTimeout(500);
-        await type(page, 'coding');
+        await type(page, t('cat.dev').toLowerCase());
         await page.waitForTimeout(700);
         key('Enter');
         await page.keyboard.press('Enter');
@@ -207,8 +212,14 @@ async function modeFlow(page: Page, key: Mark, order: string[]): Promise<void> {
     await record(page, 'gif-4-background', async key => customizeFlow(page, key));
     PACE = 1;
 
-    page = await fresh(session, page, ops.setActiveMode(base, modeId(base, 'Work')));
-    await record(page, 'gif-5-modes', async key => modeFlow(page, key, ['Dev', 'Chill', 'Work']));
+    page = await fresh(session, page, ops.setActiveMode(base, modeId(base, 'work')));
+    await record(page, 'gif-5-modes', async key => modeFlow(page, key, ['dev', 'chill', 'work']));
+    if (ONLY_LOOPS) {
+        await page.close();
+        await session.context.close();
+        removeProfile(profile);
+        process.exit(0);
+    }
 
     // The backup imported in GIF 6: this setup plus a Travel Space.
     const travel = ops.addSpace(base, { name: 'Travel', glyph: 'globe' });
@@ -285,8 +296,8 @@ async function modeFlow(page: Page, key: Mark, order: string[]): Promise<void> {
     });
     page = await fresh(session, page, base);
     await record(page, 'video-5-background', async key => customizeFlow(page, key));
-    page = await fresh(session, page, ops.setActiveMode(base, modeId(base, 'Work')));
-    await record(page, 'video-6-modes', async key => modeFlow(page, key, ['Chill', 'Dev']));
+    page = await fresh(session, page, ops.setActiveMode(base, modeId(base, 'work')));
+    await record(page, 'video-6-modes', async key => modeFlow(page, key, ['chill', 'dev']));
     await page.close();
     await session.context.close();
     removeProfile(profile);
