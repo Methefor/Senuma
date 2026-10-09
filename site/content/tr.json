@@ -1,0 +1,117 @@
+{
+  "lang": "tr",
+  "langName": "Türkçe",
+  "title": "Senuma — Kişisel Tarayıcı Çalışma Alanı",
+  "metaDescription": "Senuma her yeni sekmeyi kendi çalışma alanına çevirir: sitelerin için Alanlar, kısayollarınla tek arama çubuğu, Modlar ve sana ait bir görünüm. Ücretsiz, Senuma hesabı yok, analitik yok.",
+  "nav": { "features": "Özellikler", "privacy": "Gizlilik", "guide": "Kılavuz", "faq": "SSS", "cta": "Chrome’a ekle", "skip": "İçeriğe geç", "menu": "Bölümler" },
+  "hero": {
+    "eyebrow": "Senuma — Kişisel Tarayıcı Çalışma Alanı",
+    "title": "Tarayıcını kendine göre yap.",
+    "sub": "Senuma her yeni sekmeyi kendi çalışma alanına çevirir: kullandığın siteler Alanlarda toplanır; tek bir arama çubuğu ve sana ait bir görünüm.",
+    "cta": "Chrome’a ekle — ücretsiz",
+    "trust": ["Ücretsiz", "Senuma hesabı yok", "Analitik yok"],
+    "alt": "Yeni sekmede Senuma Ana Sayfası: karşılama, arama çubuğu, son açılan bağlantılar ve alacakaranlıkta dağ fotoğrafı üzerinde beş Alan."
+  },
+  "demo": {
+    "title": "30 saniyede gör.",
+    "sub": "Senuma’nın baştan sona gerçek bir kaydı: Ana Sayfa, Alanlar, arama kısayolları, komut merkezi, arka planlar ve Modlar.",
+    "play": "29 saniyelik videoyu oynat",
+    "description": "Video, gerçek ürünü gösterim verileriyle gösterir. Sessizdir; ekrandaki yazılar İngilizcedir."
+  },
+  "features": [
+    {
+      "id": "spaces", "kicker": "Alanlar", "title": "Kullandığın her şey, düzenli.",
+      "body": "Alanlar, hayatının bir bölümü için kullandığın siteleri senin adlandırdığın gruplarda toplar. Hazır bir setle ya da sıfırdan başla, önerilerden yalnızca istediklerini ekle.",
+      "points": ["1–9 tuşları ilk dokuz Alanını açar", "Senin adlandırdığın gruplar, sürükleyip bıraktığın bağlantılar", "Her gün açtıkların için bir dock"],
+      "media": "loop-space", "still": "spaces",
+      "alt": "Senuma’da bir Alan oluşturmak ve ilk bağlantısını eklemek."
+    },
+    {
+      "id": "search", "kicker": "Arama", "title": "Tek arama çubuğu. Senin kuralların.",
+      "body": "Tek kutu web’de arar; yazarken kendi bağlantılarını ve Alanlarını da bulur. Bir kısayol, bir boşluk ve aramanı yaz; doğrudan o sitenin aramasına geç.",
+      "example": { "code": "y lofi mix", "text": "YouTube’da “lofi mix” sonuçlarını açar." },
+      "points": ["Google, YouTube, GitHub, Reddit, ChatGPT, Claude, Wikipedia ve daha fazlası için kısayollar", "Arama sayfası olan her siteyi ekleyebilirsin", "Düz aramalar seçtiğin arama motoruna gider"],
+      "media": "loop-search", "still": "search",
+      "alt": "Senuma arama çubuğuna “y lofi mix” yazılıyor: YouTube kısayolu tanınıyor."
+    },
+    {
+      "id": "command", "kicker": "Komut merkezi", "title": "Her şey tek kısayol uzağında.",
+      "body": "Ctrl+K’ya (Mac’te ⌘K) bas: bağlantı ya da Alan aç, Mod değiştir, temayı değiştir veya ara. Bütün sayfa için klavyen yeter.",
+      "points": ["Yazdıkça bağlantılarını, Alanlarını, Modlarını, temaları ve ayarları bulur", "“switch to work mode” gibi düz ifadeleri anlar"],
+      "media": "loop-command", "still": "command",
+      "alt": "Ctrl+K ile açılan Senuma komut merkezi, Kodlama Alanını bulup açıyor."
+    },
+    {
+      "id": "modes", "kicker": "Modlar", "title": "Her hâl için bir çalışma alanı.",
+      "body": "Mod, sayfanın tamamını o an yaptığın işe göre değiştirir: Alanlarını ve istersen temasını, arka planını, arama motorunu ve dock’unu. İş, kod ve akşamları ayrı tarayıcılar olmadan ayır.",
+      "points": ["Değiştirmek için M’ye bas", "Her Mod yalnızca seçtiğin Alanları gösterir", "İstersen kendi görünümü, arama motoru ve dock’u olur"],
+      "media": "loop-modes", "still": "modes",
+      "alt": "Senuma İş Modundan Keyif Moduna geçiyor: Alanlar, tema ve arka plan birlikte değişiyor."
+    },
+    {
+      "id": "customization", "kicker": "Kişiselleştirme", "title": "Her yeni sekme sana ait hissettirsin.",
+      "body": "Altı temadan birini, hazır bir fotoğrafı ya da kendi görselini seç. Doldur ya da sığdır, görünür kalacak bölümü seç; karartma, bulanıklık ve renk gücünü ayarla, Hafif ya da Sinematik bir atmosfer ekle.",
+      "points": ["Görsellerin cihazında kalır", "Her değişikliği uygulamadan önce canlı görürsün", "Her Mod için ayrı bir görünüm"],
+      "media": "loop-background", "still": "customize",
+      "alt": "Senuma’da bir arka plan fotoğrafının ayarlanması: sığdırma, konum, karartma, bulanıklık ve atmosfer."
+    }
+  ],
+  "privacy": {
+    "kicker": "Gizlilik", "title": "Doğası gereği kişisel.",
+    "body": "Senuma ücretsizdir ve kayıt gerektirmez. Ne yaptığı ve ne yapmadığı tam olarak şöyle.",
+    "facts": [
+      { "title": "Senuma hesabı yok.", "text": "Kaydolacak bir şey yok." },
+      { "title": "Analitik yok.", "text": "Senuma onu nasıl kullandığını ölçmez." },
+      { "title": "Bu sürümde Senuma bulutu gerekmez.", "text": "Alanların, bağlantıların ve ayarların tarayıcında saklanır. Taşımak için bir yedek dosyası dışa aktar." },
+      { "title": "Dışarı giden ne var?", "text": "Aramaların seçtiğin arama motoruna gider. Site simgeleri sitelerin kendisinden, seçersen Google’ın simge servisinden gelir; “Yalnızca harfler” ile hiç istenmez." },
+      { "title": "İsteğe bağlı izinler, yalnızca kullanınca istenir.", "text": "Yer imleri ve az önce kapatılan sayfalar yalnızca o özellikleri açarsan okunur." }
+    ],
+    "alt": "Senuma’da Ayarlar → Gizlilik: cihazda neyin saklandığı ve site simgelerinin nereden geldiği.",
+    "policy": "Gizlilik politikasını oku"
+  },
+  "guide": {
+    "kicker": "Kılavuz", "title": "Beş dakikada öğren.",
+    "body": "Kullanım kılavuzunun tamamı Senuma’nın içinde gelir; burada da var, Türkçe ve İngilizce.",
+    "cards": [
+      { "title": "Başlarken", "text": "İlk Alanların, görünümün ve bağlantılarını getirmek.", "anchor": "getting-started" },
+      { "title": "Arama kısayolları", "text": "Hazır kısayollar ve kendininkini eklemek.", "anchor": "search-shortcuts" },
+      { "title": "Arka planlar ve Modlar", "text": "Kendi görselin, ayarlanmış; her Mod için bir görünüm.", "anchor": "backgrounds" }
+    ],
+    "all": "Kılavuzun tamamını oku"
+  },
+  "feedback": {
+    "kicker": "Geri bildirim", "title": "Neyi düzeltelim, neyi ekleyelim?",
+    "body": "Geri bildirim, senin yazıp kendin gönderdiğin düz bir e-postadır. Kendiliğinden hiçbir şey toplanmaz.",
+    "cards": [
+      { "title": "Sorun bildir", "text": "Doğru çalışmayan şeyler için.", "subject": "[Senuma] Sorun bildirimi" },
+      { "title": "Fikir öner", "text": "Özellik ya da iyileştirme önerileri için.", "subject": "[Senuma] Fikir" },
+      { "title": "Geri bildirim gönder", "text": "Senuma hakkındaki genel görüşlerin için.", "subject": "[Senuma] Geri bildirim" }
+    ],
+    "address": "Ya da şu adrese yaz:"
+  },
+  "faq": {
+    "kicker": "SSS", "title": "Sorular",
+    "items": [
+      { "q": "Senuma ücretsiz mi?", "a": "Evet. Hiçbir şey kilitli değil." },
+      { "q": "Hesap gerekiyor mu?", "a": "Hayır. Senuma hesabı diye bir şey yok." },
+      { "q": "Verilerim nerede?", "a": "Tarayıcında. Alanların, bağlantıların ve ayarların kullandığın tarayıcı profilinde saklanır; başka bir bilgisayara taşımak için bir yedek dosyası dışa aktar." },
+      { "q": "Bilgisayarlar arasında eşitleniyor mu?", "a": "Bu sürümde hayır. Ayarlar → Veriler’deki Dışa aktar ve İçe aktar’ı kullan." },
+      { "q": "Senuma ağ üzerinden ne gönderir?", "a": "Aramaların seçtiğin arama motoruna gider. Simge istekleri kaydettiğin sitelere, seçersen Google’ın simge servisine gider. Çalışma alanınla ilgili hiçbir şey bize gönderilmez." },
+      { "q": "Neden izin istiyor?", "a": "Senuma’nın yalnızca depolama ve arama iznine ihtiyacı var. Yer imlerini ve az önce kapatılan sekmeleri okumak isteğe bağlıdır ve yalnızca o özellikleri kullandığında istenir." },
+      { "q": "Hangi tarayıcılarda çalışır?", "a": "Chrome. Microsoft Edge ve Brave’de de yüklenir." },
+      { "q": "Türkçe mi?", "a": "Evet: arayüz ve kılavuzun tamamı." },
+      { "q": "New Tab Folders kullanıyordum. Klasörlerime ne oldu?", "a": "Senuma aynı uzantının yeniden yapılmış hâli. Klasörlerin Alanlara dönüştü ve kaydettiğin her şey korundu." },
+      { "q": "Sorunu nasıl bildiririm?", "a": "Senuma’da: Ayarlar → Yardım ve Geri Bildirim. Ya da yukarıdaki adresi kullan." }
+    ]
+  },
+  "final": {
+    "title": "Web’deki yerin.",
+    "sub": "Her yeni sekme senin olsun.",
+    "cta": "Chrome’a ekle — ücretsiz"
+  },
+  "footer": {
+    "privacy": "Gizlilik politikası", "guide": "Kılavuz", "feedback": "Geri bildirim",
+    "previously": "Eski adıyla New Tab Folders.",
+    "note": "Senuma bağımsız bir projedir. Ekranlar, gerçek ürünü gösterim verileriyle gösterir."
+  }
+}

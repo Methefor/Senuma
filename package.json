@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "build:e2e": "cross-env BOS_E2E=1 vite build",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src e2e scripts vite.config.ts",
+    "lint": "eslint src e2e scripts site vite.config.ts",
     "test": "vitest run",
     "test:e2e": "npm run build && npm run build:e2e && vite-node e2e/extension.e2e.ts",
     "test:rc": "npm run build && vite-node e2e/rc.e2e.ts",
@@ -22,6 +22,8 @@
     "check": "npm run typecheck && npm run lint && npm test && npm run build && npm run size",
     "visual": "npm run build && vite-node e2e/visual.ts",
     "size": "node scripts/size.mjs",
+    "site:media": "python site/media.py",
+    "site:build": "vite-node site/cli.ts",
     "marks": "node scripts/brand-marks.mjs",
     "icons": "node scripts/brand-icons.mjs"
   },

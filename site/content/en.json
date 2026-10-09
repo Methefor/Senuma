@@ -1,0 +1,117 @@
+{
+  "lang": "en",
+  "langName": "English",
+  "title": "Senuma — Personal Browser Workspace",
+  "metaDescription": "Senuma turns every new tab into your own workspace: Spaces for your sites, one search bar with your shortcuts, Modes and a look that is yours. Free, no Senuma account, no analytics.",
+  "nav": { "features": "Features", "privacy": "Privacy", "guide": "Guide", "faq": "FAQ", "cta": "Add to Chrome", "skip": "Skip to content", "menu": "Sections" },
+  "hero": {
+    "eyebrow": "Senuma — Personal Browser Workspace",
+    "title": "Make the browser yours.",
+    "sub": "Senuma turns every new tab into your own workspace: the sites you use, gathered into Spaces, with one search bar and a look that is yours.",
+    "cta": "Add to Chrome — free",
+    "trust": ["Free", "No Senuma account", "No analytics"],
+    "alt": "Senuma Home on a new tab: a greeting, the search bar, recently opened links and five Spaces over a photograph of mountains at dusk."
+  },
+  "demo": {
+    "title": "See it in 30 seconds.",
+    "sub": "A real recording of Senuma, start to finish: Home, Spaces, search shortcuts, the command center, backgrounds and Modes.",
+    "play": "Play the 29-second video",
+    "description": "The video shows the real product with demonstration data. It has no sound."
+  },
+  "features": [
+    {
+      "id": "spaces", "kicker": "Spaces", "title": "Everything you use, organized.",
+      "body": "Spaces gather the sites you use for one part of your life, in groups you name. Start from a ready-made set or from scratch, and add only the suggestions you want.",
+      "points": ["Keys 1–9 open your first nine Spaces", "Groups you name, links you drag", "A dock for what you open every day"],
+      "media": "loop-space", "still": "spaces",
+      "alt": "Creating a Space in Senuma and adding its first link."
+    },
+    {
+      "id": "search", "kicker": "Search", "title": "One search bar. Your rules.",
+      "body": "One box searches the web and finds your own links and Spaces as you type. Type a shortcut, a space and your query, and jump straight into a site’s search.",
+      "example": { "code": "y lofi mix", "text": "opens YouTube results for “lofi mix”." },
+      "points": ["Shortcuts for Google, YouTube, GitHub, Reddit, ChatGPT, Claude, Wikipedia and more", "Add any site that has a search page", "Plain searches go to the search engine you choose"],
+      "media": "loop-search", "still": "search",
+      "alt": "Typing “y lofi mix” into the Senuma search bar: the YouTube shortcut is recognised."
+    },
+    {
+      "id": "command", "kicker": "Command center", "title": "Everything, one shortcut away.",
+      "body": "Press Ctrl+K (⌘K on Mac) to open any link or Space, switch Mode, change theme or search. Your keyboard is enough for the whole page.",
+      "points": ["Finds links, Spaces, Modes, themes and settings as you type", "Understands plain phrases such as “switch to work mode”"],
+      "media": "loop-command", "still": "command",
+      "alt": "The Senuma command center opened with Ctrl+K, finding and opening the Coding Space."
+    },
+    {
+      "id": "modes", "kicker": "Modes", "title": "A workspace for every mode.",
+      "body": "A Mode changes the whole page for what you are doing: its Spaces, and if you like its theme, background, search engine and dock. Keep work, code and evenings apart without separate browsers.",
+      "points": ["Press M to switch", "Each Mode shows only the Spaces you choose", "Its own look, search engine and dock, if you want"],
+      "media": "loop-modes", "still": "modes",
+      "alt": "Switching Senuma from Work Mode to Chill Mode: Spaces, theme and background change together."
+    },
+    {
+      "id": "customization", "kicker": "Customization", "title": "Make every new tab feel like yours.",
+      "body": "Choose one of six themes, a built-in photograph or your own image. Fill or fit it, pick the part that stays in view, then set dim, blur and colour strength, and add a Subtle or Cinematic atmosphere.",
+      "points": ["Your images stay on your device", "Every change is previewed live before you apply it", "A different look for each Mode"],
+      "media": "loop-background", "still": "customize",
+      "alt": "Adjusting a background photograph in Senuma: fit, position, dim, blur and atmosphere."
+    }
+  ],
+  "privacy": {
+    "kicker": "Privacy", "title": "Personal by design.",
+    "body": "Senuma is free and needs no sign-up. Here is exactly what it does and does not do.",
+    "facts": [
+      { "title": "No Senuma account.", "text": "There is nothing to sign up for." },
+      { "title": "No analytics.", "text": "Senuma does not measure how you use it." },
+      { "title": "No Senuma cloud required in this release.", "text": "Your Spaces, links and settings are stored in your browser. Export a backup file to move them." },
+      { "title": "What does go out.", "text": "Your searches go to the search engine you choose. Site icons come from the sites themselves, or from Google’s icon service if you pick it, or are not requested at all with “Letters only”." },
+      { "title": "Optional permissions, asked only when used.", "text": "Bookmarks and recently closed pages are read only if you turn those features on." }
+    ],
+    "alt": "Settings → Privacy in Senuma, listing what is stored on the device and where site icons come from.",
+    "policy": "Read the privacy policy"
+  },
+  "guide": {
+    "kicker": "Guide", "title": "Learn it in five minutes.",
+    "body": "The full user guide comes with Senuma and is here too, in English and Turkish.",
+    "cards": [
+      { "title": "Getting Started", "text": "Your first Spaces, your look and bringing in your links.", "anchor": "getting-started" },
+      { "title": "Search shortcuts", "text": "The built-in shortcuts and how to add your own.", "anchor": "search-shortcuts" },
+      { "title": "Backgrounds & Modes", "text": "Your own image, tuned; a look for each Mode.", "anchor": "backgrounds" }
+    ],
+    "all": "Read the full guide"
+  },
+  "feedback": {
+    "kicker": "Feedback", "title": "Tell us what to fix or build.",
+    "body": "Feedback is a plain email that you write and send yourself. Nothing is collected automatically.",
+    "cards": [
+      { "title": "Report a problem", "text": "For things that do not work correctly.", "subject": "[Senuma] Problem report" },
+      { "title": "Suggest an idea", "text": "For features or improvements.", "subject": "[Senuma] Idea" },
+      { "title": "Share feedback", "text": "For general comments about Senuma.", "subject": "[Senuma] Feedback" }
+    ],
+    "address": "Or write to"
+  },
+  "faq": {
+    "kicker": "FAQ", "title": "Questions",
+    "items": [
+      { "q": "Is Senuma free?", "a": "Yes. Nothing is gated." },
+      { "q": "Do I need an account?", "a": "No. There is no Senuma account." },
+      { "q": "Where is my data?", "a": "In your browser. Your Spaces, links and settings are stored in the browser profile you use; export a backup file to move them to another computer." },
+      { "q": "Does it sync between computers?", "a": "Not in this release. Use Export and Import in Settings → Data." },
+      { "q": "What does Senuma send over the network?", "a": "Your searches go to the search engine you choose. Icon requests go to the sites you saved, or to Google’s icon service if you select it. Nothing about your workspace is sent to us." },
+      { "q": "Why does it ask for permissions?", "a": "Senuma needs only storage and search. Reading bookmarks and recently closed tabs is optional and asked for only when you use those features." },
+      { "q": "Which browsers does it work in?", "a": "Chrome. It also loads in Microsoft Edge and Brave." },
+      { "q": "Is it available in Turkish?", "a": "Yes: the interface and the full guide." },
+      { "q": "I used New Tab Folders. What happens to my folders?", "a": "Senuma is the same extension, rebuilt. Your folders became Spaces and everything you saved was kept." },
+      { "q": "How do I report a problem?", "a": "In Senuma: Settings → Help & Feedback. Or use the address above." }
+    ]
+  },
+  "final": {
+    "title": "Your place on the web.",
+    "sub": "Make every new tab yours.",
+    "cta": "Add to Chrome — free"
+  },
+  "footer": {
+    "privacy": "Privacy policy", "guide": "Guide", "feedback": "Feedback",
+    "previously": "Previously New Tab Folders.",
+    "note": "Senuma is an independent project. Screens show the real product with demonstration data."
+  }
+}

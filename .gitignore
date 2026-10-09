@@ -21,6 +21,7 @@ brain/
 node_modules/
 dist/
 dist-e2e/
+dist-site/
 release/
 e2e/.out/
 e2e/_*
